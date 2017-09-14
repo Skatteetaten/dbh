@@ -1,0 +1,56 @@
+buildscript {
+  ext.addRepos = {
+      mavenLocal()
+      mavenCentral()
+      maven {
+          url "http://jcenter.bintray.com/"
+      }
+  }
+  repositories addRepos
+  dependencies {
+    classpath(
+        'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:1.1.0',
+        'org.springframework.boot:spring-boot-gradle-plugin:1.5.6.RELEASE'
+    )
+  }
+}
+
+repositories addRepos
+
+ext.aurora = [
+    requireStaging: false
+]
+
+apply plugin: 'no.skatteetaten.plugins.aurora'
+apply plugin: 'org.springframework.boot'
+
+group = 'no.skatteetaten.aurora'
+
+dependencies {
+  compile(
+      "no.skatteetaten.aurora.springboot:aurora-spring-boot-starter:3.0.0",
+      "org.springframework.boot:spring-boot-starter-security",
+      "org.springframework.boot:spring-boot-starter-aop",
+
+      "org.apache.commons:commons-lang3:3.5",
+      "com.google.guava:guava:21.0",
+
+      "com.oracle:ojdbc7:12.1.0.2",
+      "org.springframework:spring-jdbc",
+      "com.zaxxer:HikariCP:2.4.1",
+      "org.flywaydb:flyway-core:4.0.3"
+  )
+  testCompile(
+      "org.codehaus.groovy:groovy-all:2.4.4",
+      "org.spockframework:spock-core:1.1-groovy-2.4-rc-3",
+      "org.spockframework:spock-spring:1.1-groovy-2.4-rc-3",
+      "org.springframework.boot:spring-boot-starter-test",
+      "cglib:cglib-nodep:3.1",
+      "org.objenesis:objenesis:2.1",
+      "org.springframework.restdocs:spring-restdocs-mockmvc:1.1.0.RELEASE"
+  )
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '3.3'
+}

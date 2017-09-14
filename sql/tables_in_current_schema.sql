@@ -1,0 +1,5 @@
+SELECT DISTINCT *
+  FROM ALL_OBJECTS
+ WHERE OBJECT_TYPE = 'TABLE'
+   AND OWNER = (SELECT SYS_CONTEXT( 'userenv', 'current_schema' ) from DUAL);
+

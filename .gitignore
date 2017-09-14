@@ -1,0 +1,11 @@
+*.iml
+.idea
+/.gradle
+build
+out
+
+/config/openshift/*secret.json
+hostconfigs
+gradlew.bat
+
+classes

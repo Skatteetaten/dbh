@@ -1,0 +1,25 @@
+databaseConfig:
+  retryDelay: 60000
+  dropAllowed: true
+  schemaListingAllowed: true
+  cooldownMonths: 6
+
+  databases:
+  - host: "${dbh.test.db.host:localhost}"
+    service: "${dbh.test.db.service:dbhotel}"
+    instanceName: "${dbh.test.db.instanceName:dev}"
+    username: "${dbh.test.db.username:aos_api_user as sysdba}"
+    password: "${dbh.test.db.password:dbh}"
+    clientService: "${dbh.test.db.clientService:dbhotel}"
+    oracleScriptRequired: "${dbh.test.db.oracleScriptRequired:true}"
+
+metrics:
+  resourceUseCollectInterval: "300000"
+
+flyway:
+  out-of-order: true
+
+aurora:
+  token:
+    headerValuePrefix: aurora-token
+    value: shared-secret

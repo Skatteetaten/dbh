@@ -1,0 +1,97 @@
+info:
+    serviceLinks:
+        metrics: "{metricsHostname}/dashboard/db/openshift-project-spring-actuator-view?var-ds=openshift-{cluster}-ose&var-namespace={namespace}&var-app={name}"
+    podLinks:
+        metrics: "{metricsHostname}/dashboard/db/openshift-project-spring-actuator-view-instance?var-ds=openshift-{cluster}-ose&var-namespace={namespace}&var-app={name}&var-instance={podName}"
+
+management:
+    health.status.order: DOWN, OUT_OF_SERVICE, UNKNOWN, COMMENT, UP
+    port: ${MANAGEMENT_HTTP_PORT:8081}
+    security:
+        enabled: false
+
+endpoints:
+    health:
+        mapping:
+            COMMENT: OK
+    metrics:
+        enabled: false
+    logfile:
+        enabled: false
+    autoconfig:
+        enabled: false
+    heapdump:
+        enabled: false
+    configprops:
+        enabled: false
+    mappings:
+        enabled: false
+    beans:
+        enabled: false
+    dump:
+        enabled: false
+    jolokia:
+        enabled: false
+
+
+spring:
+  profiles:
+    active: development
+    
+databaseConfig:
+  databases: []
+  retryDelay: 60000
+  dropAllowed: false
+  schemaListingAllowed: false
+  cooldownMonths: 6
+
+metrics:
+  resourceUseCollectInterval: "300000"
+
+logging:
+  level:
+    no.skatteetaten.aurora: DEBUG
+    no.skatteetaten.aurora.filter: INFO
+    no.skatteetaten.aurora.databasehotell.DbhConfigurator: WARN
+    com.zaxxer.hikari: WARN
+    org:
+      springframework: WARN
+      apache:
+        catalina: WARN
+
+flyway:
+  out-of-order: true
+
+aurora:
+  authenticationEnabled: true
+  token:
+    headerValuePrefix: aurora-token
+
+---
+spring:
+  profiles: development
+
+databaseConfig:
+  dropAllowed: true
+  schemaListingAllowed: true
+  databases:
+  - host: "${dbh.dev.db.host:localhost}"
+    service: "${dbh.dev.db.service:dbhotel}"
+    instanceName: "${dbh.dev.db.instanceName:dev}"
+    username: "${dbh.dev.db.username:aos_api_user as sysdba}"
+    password: "${dbh.dev.db.password:dbh}"
+    clientService: "${dbh.dev.db.clientService:dbhotel}"
+    oracleScriptRequired: "${dbh.dev.db.oracleScriptRequired:true}"
+
+aurora:
+  authenticationEnabled: false
+  token:
+    location: ./src/test/resources/aurora-token
+
+---
+spring:
+  profiles: openshift
+
+aurora:
+  token:
+    location: /u01/secrets/app/aurora-token/token

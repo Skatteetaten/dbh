@@ -1,0 +1,7 @@
+CREATE TABLE USERS (
+  id VARCHAR2(255) NOT NULL,
+  schema_id VARCHAR2(255) NOT NULL,
+  type VARCHAR2(255) NOT NULL,
+  username VARCHAR2(255) NOT NULL,
+  password varchar2(255)
+);

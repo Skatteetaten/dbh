@@ -1,0 +1,228 @@
+package no.skatteetaten.aurora.databasehotel.service;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.google.common.base.Verify;
+
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager;
+import no.skatteetaten.aurora.databasehotel.dao.dto.Label;
+import no.skatteetaten.aurora.databasehotel.dao.dto.Schema;
+import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData;
+import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser;
+import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo;
+import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema;
+import no.skatteetaten.aurora.databasehotel.utils.Assert;
+import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuilder;
+import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector;
+
+public class DatabaseInstance {
+
+    public static final int DAYS_BACK = -7;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseInstance.class);
+    private static final int RANDOM_LENGTH = 30;
+    private final DatabaseInstanceMetaInfo metaInfo;
+    private final DatabaseManager databaseManager;
+    private final DatabaseHotelDataDao databaseHotelDataDao;
+    private final JdbcUrlBuilder jdbcUrlBuilder;
+    private final ResourceUsageCollector resourceUsageCollector;
+    private List<Integration> integrations = new ArrayList<>();
+    private SchemaNamePasswordStrategy schemaNamePasswordStrategy = () -> {
+        String schemaName = RandomStringUtils.randomAlphabetic(RANDOM_LENGTH);
+        String password = RandomStringUtils.randomAlphabetic(RANDOM_LENGTH);
+        return Pair.of(schemaName, password);
+    };
+
+    public DatabaseInstance(DatabaseInstanceMetaInfo metaInfo, DatabaseManager databaseManager,
+        DatabaseHotelDataDao databaseHotelDataDao,
+        JdbcUrlBuilder jdbcUrlBuilder, ResourceUsageCollector resourceUsageCollector) {
+
+        this.metaInfo = metaInfo;
+        this.databaseManager = databaseManager;
+        this.databaseHotelDataDao = databaseHotelDataDao;
+        this.jdbcUrlBuilder = jdbcUrlBuilder;
+        this.resourceUsageCollector = Assert.asNotNull(resourceUsageCollector, "%s must be set", ResourceUsageCollector.class);
+    }
+
+    public DatabaseInstanceMetaInfo getMetaInfo() {
+
+        return metaInfo;
+    }
+
+    public Optional<DatabaseSchema> findSchemaById(String id) {
+
+        return databaseHotelDataDao.findSchemaDataById(id).map(this::getDatabaseSchemaFromSchemaData);
+    }
+
+    public Optional<DatabaseSchema> findSchemaByName(String name) {
+
+        return databaseHotelDataDao.findSchemaDataByName(name).map(this::getDatabaseSchemaFromSchemaData);
+    }
+
+    public Set<DatabaseSchema> findAllSchemas() {
+
+        List<SchemaData> schemaData = databaseHotelDataDao.findAllManagedSchemaData();
+        List<SchemaUser> users = databaseHotelDataDao.findAllUsers();
+        List<Schema> schemas = databaseManager.findAllNonSystemSchemas();
+        List<Label> labels = databaseHotelDataDao.findAllLabels();
+        List<OracleResourceUsageCollector.SchemaSize> schemaSizes = resourceUsageCollector.getSchemaSizes();
+        return new DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder)
+            .createMany(schemaData, schemas, users, labels, schemaSizes);
+    }
+
+    @Transactional
+    public DatabaseSchema createSchema(Map<String, String> labelsOption) {
+
+        Pair<String, String> schemaNameAndPassword = createSchemaNameAndPassword();
+        String schemaName = schemaNameAndPassword.getLeft();
+        String password = schemaNameAndPassword.getRight();
+
+        return createSchema(schemaName, password, labelsOption);
+    }
+
+    @Transactional
+    public DatabaseSchema createSchema(String schemaName, Map<String, String> labelsOption) {
+
+        Pair<String, String> schemaNameAndPassword = createSchemaNameAndPassword();
+        String password = schemaNameAndPassword.getRight();
+
+        return createSchema(schemaName, password, labelsOption);
+    }
+
+    @Transactional
+    public DatabaseSchema createSchema(String schemaName, String password, Map<String, String> labelsOption) {
+
+        String schemaNameValid = databaseManager.createSchema(schemaName, password);
+        SchemaData schemaData = databaseHotelDataDao.createSchemaData(schemaNameValid);
+        databaseHotelDataDao.createUser(schemaData.getId(), UserType.SCHEMA.toString(), schemaData.getName(), password);
+
+        DatabaseSchema databaseSchema = findSchemaByName(schemaNameValid).orElseThrow(() ->
+            new DatabaseServiceException(
+                String.format("Expected schema [%s] to be created, but it was not", schemaNameValid)));
+
+        Optional.ofNullable(labelsOption).ifPresent(labels -> replaceLabels(databaseSchema, labels));
+
+        integrations.forEach(integration -> integration.onSchemaCreated(databaseSchema));
+
+        return databaseSchema;
+    }
+
+    @Transactional
+    public void deleteSchema(String schemaName, boolean assertExists) {
+
+        Optional<DatabaseSchema> optionalSchema = findSchemaByName(schemaName);
+        if (assertExists) {
+            optionalSchema
+                .orElseThrow(() -> new DatabaseServiceException(String.format("No schema named [%s]", schemaName)));
+        } else {
+            if (!optionalSchema.isPresent()) {
+                return;
+            }
+        }
+
+        Optional<SchemaData> schemaDataOption = databaseHotelDataDao.findSchemaDataByName(schemaName);
+        schemaDataOption.ifPresent(schemaData -> {
+            LOGGER.info("Deleting schema name={}, id={}", schemaData.getName(), schemaData.getId());
+            databaseHotelDataDao.deactivateSchemaData(schemaData.getId());
+        });
+        integrations.forEach(integration -> integration.onSchemaDeleted(optionalSchema.get()));
+    }
+
+    @Transactional
+    public void deleteSchema(String schemaName) {
+
+        LOGGER.info("Deleting schema {}", schemaName);
+        deleteSchema(schemaName, true);
+    }
+
+    @Transactional
+    public void deleteSchema(DatabaseSchema schema) {
+
+        deleteSchema(schema.getName(), true);
+    }
+
+    public void deleteUnusedSchemas() {
+
+        LOGGER.info("Deleting schemas that have never been accessed and that was created more than {} days ago",
+            Math.abs(DAYS_BACK));
+        Calendar c = Calendar.getInstance();
+        c.add(Calendar.DAY_OF_MONTH, DAYS_BACK);
+        Date daysAgo = c.getTime();
+
+        List<DatabaseSchema> schemas = findAllSchemas().stream()
+            .filter(DatabaseSchema::isUnused)
+            .filter(s -> s.getCreatedDate().before(daysAgo)).collect(Collectors.toList());
+        LOGGER.info("Found {} old and unused schemas", schemas.size());
+        schemas.parallelStream().forEach(this::deleteSchema);
+    }
+
+    @Transactional
+    public void replaceLabels(DatabaseSchema schema, Map<String, String> labels) {
+
+        schema.setLabels(labels);
+        databaseHotelDataDao.replaceLabels(schema.getId(), schema.getLabels());
+        integrations.forEach((integration -> integration.onSchemaUpdated(schema)));
+    }
+
+    public String getInstanceName() {
+
+        return metaInfo.getInstanceName();
+    }
+
+    public void setSchemaNamePasswordStrategy(SchemaNamePasswordStrategy schemaNamePasswordStrategy) {
+
+        Verify.verifyNotNull(schemaNamePasswordStrategy, "SchemaNamePasswordStrategy cannot be null");
+        this.schemaNamePasswordStrategy = schemaNamePasswordStrategy;
+    }
+
+    public void registerIntegration(Integration integration) {
+
+        this.integrations.add(integration);
+    }
+
+    public ResourceUsageCollector getResourceUsageCollector() {
+        return resourceUsageCollector;
+    }
+
+    public DatabaseHotelDataDao getDatabaseHotelDataDao() {
+        return databaseHotelDataDao;
+    }
+
+    protected Pair<String, String> createSchemaNameAndPassword() {
+
+        return schemaNamePasswordStrategy.createSchemaNameAndPassword();
+    }
+
+    private DatabaseSchema getDatabaseSchemaFromSchemaData(SchemaData schemaData) {
+
+        return databaseManager.findSchemaByName(schemaData.getName()).map(schema -> {
+            List<SchemaUser> users = databaseHotelDataDao.findAllUsersForSchema(schemaData.getId());
+            List<Label> labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.getId());
+
+            Optional<OracleResourceUsageCollector.SchemaSize> schemaSize =
+                resourceUsageCollector.getSchemaSize(schemaData.getName());
+
+            return new DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder).createOne(schemaData, schema, users,
+                Optional.ofNullable(labels), schemaSize);
+        }).orElse(null);
+    }
+
+    public enum UserType {
+        SCHEMA,
+        READONLY,
+        READWRITE
+    }
+}

@@ -1,0 +1,17 @@
+{
+  "docker": {
+    "maintainer": "Aurora OpenShift Utvikling <utvpaas@skatteetaten.no>",
+    "labels": {
+      "io.k8s.description": "Databasehotel",
+      "io.openshift.tags": "openshift,springboot,oracle"
+    }
+  },
+  "java": {
+    "mainClass": "no.skatteetaten.aurora.databasehotel.Main",
+    "jvmOpts": "-Dspring.profiles.active=openshift",
+    "applicationArgs": "--logging.config=${LOGBACK_FILE}"
+  },
+  "openshift": {
+    "readinessUrl": "/health"
+  }
+}
