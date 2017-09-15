@@ -12,7 +12,44 @@ You will need to provide the Oracle JDBC driver as this dependency does not exis
 Please read the readme file in the ```lib``` folder for more information. Once this jar file is in place, you will be
 able to compile and build the application.
 
-### Prepare a Oracle database server
+### Configuring database access
+
+You will need access to an Oracle database server both for running the unit tests and for local development. It is
+recommended that you use a dedicated server for these purposes and not reuse any existing server that is used for
+other services as well. Especially running the unit tests will create and drop schemas, and the cleanup mechanism
+may interfere with or delete existing schemas in the database.
+
+#### Configuring development and tests to use an external server
+
+The two configuration files that handle general configuration (including config for development) and for tests are
+```src/main/resources/application.yml``` and ```src/test/resources/application.yml```. They both have default config
+that will try to access a database on localhost:1521. This can be overridden for both development and test.
+
+The most convenient way to override settings for development and test is to use the "Home folder properties file"
+feature of Spring Boot. By creating a file ```~/.spring-boot-devtools.properties``` and setting a few properties you
+can control which database will be used.
+
+    dbh.dev.db.host = dbhost.example.com
+    dbh.dev.db.service = dbhotel
+    dbh.dev.db.instanceName = test-dev
+    dbh.dev.db.username = aos_api_user
+    dbh.dev.db.password = dbh
+    dbh.dev.db.clientService = dbhotel
+    dbh.dev.db.oracleScriptRequired = false
+    
+    dbh.test.db.host = dbhost.example.com
+    dbh.test.db.service = dbhotel
+    dbh.test.db.instanceName = test-dev
+    dbh.test.db.username = aos_api_user
+    dbh.test.db.password = dbh
+    dbh.test.db.clientService = dbhotel
+    dbh.test.db.oracleScriptRequired = false
+
+The same properties can also be set using system properties or environment variables as per the spring boot
+conventions. See https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html[Externalized Configuration]
+for more details on all options spring provides for setting and overriding configuration.
+
+#### Prepare a Oracle database server
 
 A convenient way to get started with development is setting up your own Oracle database running from
 a Docker image on your own development machine. There are no official Oracle database images available for download
@@ -26,7 +63,7 @@ You will need to build the Enterprise Edition image for the instructions below t
 
 Once you have completed the image build process, run
 
-    docker run --name=oracle-ee -p 1521:1521 -p 5500:5500 -e ORACLE_PWD=dbh -v /Users/bent/tmp/oracle:/opt/oracle/oradata oracle/database:12.2.0.1-ee
+    docker run --name=oracle-ee -p 1521:1521 -p 5500:5500 -e ORACLE_PWD=dbh -v /opt/oracle/oradata:/opt/oracle/oradata oracle/database:12.2.0.1-ee
 
 to start the server. This takes quite a while the first time you run it, so be patient.
 
