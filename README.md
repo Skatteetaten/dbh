@@ -2,17 +2,17 @@
 
 ## Setting up a development environment
 
-The Database Hotel API (dbh from now on) can easilly be run locally eather from your ide (IntellJ will be assumed) or
-from gradle.
+The Database Hotel API (dbh from now on) can easilly be run locally either from your ide (IntellJ will be assumed) or
+from gradle. Before you can run or build the application, however, there are a couple of prerequisites that must be
+handled.
 
-From IntelliJ import the project from external model (gradle) and run the Main class.
+### Oracle JDBC driver
 
-Or, from the command line run
+You will need to provide the Oracle JDBC driver as this dependency does not exist in any public maven repository.
+Please read the readme file in the ```lib``` folder for more information. Once this jar file is in place, you will be
+able to compile and build the application.
 
-    ./gradlew boot:run
-
-
-## How to use containerized Oracle database
+### Prepare a Oracle database server
 
 A convenient way to get started with development is setting up your own Oracle database running from
 a Docker image on your own development machine. There are no official Oracle database images available for download
@@ -22,17 +22,18 @@ dedicated server you can use for development or some other means (like a VM) to 
 
 The official instructions can be found here: https://github.com/oracle/docker-images/tree/master/OracleDatabase
 
-We have found that the Standard Edition 2 image works well.
+You will need to build the Enterprise Edition image for the instructions below to work.
 
 Once you have completed the image build process, run
 
-    docker run --name=oracle-se -p 1521:1521 -p 5500:5500 -e ORACLE_PWD=dbh -v /Users/bent/tmp/oracle:/opt/oracle/oradata oracle/database:12.2.0.1-se2
+    docker run --name=oracle-ee -p 1521:1521 -p 5500:5500 -e ORACLE_PWD=dbh -v /Users/bent/tmp/oracle:/opt/oracle/oradata oracle/database:12.2.0.1-ee
 
 to start the server. This takes quite a while the first time you run it, so be patient.
 
 Once the server is running log in to create the objects that are required to support the dbh application
     
-    sqlplus sys/dbh@//localhost:1521/ORCLCDB as sysdba
+    docker exec -ti oracle-ee sqlplus sys/dbh@ORCLCDB as sysdba
+
     exec DBMS_SERVICE.CREATE_SERVICE('dbhotel','dbhotel');
     exec DBMS_SERVICE.START_SERVICE('dbhotel');
     
@@ -52,7 +53,16 @@ Once the server is running log in to create the objects that are required to sup
         RESIDENT_SERVICE VARCHAR2(100) NOT NULL
     );
     grant select, insert, update on RESIDENTS.RESIDENTS to aos_api_user;
-    
+
+
+From IntelliJ import the project from external model (gradle) and run the Main class.
+
+Or, from the command line run
+
+    ./gradlew bootRun
+
+
+
     
 ## How to disable password expiration
 
