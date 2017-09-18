@@ -46,7 +46,7 @@ can control which database will be used.
     dbh.test.db.oracleScriptRequired = false
 
 The same properties can also be set using system properties or environment variables as per the spring boot
-conventions. See https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html[Externalized Configuration]
+conventions. See [https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html](Externalized Configuration)
 for more details on all options spring provides for setting and overriding configuration.
 
 #### Prepare a Oracle database server
@@ -145,6 +145,16 @@ privileges than ordinary schema users.
  - SELECT from SYS.DBA_DATA_FILES
  - SELECT from SYS.DBA_SEGMENTS
  - SELECT from SYS.DBA_USERS
+
+
+## Configuration options
+
+The following environment variables can be set to control the behaviour of dbh
+
+Config field | Legal values | Description
+--- | --- | ---
+DATABASECONFIG_SCHEMALISTINGALLOWED | true/false | Enables or disables listing of schemas (```GET /api/v1/schema```)
+DATABASECONFIG_DROPALLOWED | true/false | Enables or disables deletion of schemas (```DELETE /api/v1/schema/{id}```)
 
 
 ## Notes to self
