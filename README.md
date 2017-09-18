@@ -1,8 +1,18 @@
 # Database Hotel API
 
+## About the Database Hotel API
+
+The Database Hotel API (dbh from now on) is a simple API that can be used for creating an managing schemas on one or
+more Oracle database servers. The API is designed for both creating schemas and providing connection information 
+(like usernames and passwords) at a later point in time. The consequence of this is that the API will store user names
+and unhashed passwords since it will need to provide both a upon request. It is therefore critical that you are able
+to restrict access to the database schema where the connection information is stored, or only use this application in
+environments where where keeping passwords secret is non-critical (like in a development environment).
+
+
 ## Setting up a development environment
 
-The Database Hotel API (dbh from now on) can easilly be run locally either from your ide (IntellJ will be assumed) or
+Dbh can easily be run locally either from your ide (IntellJ will be assumed) or
 from gradle. Before you can run or build the application, however, there are a couple of prerequisites that must be
 handled.
 
@@ -155,7 +165,17 @@ Config field | Legal values | Description
 --- | --- | ---
 DATABASECONFIG_SCHEMALISTINGALLOWED | true/false | Enables or disables listing of schemas (```GET /api/v1/schema```)
 DATABASECONFIG_DROPALLOWED | true/false | Enables or disables deletion of schemas (```DELETE /api/v1/schema/{id}```)
+DATABASE_CONFIG_DATABASES_0_host | Example: dbhost.example.com | Host name of the first database server to manage.
+DATABASE_CONFIG_DATABASES_0_service | Example: dbhotel | The service of the first database server to connect to.
+DATABASE_CONFIG_DATABASES_0_instanceName | Example: test-dev | The unique logical name of this database.
+DATABASE_CONFIG_DATABASES_0_username | Example: aos_api_user | The username to connect with
+DATABASE_CONFIG_DATABASES_0_password | Example: dbh | 
+DATABASE_CONFIG_DATABASES_0_clientService | Example: dbhotel | The service for generated jdbc urls for external clients to use when connecting to a generated schema.
+DATABASE_CONFIG_DATABASES_0_oracleScriptRequired | true/false | Whether or not oracle script is required for this database instance 
+DATABASE_CONFIG_DATABASES_n_host | | The host name of the nth database to mange
+... | | Config options for the nth database are the same as for the first.
 
+**Note** The first database instance configured will be used for storage of connection info for external schemas.
 
 ## Notes to self
 
