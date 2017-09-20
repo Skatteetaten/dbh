@@ -18,9 +18,15 @@ handled.
 
 ### Oracle JDBC driver
 
-You will need to provide the Oracle JDBC driver as this dependency does not exist in any public maven repository.
+You will need to provide the Oracle JDBC driver as this dependency does not exist (legally) in any public maven repository.
 Please read the readme file in the ```lib``` folder for more information. Once this jar file is in place, you will be
 able to compile and build the application.
+
+As an alternative you may also use [https://docs.gradle.org/current/userguide/init_scripts.html](Gradle Init Scrips) if 
+you want to register your own artifact repository (like an on prem Nexus) that already has the Oracle JDBC driver
+installed. That will likely be required if you want to build this on a CI server, for instance. You may also be able to
+use the Nexus registration features of the [https://github.com/Skatteetaten/aurora-gradle-plugin](Aurora Gradle Plugin)
+directly for registering an on-prem Nexus.
 
 ### Configuring database access
 
