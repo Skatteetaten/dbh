@@ -37,11 +37,11 @@ dependencies {
       "org.apache.commons:commons-lang3:3.5",
       "com.google.guava:guava:21.0",
 
+      "com.oracle:ojdbc7:12.1.0.2",
       "org.springframework:spring-jdbc",
       "com.zaxxer:HikariCP:2.4.1",
       "org.flywaydb:flyway-core:4.0.3"
   )
-  compile name: "ojdbc7" // Loaded from the local lib folder as this dependency does not exist in a maven repo
 
   testCompile(
       "org.codehaus.groovy:groovy-all:2.4.4",
