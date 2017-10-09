@@ -1,15 +1,17 @@
 buildscript {
   ext.addRepos = {
-      mavenLocal()
       mavenCentral()
       maven {
           url "http://jcenter.bintray.com/"
+      }
+      flatDir {
+          dirs 'libs' // For Oracle JDBC driver
       }
   }
   repositories addRepos
   dependencies {
     classpath(
-        'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:1.1.0',
+        'no.skatteetaten.aurora.gradle.plugins:aurora-gradle-plugin:1.2.1',
         'org.springframework.boot:spring-boot-gradle-plugin:1.5.6.RELEASE'
     )
   }
@@ -40,6 +42,7 @@ dependencies {
       "com.zaxxer:HikariCP:2.4.1",
       "org.flywaydb:flyway-core:4.0.3"
   )
+
   testCompile(
       "org.codehaus.groovy:groovy-all:2.4.4",
       "org.spockframework:spock-core:1.1-groovy-2.4-rc-3",
@@ -50,6 +53,8 @@ dependencies {
       "org.springframework.restdocs:spring-restdocs-mockmvc:1.1.0.RELEASE"
   )
 }
+
+test.onlyIf { false }
 
 task wrapper(type: Wrapper) {
   gradleVersion = '3.3'
