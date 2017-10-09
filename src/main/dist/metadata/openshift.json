@@ -2,7 +2,7 @@
   "docker": {
     "maintainer": "Aurora OpenShift Utvikling <utvpaas@skatteetaten.no>",
     "labels": {
-      "io.k8s.description": "Databasehotel",
+      "io.k8s.description": "Database Hotel",
       "io.openshift.tags": "openshift,springboot,oracle"
     }
   },
