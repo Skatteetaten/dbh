@@ -22,7 +22,7 @@ public class OracleResourceUsageCollector extends DatabaseSupport implements Res
     private static final RowMapper<SchemaSize> SCHEMA_SIZE_ROWMAPPER =
         (resultSet, i) -> new SchemaSize(resultSet.getString("owner"), resultSet.getBigDecimal("schema_size_mb"));
 
-    private static final String KEYS_ARE_NOTE_USED = "ANY";
+    private static final String KEYS_ARE_NOT_USED = "ANY";
 
     final private LoadingCache<Object, List<SchemaSize>> cache;
 
@@ -33,10 +33,12 @@ public class OracleResourceUsageCollector extends DatabaseSupport implements Res
             .build(new CacheLoader<Object, List<SchemaSize>>() {
                 @Override
                 public List<SchemaSize> load(Object key) throws Exception {
-                    return jdbcTemplate.query("SELECT owner, sum(bytes)/1024/1024 schema_size_mb "
-                        + "FROM dba_segments "
-                        + "where owner in (select name from DATABASEHOTEL_INSTANCE_DATA.SCHEMA_DATA) "
-                        + "group BY owner", SCHEMA_SIZE_ROWMAPPER);
+                    List<SchemaSize> schemaSizes =
+                        jdbcTemplate.query("SELECT owner, sum(bytes)/1024/1024 schema_size_mb "
+                            + "FROM dba_segments "
+                            + "where owner in (select name from DATABASEHOTEL_INSTANCE_DATA.SCHEMA_DATA) "
+                            + "group BY owner", SCHEMA_SIZE_ROWMAPPER);
+                    return schemaSizes;
                 }
             });
     }
@@ -45,7 +47,7 @@ public class OracleResourceUsageCollector extends DatabaseSupport implements Res
     public List<SchemaSize> getSchemaSizes() {
 
         try {
-            return cache.get(KEYS_ARE_NOTE_USED);
+            return cache.get(KEYS_ARE_NOT_USED);
         } catch (ExecutionException e) {
             throw new DatabaseServiceException("An error occurred while getting schema sizes", e);
         }
@@ -55,5 +57,10 @@ public class OracleResourceUsageCollector extends DatabaseSupport implements Res
     public Optional<SchemaSize> getSchemaSize(String schemaName) {
 
         return getSchemaSizes().stream().filter(schemaSize -> schemaSize.getOwner().equals(schemaName)).findFirst();
+    }
+
+    public void invalidateCache() {
+
+        cache.invalidateAll();
     }
 }

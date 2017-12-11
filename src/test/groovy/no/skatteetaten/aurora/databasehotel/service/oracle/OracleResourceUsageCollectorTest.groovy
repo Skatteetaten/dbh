@@ -4,6 +4,7 @@ import static no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceIn
 
 import javax.sql.DataSource
 
+import groovy.sql.Sql
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.oracle.AbstractOracleSpec
 import no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceInitializer
@@ -24,7 +25,7 @@ class OracleResourceUsageCollectorTest extends AbstractOracleSpec {
 
   def setupSpec() {
 
-    this.resourceUsageCollector = new OracleResourceUsageCollector(managerDs, resourceUseCollectInterval)
+    this.resourceUsageCollector = new OracleResourceUsageCollector(managerDs, 300000L)
 
     def databaseManager = new OracleDatabaseManager(managerDs)
     def dataSource = cleanUpPreviousRun(databaseManager)
@@ -38,6 +39,7 @@ class OracleResourceUsageCollectorTest extends AbstractOracleSpec {
 
   def "Get schema sizes"() {
     when:
+      resourceUsageCollector.invalidateCache()
       List<ResourceUsageCollector.SchemaSize> schemaSizes = resourceUsageCollector.getSchemaSizes()
 
     then:
@@ -48,8 +50,8 @@ class OracleResourceUsageCollectorTest extends AbstractOracleSpec {
 
   def "Get schema size"() {
     when:
+      resourceUsageCollector.invalidateCache()
       Optional<ResourceUsageCollector.SchemaSize> schemaSize = resourceUsageCollector.getSchemaSize("TEST1")
-
     then:
       schemaSize.get().owner == "TEST1"
       schemaSize.get().schemaSizeMb > 0.0
@@ -57,6 +59,7 @@ class OracleResourceUsageCollectorTest extends AbstractOracleSpec {
 
   def "Get schema size for unmanaged schema fails"() {
     when:
+      resourceUsageCollector.invalidateCache()
       Optional<ResourceUsageCollector.SchemaSize> schemaSize = resourceUsageCollector.getSchemaSize("SYS")
 
     then:
