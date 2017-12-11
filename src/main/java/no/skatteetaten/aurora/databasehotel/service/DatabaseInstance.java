@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,9 +26,10 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema;
-import no.skatteetaten.aurora.databasehotel.utils.Assert;
 import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuilder;
+import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher;
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector;
+import no.skatteetaten.aurora.databasehotel.utils.Assert;
 
 public class DatabaseInstance {
 
@@ -54,7 +56,8 @@ public class DatabaseInstance {
         this.databaseManager = databaseManager;
         this.databaseHotelDataDao = databaseHotelDataDao;
         this.jdbcUrlBuilder = jdbcUrlBuilder;
-        this.resourceUsageCollector = Assert.asNotNull(resourceUsageCollector, "%s must be set", ResourceUsageCollector.class);
+        this.resourceUsageCollector =
+            Assert.asNotNull(resourceUsageCollector, "%s must be set", ResourceUsageCollector.class);
     }
 
     public DatabaseInstanceMetaInfo getMetaInfo() {
@@ -72,13 +75,46 @@ public class DatabaseInstance {
         return databaseHotelDataDao.findSchemaDataByName(name).map(this::getDatabaseSchemaFromSchemaData);
     }
 
-    public Set<DatabaseSchema> findAllSchemas() {
+    public Set<DatabaseSchema> findAllSchemas(Map<String, String> labelsToMatch) {
+
+        if (labelsToMatch == null || labelsToMatch.isEmpty()) {
+            return findAllSchemasUnfiltered();
+        } else {
+            return findAllSchemasWithLabels(labelsToMatch);
+        }
+    }
+
+    private Set<DatabaseSchema> findAllSchemasUnfiltered() {
 
         List<SchemaData> schemaData = databaseHotelDataDao.findAllManagedSchemaData();
         List<SchemaUser> users = databaseHotelDataDao.findAllUsers();
         List<Schema> schemas = databaseManager.findAllNonSystemSchemas();
         List<Label> labels = databaseHotelDataDao.findAllLabels();
         List<OracleResourceUsageCollector.SchemaSize> schemaSizes = resourceUsageCollector.getSchemaSizes();
+
+        return new DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder)
+            .createMany(schemaData, schemas, users, labels, schemaSizes);
+    }
+
+    private Set<DatabaseSchema> findAllSchemasWithLabels(Map<String, String> labelsToMatch) {
+
+        List<SchemaData> schemaData = databaseHotelDataDao.findAllManagedSchemaDataByLabels(labelsToMatch);
+
+        List<SchemaUser> users = schemaData.stream()
+            .flatMap((it) -> databaseHotelDataDao.findAllUsersForSchema(it.getId())
+                .stream()).collect(Collectors.toList());
+
+        List<Schema> schemas = schemaData.stream()
+            .map((it) -> databaseManager.findSchemaByName(it.getName()))
+            .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
+            .collect(Collectors.toList());
+
+        List<Label> labels = schemaData.stream()
+            .flatMap((it) -> databaseHotelDataDao.findAllLabelsForSchema(it.getId())
+                .stream()).collect(Collectors.toList());
+
+        List<OracleResourceUsageCollector.SchemaSize> schemaSizes = resourceUsageCollector.getSchemaSizes();
+
         return new DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder)
             .createMany(schemaData, schemas, users, labels, schemaSizes);
     }
@@ -162,7 +198,7 @@ public class DatabaseInstance {
         c.add(Calendar.DAY_OF_MONTH, DAYS_BACK);
         Date daysAgo = c.getTime();
 
-        List<DatabaseSchema> schemas = findAllSchemas().stream()
+        List<DatabaseSchema> schemas = findAllSchemas(null).stream()
             .filter(DatabaseSchema::isUnused)
             .filter(s -> s.getCreatedDate().before(daysAgo)).collect(Collectors.toList());
         LOGGER.info("Found {} old and unused schemas", schemas.size());

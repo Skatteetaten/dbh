@@ -1,12 +1,20 @@
 package no.skatteetaten.aurora.databasehotel.dao.oracle;
 
+import static com.google.common.collect.Lists.newArrayList;
+
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
+
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
@@ -78,6 +86,38 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
 
         return queryForMany("select id, name, schema_type from SCHEMA_DATA where active=1 and schema_type=?",
             SchemaData.class, schemaType);
+    }
+
+    @Override
+    /** Example query:
+     * select schema_id
+     * from LABELS where name in ('affiliation', 'application', 'environment', 'name')
+     * group by schema_id
+     * HAVING listagg(value, ',') WITHIN GROUP (ORDER BY name) like 'paas,boober,paas-boober,referanseapp'
+     */
+    public List<SchemaData> findAllManagedSchemaDataByLabels(Map<String, String> labels) {
+
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        List<String> labelNames = newArrayList(labels.keySet());
+        Collections.sort(labelNames);
+        String labelValues = labelNames.stream()
+            .map(it -> labels.get(it))
+            .collect(Collectors.joining(","));
+        parameters.addValue("names", labelNames);
+        parameters.addValue("values", labelValues);
+        parameters.addValue("type", SCHEMA_TYPE_MANAGED);
+
+        return namedParameterJdbcTemplate.query(
+            "select id, name, schema_type from SCHEMA_DATA where id in (\n"
+                + "select schema_id\n"
+                + "from LABELS where name in (:names)\n"
+                + "group by schema_id\n"
+                + "HAVING listagg(value, ',') WITHIN GROUP (ORDER BY name) like (:values)\n"
+                + ") and active=1 and schema_type=(:type)",
+            parameters,
+            new BeanPropertyRowMapper<>(SchemaData.class)
+        );
     }
 
     @Override

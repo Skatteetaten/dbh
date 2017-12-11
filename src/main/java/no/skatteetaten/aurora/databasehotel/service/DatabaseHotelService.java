@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.databasehotel.service;
 
 import static java.lang.String.format;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -48,22 +49,24 @@ public class DatabaseHotelService {
 
     public Set<DatabaseSchema> findAllDatabaseSchemas() {
 
-        Set<DatabaseSchema> allDatabaseSchemas = new HashSet<>();
-        Set<DatabaseInstance> databaseInstances = databaseHotelAdminService.findAllDatabaseInstances();
-        for (DatabaseInstance databaseInstance : databaseInstances) {
-
-            Set<DatabaseSchema> databaseSchemas = databaseInstance.findAllSchemas();
-            allDatabaseSchemas.addAll(databaseSchemas);
-        }
-        databaseHotelAdminService.getExternalSchemaManager()
-            .ifPresent(externalSchemaManager -> allDatabaseSchemas.addAll(externalSchemaManager.findAllSchemas()));
-        return allDatabaseSchemas;
+        return findAllDatabaseSchemasByLabels(null);
     }
 
     public Set<DatabaseSchema> findAllDatabaseSchemasByLabels(Map<String, String> labelsToMatch) {
 
-        Set<DatabaseSchema> schemas = findAllDatabaseSchemas();
-        return SchemaLabelMatcher.findAllMatchingSchemas(schemas, labelsToMatch);
+        Set<DatabaseSchema> schemas = new HashSet<>();
+        Set<DatabaseInstance> databaseInstances = databaseHotelAdminService.findAllDatabaseInstances();
+        for (DatabaseInstance databaseInstance : databaseInstances) {
+
+            Set<DatabaseSchema> databaseSchemas = databaseInstance.findAllSchemas(labelsToMatch);
+            schemas.addAll(databaseSchemas);
+        }
+        databaseHotelAdminService.getExternalSchemaManager()
+            .ifPresent(externalSchemaManager -> {
+                Set<DatabaseSchema> externalSchemas = externalSchemaManager.findAllSchemas();
+                schemas.addAll(SchemaLabelMatcher.findAllMatchingSchemas(externalSchemas, labelsToMatch));
+            });
+        return schemas;
     }
 
     public DatabaseSchema createSchema() {

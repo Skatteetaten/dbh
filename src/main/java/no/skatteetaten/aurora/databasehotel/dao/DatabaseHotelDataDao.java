@@ -31,6 +31,8 @@ public interface DatabaseHotelDataDao {
 
     List<SchemaData> findAllSchemaDataBySchemaType(String schemaType);
 
+    List<SchemaData> findAllManagedSchemaDataByLabels(Map<String, String> labels);
+
     SchemaUser createUser(String schemaId, String userType, String username, String password);
 
     Optional<SchemaUser> findUserById(String id);
