@@ -24,7 +24,7 @@ class OracleResourceUsageCollectorTest extends AbstractOracleSpec {
 
   def setupSpec() {
 
-    this.resourceUsageCollector = new OracleResourceUsageCollector(managerDs)
+    this.resourceUsageCollector = new OracleResourceUsageCollector(managerDs, resourceUseCollectInterval)
 
     def databaseManager = new OracleDatabaseManager(managerDs)
     def dataSource = cleanUpPreviousRun(databaseManager)

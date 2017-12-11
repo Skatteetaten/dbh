@@ -4,9 +4,13 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector;
 
 public interface ResourceUsageCollector {
+
     List<OracleResourceUsageCollector.SchemaSize> getSchemaSizes();
 
     Optional<OracleResourceUsageCollector.SchemaSize> getSchemaSize(String schemaName);

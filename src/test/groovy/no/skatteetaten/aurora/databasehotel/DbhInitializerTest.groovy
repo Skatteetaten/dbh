@@ -8,7 +8,7 @@ class DbhInitializerTest extends Specification {
 
   static testConfig = TestConfig.loadTestConfig()
 
-  def databaseHotelAdminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, "test-dev")
+  def databaseHotelAdminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, "test-dev", 30000L)
 
   def dbConfig = [
       "dbhost.example.com", // This server does not exist an cannot be connected to

@@ -22,14 +22,14 @@ import com.google.common.base.Strings;
 
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager;
-import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager;
-import no.skatteetaten.aurora.databasehotel.service.sits.ResidentsIntegration;
 import no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceInitializer;
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDataSourceUtils;
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao;
+import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo;
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder;
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector;
+import no.skatteetaten.aurora.databasehotel.service.sits.ResidentsIntegration;
 
 @Service
 public class DatabaseHotelAdminService {
@@ -37,6 +37,7 @@ public class DatabaseHotelAdminService {
     public static final int PORT = 1521;
 
     private final Map<String, DatabaseInstance> databaseInstances = new HashMap<>();
+    private final Long resourceUseCollectInterval;
 
     private DatabaseInstanceInitializer databaseInstanceInitializer;
 
@@ -46,11 +47,13 @@ public class DatabaseHotelAdminService {
 
     public DatabaseHotelAdminService(DatabaseInstanceInitializer databaseInstanceInitializer,
         @Value("${databaseConfig.cooldownMonths}") int cooldownAfterDeleteMonths,
-        @Value("${databaseConfig.defaultInstanceName:}") String defaultInstanceName) {
+        @Value("${databaseConfig.defaultInstanceName:}") String defaultInstanceName,
+        @Value("${metrics.resourceUseCollectInterval}") Long resourceUseCollectInterval) {
 
         this.databaseInstanceInitializer = databaseInstanceInitializer;
         this.cooldownAfterDeleteMonths = cooldownAfterDeleteMonths;
         this.defaultInstanceName = defaultInstanceName;
+        this.resourceUseCollectInterval = resourceUseCollectInterval;
     }
 
     public Set<DatabaseInstance> findAllDatabaseInstances() {
@@ -86,7 +89,7 @@ public class DatabaseHotelAdminService {
 
         JdbcUrlBuilder jdbcUrlBuilder = new OracleJdbcUrlBuilder(clientService);
 
-        OracleResourceUsageCollector resourceUsageCollector = new OracleResourceUsageCollector(managementDataSource);
+        OracleResourceUsageCollector resourceUsageCollector = new OracleResourceUsageCollector(managementDataSource, resourceUseCollectInterval);
         DatabaseInstance databaseInstance = new DatabaseInstance(databaseInstanceMetaInfo, databaseManager,
             databaseHotelDataDao, jdbcUrlBuilder, resourceUsageCollector);
         ResidentsIntegration residentsIntegration =

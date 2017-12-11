@@ -35,7 +35,7 @@ dependencies {
       "org.springframework.boot:spring-boot-starter-aop",
 
       "org.apache.commons:commons-lang3:3.5",
-      "com.google.guava:guava:21.0",
+      "com.google.guava:guava:23.5-jre",
 
       "com.oracle:ojdbc7:12.1.0.2",
       "org.springframework:spring-jdbc",

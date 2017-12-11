@@ -15,7 +15,6 @@ public class SchemaLabelMatcher {
     public static Set<DatabaseSchema> findAllMatchingSchemas(Set<DatabaseSchema> schemas, Map<String, String> labels) {
 
         Verify.verifyNotNull(schemas, "Schemas cannot be null");
-        Verify.verifyNotNull(labels, "Labels cannot be null");
 
         return schemas.stream().filter(schema -> matchesAll(schema, labels)).collect(Collectors.toSet());
     }
@@ -23,7 +22,9 @@ public class SchemaLabelMatcher {
     public static boolean matchesAll(DatabaseSchema schema, Map<String, String> labels) {
 
         Verify.verifyNotNull(schema, "Schema cannot be null");
-        Verify.verifyNotNull(labels, "Labels cannot be null");
+        if (labels == null) {
+            return true;
+        }
 
         boolean matches = true;
         Map<String, String> schemaLabels = schema.getLabels();

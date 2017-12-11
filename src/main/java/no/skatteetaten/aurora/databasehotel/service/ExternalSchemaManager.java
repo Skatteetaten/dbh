@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -44,7 +45,7 @@ public class ExternalSchemaManager {
         });
     }
 
-    public Collection<? extends DatabaseSchema> findAllSchemas() {
+    public Set<DatabaseSchema> findAllSchemas() {
 
         List<SchemaData> externalSchemas = databaseHotelDataDao.findAllSchemaDataBySchemaType(
             DatabaseHotelDataDao.SCHEMA_TYPE_EXTERNAL);
@@ -56,7 +57,7 @@ public class ExternalSchemaManager {
                     + "schema with id %s", id)));
             List<SchemaUser> users = databaseHotelDataDao.findAllUsersForSchema(id);
             return createDatabaseSchema(schemaData, externalSchema, users);
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toSet());
     }
 
     public DatabaseSchema registerSchema(String username, String password, String jdbcUrl,
