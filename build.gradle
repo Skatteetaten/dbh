@@ -30,7 +30,7 @@ group = 'no.skatteetaten.aurora'
 
 dependencies {
   compile(
-      "no.skatteetaten.aurora.springboot:aurora-spring-boot-starter:3.0.0",
+      "no.skatteetaten.aurora.springboot:aurora-spring-boot-starter:3.4.0",
       "org.springframework.boot:spring-boot-starter-security",
       "org.springframework.boot:spring-boot-starter-aop",
 
