@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema;
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService;
@@ -82,11 +83,10 @@ public class ResourceUseCollector {
     private void registerGaugeForSchema(DatabaseSchema schema, SchemaSizeValue value) {
 
         Map<String, String> labels = schema.getLabels();
-        registry
-            .gaugeBuilder(METRIC_NAME, value, SchemaSizeValue::getSizeMb)
+        Gauge.builder(METRIC_NAME, value, SchemaSizeValue::getSizeMb)
             .description("the size of the individual registered schemas")
             .tags(createLabelsArray(labels))
-            .create();
+            .register(registry);
     }
 
     private String[] createLabelsArray(Map<String, String> labels) {
