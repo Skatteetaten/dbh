@@ -32,7 +32,7 @@ class OracleResourceUsageCollectorTest extends AbstractOracleSpec {
 
     def databaseHotelDataDao = new OracleDatabaseHotelDataDao(dataSource)
     def databaseInstance = new DatabaseInstance(new DatabaseInstanceMetaInfo("a", "b", 1512), databaseManager,
-        databaseHotelDataDao, new OracleJdbcUrlBuilder("dbhotel"), resourceUsageCollector)
+        databaseHotelDataDao, new OracleJdbcUrlBuilder("dbhotel"), resourceUsageCollector, true)
 
     createTestSchemas(databaseInstance, databaseManager)
   }

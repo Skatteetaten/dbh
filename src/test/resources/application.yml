@@ -8,6 +8,7 @@ databaseConfig:
   - host: "${dbh.test.db.host:localhost}"
     service: "${dbh.test.db.service:dbhotel}"
     instanceName: "${dbh.test.db.instanceName:dev}"
+    createSchemaAllowed: "${dbh.test.db.createSchemaAllowed:true}"
     username: "${dbh.test.db.username:aos_api_user as sysdba}"
     password: "${dbh.test.db.password:dbh}"
     clientService: "${dbh.test.db.clientService:dbhotel}"

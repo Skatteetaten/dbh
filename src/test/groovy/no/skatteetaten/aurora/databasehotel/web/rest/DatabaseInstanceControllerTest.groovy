@@ -46,7 +46,8 @@ class DatabaseInstanceControllerTest extends Specification {
           Mock(DatabaseManager),
           Mock(DatabaseHotelDataDao),
           Mock(JdbcUrlBuilder),
-          Mock(ResourceUsageCollector)
+          Mock(ResourceUsageCollector),
+          true
       )]
 
     when:
