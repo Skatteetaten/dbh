@@ -84,13 +84,15 @@ public class DbhInitializer {
     private void registerDatabase(Map<String, Object> databaseConfig) {
 
         String host = get(databaseConfig, "host");
+        Optional<Boolean> createSchemaAllowed = maybeGetAsBoolean(databaseConfig, "createSchemaAllowed");
         Optional<Boolean> oracleScriptRequired = maybeGetAsBoolean(databaseConfig, "oracleScriptRequired");
         // The serviceLevel property has been renamed to instanceName, but we support both for a while.
         String instanceName =
             (String) maybeGet(databaseConfig, "instanceName").orElseGet(() -> get(databaseConfig, "serviceLevel"));
         databaseHotelAdminService.registerOracleDatabaseInstance(
             instanceName, host, get(databaseConfig, "service"), get(databaseConfig, "username"),
-            get(databaseConfig, "password"), get(databaseConfig, "clientService"), oracleScriptRequired.orElse(false));
+            get(databaseConfig, "password"), get(databaseConfig, "clientService"), createSchemaAllowed.orElse(true),
+            oracleScriptRequired.orElse(false));
         LOGGER.info("Registered host [{}]", host);
     }
 }

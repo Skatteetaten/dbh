@@ -7,14 +7,15 @@ import static no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceIn
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -62,14 +63,15 @@ public class DatabaseHotelAdminService {
     }
 
     public void registerOracleDatabaseInstance(String instanceName, String dbHost, String service, String username,
-        String password, String clientService, boolean oracleScriptRequired) {
+        String password, String clientService, boolean createSchemaAllowed, boolean oracleScriptRequired) {
 
         registerOracleDatabaseInstance(instanceName, dbHost, PORT, service, username, password,
-            clientService, oracleScriptRequired);
+            clientService, createSchemaAllowed, oracleScriptRequired);
     }
 
     public void registerOracleDatabaseInstance(String instanceName, String dbHost, int port, String service,
-        String username, String password, String clientService, boolean oracleScriptRequired) {
+        String username, String password, String clientService, boolean createSchemaAllowed,
+        boolean oracleScriptRequired) {
 
         String managementJdbcUrl = new OracleJdbcUrlBuilder(service).create(dbHost, port);
         DatabaseInstanceMetaInfo databaseInstanceMetaInfo = new DatabaseInstanceMetaInfo(instanceName, dbHost, port);
@@ -89,9 +91,10 @@ public class DatabaseHotelAdminService {
 
         JdbcUrlBuilder jdbcUrlBuilder = new OracleJdbcUrlBuilder(clientService);
 
-        OracleResourceUsageCollector resourceUsageCollector = new OracleResourceUsageCollector(managementDataSource, resourceUseCollectInterval);
+        OracleResourceUsageCollector resourceUsageCollector =
+            new OracleResourceUsageCollector(managementDataSource, resourceUseCollectInterval);
         DatabaseInstance databaseInstance = new DatabaseInstance(databaseInstanceMetaInfo, databaseManager,
-            databaseHotelDataDao, jdbcUrlBuilder, resourceUsageCollector);
+            databaseHotelDataDao, jdbcUrlBuilder, resourceUsageCollector, createSchemaAllowed);
         ResidentsIntegration residentsIntegration =
             new ResidentsIntegration(managementDataSource, cooldownAfterDeleteMonths);
         databaseInstance.registerIntegration(residentsIntegration);
@@ -115,16 +118,20 @@ public class DatabaseHotelAdminService {
      */
     public DatabaseInstance findDatabaseInstanceOrFail(String instanceNameOption) {
 
-        Set<String> instanceNames = findAllInstanceNames();
-        if (instanceNames.isEmpty()) {
+        Set<DatabaseInstance> instances = findAllDatabaseInstances();
+        if (instances.isEmpty()) {
             throw new DatabaseServiceException("No database instances registered");
         }
         String instanceName = Optional.ofNullable(instanceNameOption).orElseGet(() -> {
-            if (instanceNames.size() != 1) {
-                throw new DatabaseServiceException(format("No instance name specified and more than one registered "
-                    + "(%s). Please specify desired instance", StringUtils.join(instanceNames, ",")));
+            List<DatabaseInstance> createSchemaInstances =
+                instances.stream().filter(DatabaseInstance::isCreateSchemaAllowed).collect(Collectors.toList());
+
+            if (createSchemaInstances.isEmpty()) {
+                throw new DatabaseServiceException("Schema creation has been disabled for all instances");
             }
-            return instanceNames.iterator().next();
+
+            int random = new Random().nextInt(createSchemaInstances.size());
+            return createSchemaInstances.get(random).getInstanceName();
         });
         return findDatabaseInstanceByInstanceName(instanceName)
             .orElseThrow(() -> new DatabaseServiceException(format("No instance named [%s]", instanceName)));
@@ -159,15 +166,9 @@ public class DatabaseHotelAdminService {
             throw new DatabaseServiceException("More than one database instance registered but "
                 + "databaseConfig.defaultInstanceName has not been specified.");
         }
-        return Optional.ofNullable(databaseInstances.get(defaultInstanceName))
+        return findDatabaseInstanceByInstanceName(defaultInstanceName)
             .orElseThrow(() -> new DatabaseServiceException(format("Unable to find database instance %s among "
                 + "registered instances %s", defaultInstanceName, databaseInstances.keySet())));
-    }
-
-    public Set<String> findAllInstanceNames() {
-
-        Set<DatabaseInstance> dbInstances = findAllDatabaseInstances();
-        return dbInstances.stream().map(DatabaseInstance::getInstanceName).collect(Collectors.toSet());
     }
 
     public void registerExternalSchemaManager(ExternalSchemaManager externalSchemaManager) {

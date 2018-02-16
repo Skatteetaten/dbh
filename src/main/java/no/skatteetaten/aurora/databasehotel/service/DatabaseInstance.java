@@ -27,7 +27,6 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema;
 import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuilder;
-import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher;
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector;
 import no.skatteetaten.aurora.databasehotel.utils.Assert;
 
@@ -47,10 +46,11 @@ public class DatabaseInstance {
         String password = RandomStringUtils.randomAlphabetic(RANDOM_LENGTH);
         return Pair.of(schemaName, password);
     };
+    private final boolean createSchemaAllowed;
 
     public DatabaseInstance(DatabaseInstanceMetaInfo metaInfo, DatabaseManager databaseManager,
         DatabaseHotelDataDao databaseHotelDataDao,
-        JdbcUrlBuilder jdbcUrlBuilder, ResourceUsageCollector resourceUsageCollector) {
+        JdbcUrlBuilder jdbcUrlBuilder, ResourceUsageCollector resourceUsageCollector, boolean createSchemaAllowed) {
 
         this.metaInfo = metaInfo;
         this.databaseManager = databaseManager;
@@ -58,6 +58,7 @@ public class DatabaseInstance {
         this.jdbcUrlBuilder = jdbcUrlBuilder;
         this.resourceUsageCollector =
             Assert.asNotNull(resourceUsageCollector, "%s must be set", ResourceUsageCollector.class);
+        this.createSchemaAllowed = createSchemaAllowed;
     }
 
     public DatabaseInstanceMetaInfo getMetaInfo() {
@@ -141,6 +142,11 @@ public class DatabaseInstance {
     @Transactional
     public DatabaseSchema createSchema(String schemaName, String password, Map<String, String> labelsOption) {
 
+        if (!createSchemaAllowed) {
+            throw new DatabaseServiceException(String.format("Schema creation has been disabled for this instance=%s",
+                getInstanceName()));
+        }
+
         String schemaNameValid = databaseManager.createSchema(schemaName, password);
         SchemaData schemaData = databaseHotelDataDao.createSchemaData(schemaNameValid);
         databaseHotelDataDao.createUser(schemaData.getId(), UserType.SCHEMA.toString(), schemaData.getName(), password);
@@ -216,6 +222,10 @@ public class DatabaseInstance {
     public String getInstanceName() {
 
         return metaInfo.getInstanceName();
+    }
+
+    public boolean isCreateSchemaAllowed() {
+        return createSchemaAllowed;
     }
 
     public void setSchemaNamePasswordStrategy(SchemaNamePasswordStrategy schemaNamePasswordStrategy) {
