@@ -16,6 +16,8 @@ try {
   def overrides = [piTests: false, disableAllReports: true]
   jenkinsfile.gradle(version, overrides)
 } finally {
-  sh 'rm ~/.spring-boot-devtools.properties'
+  node {
+    sh 'rm ~/.spring-boot-devtools.properties'
+  }
 }
 
