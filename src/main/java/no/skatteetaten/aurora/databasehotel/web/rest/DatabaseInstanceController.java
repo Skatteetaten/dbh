@@ -37,6 +37,7 @@ public class DatabaseInstanceController {
         DatabaseInstanceMetaInfo metaInfo = databaseInstance.getMetaInfo();
         return MapUtils.from(
             kv("host", metaInfo.getHost()),
+            kv("createSchemaAllowed", databaseInstance.isCreateSchemaAllowed()),
             kv("instanceName", metaInfo.getInstanceName()),
             kv("port", metaInfo.getPort())
         );

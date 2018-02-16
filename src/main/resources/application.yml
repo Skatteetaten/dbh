@@ -35,10 +35,12 @@ spring:
 databaseConfig:
   dropAllowed: true
   schemaListingAllowed: true
+  defaultInstanceName: "${dbh.dev.db.instanceName:dev}"
   databases:
   - host: "${dbh.dev.db.host:localhost}"
     service: "${dbh.dev.db.service:dbhotel}"
     instanceName: "${dbh.dev.db.instanceName:dev}"
+    createSchemaAllowed: "${dbh.dev.db.createSchemaAllowed:true}"
     username: "${dbh.dev.db.username:aos_api_user as sysdba}"
     password: "${dbh.dev.db.password:dbh}"
     clientService: "${dbh.dev.db.clientService:dbhotel}"

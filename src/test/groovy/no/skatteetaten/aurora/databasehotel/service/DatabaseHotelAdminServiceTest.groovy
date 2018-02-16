@@ -66,11 +66,34 @@ class DatabaseHotelAdminServiceTest extends Specification {
 
   def "Not specifying instance fails when several instances exist"() {
 
-    when:
-      adminService.findDatabaseInstanceOrFail(null)
+    given:
+      adminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, "db", 300000L)
 
-    then:
-      thrown(DatabaseServiceException)
+    [createMockInstance("dev1", true),
+     createMockInstance("dev2", true),
+     createMockInstance("dev3", false)
+    ].each {
+      adminService.registerDatabaseInstance(it)
+    }
+
+    expect:
+      def usedInstances = [] as Set
+      (0..1000).each {
+        def instance = adminService.findDatabaseInstanceOrFail(null)
+        assert instance != null
+        assert instance.instanceName != "dev3"
+        usedInstances << instance.instanceName
+      }
+
+      usedInstances.containsAll(["dev1", "dev2"])
+  }
+
+  private def createMockInstance(String name, boolean isCreateSchemaAllowed) {
+    def databaseInstance = Mock(DatabaseInstance)
+    databaseInstance.getMetaInfo() >> new DatabaseInstanceMetaInfo(name, "$name-localhost", 1521)
+    databaseInstance.getInstanceName() >> name
+    databaseInstance.isCreateSchemaAllowed() >> isCreateSchemaAllowed
+    return databaseInstance
   }
 
   def "Specifying a missing instance fails"() {
