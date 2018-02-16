@@ -54,8 +54,6 @@ dependencies {
   )
 }
 
-test.onlyIf { false }
-
 task wrapper(type: Wrapper) {
   gradleVersion = '4.5.1'
 }
