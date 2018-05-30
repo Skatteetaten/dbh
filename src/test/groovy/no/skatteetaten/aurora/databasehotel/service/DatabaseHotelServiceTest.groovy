@@ -9,7 +9,10 @@ class DatabaseHotelServiceTest extends Specification {
 
   public static final String INSTANCE_NAME = "test-dev"
 
-  def adminService = Mock(DatabaseHotelAdminService)
+  def adminService = Mock(DatabaseHotelAdminService).with {
+    it.getExternalSchemaManager() >> Optional.empty()
+    it
+  }
 
   def databaseHotelService = new DatabaseHotelService(adminService)
 

@@ -2,8 +2,8 @@ package no.skatteetaten.aurora.databasehotel.service;
 
 import static java.lang.String.format;
 
-import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.google.common.collect.Lists;
 
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema;
 import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher;
@@ -32,19 +34,22 @@ public class DatabaseHotelService {
 
     public Optional<Pair<DatabaseSchema, DatabaseInstance>> findSchemaById(String id) {
 
+        List<Pair<DatabaseSchema, DatabaseInstance>> candidates = Lists.newArrayList();
+
         Set<DatabaseInstance> allDatabaseInstances = databaseHotelAdminService.findAllDatabaseInstances();
         for (DatabaseInstance databaseInstance : allDatabaseInstances) {
             Optional<Pair<DatabaseSchema, DatabaseInstance>> schemaAndInstance = databaseInstance.findSchemaById(id)
                 .map(dbs -> Pair.of(dbs, databaseInstance));
-            if (schemaAndInstance.isPresent()) {
-                return schemaAndInstance;
-            }
+            schemaAndInstance.ifPresent(candidates::add);
         }
 
-        Optional<DatabaseSchema> schemaOptional = databaseHotelAdminService.getExternalSchemaManager()
-            .map(externalSchemaManager -> externalSchemaManager.findSchemaById(id).orElse(null));
+        databaseHotelAdminService.getExternalSchemaManager()
+            .map(externalSchemaManager -> externalSchemaManager.findSchemaById(id).orElse(null))
+            .map(databaseSchema -> Pair.of(databaseSchema, (DatabaseInstance) null))
+            .ifPresent(candidates::add);
 
-        return schemaOptional.map(databaseSchema -> Pair.of(databaseSchema, null));
+        verifyOnlyOneCandidate(id, candidates);
+        return candidates.size() == 0 ? Optional.empty() : Optional.of(candidates.get(0));
     }
 
     public Set<DatabaseSchema> findAllDatabaseSchemas() {
@@ -147,5 +152,26 @@ public class DatabaseHotelService {
         return databaseHotelAdminService.getExternalSchemaManager().map(
             externalSchemaManager -> externalSchemaManager.registerSchema(username, password, jdbcUrl, labels))
             .orElseThrow(() -> new DatabaseServiceException("External Schema Manager has not been registered"));
+    }
+
+    private static void verifyOnlyOneCandidate(String id, List<Pair<DatabaseSchema, DatabaseInstance>> candidates) {
+        if (candidates.size() <= 1) {
+            return;
+        }
+
+        candidates.stream()
+            .map(candidate -> {
+                DatabaseSchema schema = candidate.getLeft();
+                DatabaseInstance instance = candidate.getRight();
+                String host = instance != null ? instance.getMetaInfo().getHost() : null;
+                return format("[schemaName=%s, jdbcUrl=%s, hostName=%s]", schema.getName(), schema.getJdbcUrl(), host);
+            })
+            .reduce((s, s2) -> format("%s, %s", s, s2))
+            .ifPresent(candidatesString -> {
+                String error =
+                    format("More than one schema from different database servers matched the specified id [%s]: %s",
+                        id, candidatesString);
+                throw new IllegalStateException(error);
+            });
     }
 }
