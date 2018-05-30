@@ -163,7 +163,8 @@ public class DatabaseHotelService {
             .map(candidate -> {
                 DatabaseSchema schema = candidate.getLeft();
                 DatabaseInstance instance = candidate.getRight();
-                return format("[schemaName=%s, hostName=%s]", schema.getName(), instance.getMetaInfo().getHost());
+                String host = instance != null ? instance.getMetaInfo().getHost() : null;
+                return format("[schemaName=%s, jdbcUrl=%s, hostName=%s]", schema.getName(), schema.getJdbcUrl(), host);
             })
             .reduce((s, s2) -> format("%s, %s", s, s2))
             .ifPresent(candidatesString -> {
