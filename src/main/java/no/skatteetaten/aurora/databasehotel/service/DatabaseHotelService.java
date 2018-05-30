@@ -48,10 +48,7 @@ public class DatabaseHotelService {
             .map(databaseSchema -> Pair.of(databaseSchema, (DatabaseInstance) null))
             .ifPresent(candidates::add);
 
-        if (candidates.size() > 1) {
-            throw new IllegalStateException(String
-                .format("More than one schema from different database servers matched the specified id [%s]", id));
-        }
+        verifyOnlyOneCandidate(id, candidates);
         return candidates.size() == 0 ? Optional.empty() : Optional.of(candidates.get(0));
     }
 
@@ -155,5 +152,25 @@ public class DatabaseHotelService {
         return databaseHotelAdminService.getExternalSchemaManager().map(
             externalSchemaManager -> externalSchemaManager.registerSchema(username, password, jdbcUrl, labels))
             .orElseThrow(() -> new DatabaseServiceException("External Schema Manager has not been registered"));
+    }
+
+    private static void verifyOnlyOneCandidate(String id, List<Pair<DatabaseSchema, DatabaseInstance>> candidates) {
+        if (candidates.size() <= 1) {
+            return;
+        }
+
+        candidates.stream()
+            .map(candidate -> {
+                DatabaseSchema schema = candidate.getLeft();
+                DatabaseInstance instance = candidate.getRight();
+                return format("[schemaName=%s, hostName=%s]", schema.getName(), instance.getMetaInfo().getHost());
+            })
+            .reduce((s, s2) -> format("%s, %s", s, s2))
+            .ifPresent(candidatesString -> {
+                String error =
+                    format("More than one schema from different database servers matched the specified id [%s]: %s",
+                        id, candidatesString);
+                throw new IllegalStateException(error);
+            });
     }
 }
