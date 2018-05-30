@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.databasehotel.service;
 
+import static no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao.SCHEMA_TYPE_MANAGED;
+import static no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.MANAGED;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -254,6 +257,9 @@ public class DatabaseInstance {
 
     private DatabaseSchema getDatabaseSchemaFromSchemaData(SchemaData schemaData) {
 
+        if (!SCHEMA_TYPE_MANAGED.equals(schemaData.getSchemaType())) {
+            return null;
+        }
         return databaseManager.findSchemaByName(schemaData.getName()).map(schema -> {
             List<SchemaUser> users = databaseHotelDataDao.findAllUsersForSchema(schemaData.getId());
             List<Label> labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.getId());

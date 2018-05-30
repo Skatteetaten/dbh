@@ -2,10 +2,11 @@ package no.skatteetaten.aurora.databasehotel.service;
 
 import static java.lang.String.format;
 
+import static no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao.SCHEMA_TYPE_EXTERNAL;
+import static no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.EXTERNAL;
 import static no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +36,8 @@ public class ExternalSchemaManager {
 
     public Optional<DatabaseSchema> findSchemaById(String schemaId) {
 
-        Optional<SchemaData> maybeSchemaData = databaseHotelDataDao.findSchemaDataById(schemaId);
+        Optional<SchemaData> maybeSchemaData = databaseHotelDataDao.findSchemaDataById(schemaId)
+            .filter(schemaData -> SCHEMA_TYPE_EXTERNAL.equals(schemaData.getSchemaType()));
         return maybeSchemaData.map(schemaData -> {
             ExternalSchema externalSchema = databaseHotelDataDao.findExternalSchemaById(schemaId)
                 .orElseThrow(() -> new DatabaseServiceException(format("Could not find ExternalSchema data for "
@@ -48,7 +50,7 @@ public class ExternalSchemaManager {
     public Set<DatabaseSchema> findAllSchemas() {
 
         List<SchemaData> externalSchemas = databaseHotelDataDao.findAllSchemaDataBySchemaType(
-            DatabaseHotelDataDao.SCHEMA_TYPE_EXTERNAL);
+            SCHEMA_TYPE_EXTERNAL);
         // TODO: Iterating like this may (will) become a performance bottleneck at some point.
         return externalSchemas.stream().map(schemaData -> {
             String id = schemaData.getId();
@@ -63,7 +65,8 @@ public class ExternalSchemaManager {
     public DatabaseSchema registerSchema(String username, String password, String jdbcUrl,
         Map<String, String> labelMap) {
 
-        SchemaData schemaData = databaseHotelDataDao.createSchemaData(username, DatabaseHotelDataDao.SCHEMA_TYPE_EXTERNAL);
+        SchemaData schemaData =
+            databaseHotelDataDao.createSchemaData(username, SCHEMA_TYPE_EXTERNAL);
         ExternalSchema externalSchema = databaseHotelDataDao.registerExternalSchema(schemaData.getId(), jdbcUrl);
         databaseHotelDataDao.replaceLabels(schemaData.getId(), labelMap);
         SchemaUser user = databaseHotelDataDao.createUser(schemaData.getId(), SCHEMA.toString(), username, password);
@@ -95,7 +98,7 @@ public class ExternalSchemaManager {
         return new DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder).createOne(schemaData, schema, users,
             Optional.ofNullable(labels),
             Optional.of(new ResourceUsageCollector.SchemaSize(schemaData.getName(), BigDecimal.ZERO)),
-            DatabaseSchema.Type.EXTERNAL);
+            EXTERNAL);
     }
 
     public void replaceLabels(DatabaseSchema schema, Map<String, String> labels) {

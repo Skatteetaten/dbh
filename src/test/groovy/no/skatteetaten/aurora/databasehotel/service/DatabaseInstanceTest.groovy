@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import static java.util.Optional.of
+
 import no.skatteetaten.aurora.databasehotel.dao.dto.Schema
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
@@ -50,9 +52,10 @@ class DatabaseInstanceTest extends Specification {
       def password = "any_pass"
 
       databaseDao.createSchema(schemaName, password) >> schemaName
-      databaseDao.findSchemaByName(schemaName) >> Optional.of(new Schema(username: schemaName))
-      databaseHotelDataDao.createSchemaData(schemaName) >> new SchemaData(id: "A", name: schemaName)
-      databaseHotelDataDao.findSchemaDataByName(schemaName) >> Optional.of(new SchemaData(id: "A", name: schemaName))
+      databaseDao.findSchemaByName(schemaName) >> of(new Schema(username: schemaName))
+      def schemaData = new SchemaData(id: "A", name: schemaName, schemaType: DatabaseSchema.Type.MANAGED.name())
+      databaseHotelDataDao.createSchemaData(schemaName) >> schemaData
+      databaseHotelDataDao.findSchemaDataByName(schemaName) >> of(schemaData)
       databaseHotelDataDao.findAllUsersForSchema("A") >> [
           new SchemaUser(id: "USER", username: schemaName, password: password, type: "SCHEMA")
       ]
