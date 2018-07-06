@@ -51,8 +51,7 @@ class DatabaseHotelServiceTest extends Specification {
       databaseHotelService.createSchema(INSTANCE_NAME, labels)
 
     then:
-      1 * databaseInstance.createSchema(labels) >>
-          new DatabaseSchema(null, null, null, null, null, null, new DatabaseSchemaMetaData(0.0))
+      1 * databaseInstance.createSchema(labels) >> new DatabaseSchema(null, null, null, null, null, null, new DatabaseSchemaMetaData(0.0))
   }
 
   def "Update schema labels"() {
