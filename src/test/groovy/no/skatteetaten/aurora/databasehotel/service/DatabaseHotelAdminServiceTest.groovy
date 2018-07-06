@@ -6,7 +6,7 @@ import spock.lang.Specification
 
 class DatabaseHotelAdminServiceTest extends Specification {
 
-  def adminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, "db", 300000L)
+  def adminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L)
 
   def setup() {
 
@@ -24,7 +24,7 @@ class DatabaseHotelAdminServiceTest extends Specification {
   def "Register database instance"() {
 
     given:
-      adminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, "db", 300000L)
+      adminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L)
       def databaseInstance = Mock(DatabaseInstance)
       databaseInstance.getMetaInfo() >> new DatabaseInstanceMetaInfo("test", "localhost", 1521)
 
@@ -67,7 +67,7 @@ class DatabaseHotelAdminServiceTest extends Specification {
   def "Not specifying instance fails when several instances exist"() {
 
     given:
-      adminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, "db", 300000L)
+      adminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L)
 
     [createMockInstance("dev1", true),
      createMockInstance("dev2", true),

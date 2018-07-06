@@ -43,16 +43,19 @@ public class DatabaseHotelAdminService {
     private DatabaseInstanceInitializer databaseInstanceInitializer;
 
     private int cooldownAfterDeleteMonths;
+    private int cooldownDaysForOldUnusedSchemas;
     private String defaultInstanceName;
     private ExternalSchemaManager externalSchemaManager;
 
     public DatabaseHotelAdminService(DatabaseInstanceInitializer databaseInstanceInitializer,
         @Value("${databaseConfig.cooldownMonths}") int cooldownAfterDeleteMonths,
+        @Value("${databaseConfig.cooldownDaysForOldUnusedSchemas:1}") int cooldownDaysForOldUnusedSchemas,
         @Value("${databaseConfig.defaultInstanceName:}") String defaultInstanceName,
         @Value("${metrics.resourceUseCollectInterval}") Long resourceUseCollectInterval) {
 
         this.databaseInstanceInitializer = databaseInstanceInitializer;
         this.cooldownAfterDeleteMonths = cooldownAfterDeleteMonths;
+        this.cooldownDaysForOldUnusedSchemas = cooldownDaysForOldUnusedSchemas;
         this.defaultInstanceName = defaultInstanceName;
         this.resourceUseCollectInterval = resourceUseCollectInterval;
     }
@@ -94,9 +97,10 @@ public class DatabaseHotelAdminService {
         OracleResourceUsageCollector resourceUsageCollector =
             new OracleResourceUsageCollector(managementDataSource, resourceUseCollectInterval);
         DatabaseInstance databaseInstance = new DatabaseInstance(databaseInstanceMetaInfo, databaseManager,
-            databaseHotelDataDao, jdbcUrlBuilder, resourceUsageCollector, createSchemaAllowed);
+            databaseHotelDataDao, jdbcUrlBuilder, resourceUsageCollector, createSchemaAllowed,
+            cooldownAfterDeleteMonths, cooldownDaysForOldUnusedSchemas);
         ResidentsIntegration residentsIntegration =
-            new ResidentsIntegration(managementDataSource, cooldownAfterDeleteMonths);
+            new ResidentsIntegration(managementDataSource);
         databaseInstance.registerIntegration(residentsIntegration);
 
         registerDatabaseInstance(databaseInstance);

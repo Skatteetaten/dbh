@@ -25,7 +25,7 @@ class DatabaseInstanceTest extends Specification {
   def resourceUsageCollector = Mock(ResourceUsageCollector)
 
   def databaseInstance = new DatabaseInstance(databaseInstanceMetaInfo,
-      databaseDao, databaseHotelDataDao, Mock(JdbcUrlBuilder), resourceUsageCollector, true).with {
+      databaseDao, databaseHotelDataDao, Mock(JdbcUrlBuilder), resourceUsageCollector, true, 6, 1).with {
     it.registerIntegration(integration)
     it
   }
@@ -33,7 +33,7 @@ class DatabaseInstanceTest extends Specification {
   def "Create schema when schema creation is disabled fails"() {
     given:
       def databaseInstance = new DatabaseInstance(databaseInstanceMetaInfo,
-          databaseDao, databaseHotelDataDao, Mock(JdbcUrlBuilder), resourceUsageCollector, false).with {
+          databaseDao, databaseHotelDataDao, Mock(JdbcUrlBuilder), resourceUsageCollector, false, 6, 1).with {
         it.registerIntegration(integration)
         it
       }
