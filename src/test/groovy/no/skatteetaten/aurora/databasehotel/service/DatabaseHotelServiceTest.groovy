@@ -19,9 +19,10 @@ class DatabaseHotelServiceTest extends Specification {
   def "Delete schema for nonexisting instance"() {
 
     when:
-      new DatabaseHotelService(new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, "db", 300000L)).
-          deleteSchema("nosuchinstance", "does not matter")
-      new DatabaseHotelService(new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, "db", 300000L)).deleteSchema("nosuchinstance", "does not matter")
+      new DatabaseHotelService(new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L))
+          .deleteSchema("nosuchinstance", "does not matter")
+      new DatabaseHotelService(new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1,"db", 300000L))
+          .deleteSchema("nosuchinstance", "does not matter")
 
     then:
       thrown(DatabaseServiceException)
@@ -30,8 +31,8 @@ class DatabaseHotelServiceTest extends Specification {
   def "Create schema for non existing instance"() {
 
     when:
-      new DatabaseHotelService(new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, "db", 300000L)).
-          createSchema("nosuchlevel")
+      new DatabaseHotelService(new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L))
+          .createSchema("nosuchlevel")
 
     then:
       thrown(DatabaseServiceException)

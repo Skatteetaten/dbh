@@ -1,0 +1,2 @@
+select * from RESIDENTS where trunc(RESIDENT_REMOVE_AFTER) = TO_DATE('2018-08-16', 'YYYY-MM-DD');
+update RESIDENTS set resident_remove_after=TO_DATE('2018-04-13 13:30:00', 'YYYY-MM-DD HH24:MI:SS') where trunc(RESIDENT_REMOVE_AFTER) = TO_DATE('2018-08-16', 'YYYY-MM-DD');

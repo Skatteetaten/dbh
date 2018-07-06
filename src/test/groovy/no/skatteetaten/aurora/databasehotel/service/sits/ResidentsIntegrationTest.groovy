@@ -15,7 +15,7 @@ class ResidentsIntegrationTest extends Specification {
   @Shared
   HikariDataSource dataSource = Datasources.createTestDs()
 
-  def integration = new ResidentsIntegration(dataSource, 6)
+  def integration = new ResidentsIntegration(dataSource)
 
   DatabaseSchema schema = new DatabaseSchema("id", new DatabaseInstanceMetaInfo("A", "B", 1234), "jdbc", "schema_name",
       new Date(), new Date(), new DatabaseSchemaMetaData(0.0)).with {

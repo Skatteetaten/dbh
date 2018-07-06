@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.databasehotel.service.sits;
 
-import java.util.Calendar;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Map;
 
@@ -16,14 +18,11 @@ import no.skatteetaten.aurora.databasehotel.service.Integration;
 public class ResidentsIntegration implements Integration {
 
     private final JdbcTemplate jdbcTemplate;
-    private int cooldownAfterDeleteMonths;
 
-    public ResidentsIntegration(DataSource dataSource, int cooldownAfterDeleteMonths) {
+    public ResidentsIntegration(DataSource dataSource) {
 
         Validate.notNull(dataSource, "DataSource cannot be null");
-        Validate.inclusiveBetween(0, 36, cooldownAfterDeleteMonths);
         this.jdbcTemplate = new JdbcTemplate(dataSource);
-        this.cooldownAfterDeleteMonths = cooldownAfterDeleteMonths;
     }
 
     private static String createServiceNameFromLabels(Map<String, String> labels) {
@@ -47,19 +46,20 @@ public class ResidentsIntegration implements Integration {
     }
 
     @Override
-    public void onSchemaDeleted(DatabaseSchema databaseSchema) {
+    public void onSchemaDeleted(DatabaseSchema databaseSchema, Duration cooldownDuration) {
 
         Validate.notNull(databaseSchema, "DatabaseSchema cannot be null");
+        Validate.notNull(cooldownDuration, "cooldownDuration cannot be null");
 
         String schemaName = databaseSchema.getName();
-
-        Calendar c = Calendar.getInstance();
-        c.add(Calendar.MONTH, cooldownAfterDeleteMonths);
 
         if (!residentsEntryForSchemaExists(schemaName)) {
             createResidentsEntryForSchema(schemaName);
         }
-        setResidentsEntryRemoveAfter(schemaName, c.getTime());
+
+        LocalDateTime deleteAfterDate = LocalDateTime.now().plus(cooldownDuration);
+        Date out = Date.from(deleteAfterDate.atZone(ZoneId.systemDefault()).toInstant());
+        setResidentsEntryRemoveAfter(schemaName, out);
     }
 
     @Override
