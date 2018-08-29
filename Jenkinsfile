@@ -14,7 +14,7 @@ node {
   try {
     def overrides = [
        piTests: false, 
-       disableAllReports: true
+       disableAllReports: true,
        openshiftBaseImage: 'yeaster',
        openshiftBaseImageVersion: '1',
     ]
