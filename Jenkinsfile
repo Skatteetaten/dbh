@@ -15,8 +15,8 @@ node {
     def overrides = [
        piTests: false, 
        disableAllReports: true,
-       openshiftBaseImage: 'yeaster',
-       openshiftBaseImageVersion: '1',
+       openShiftBaseImage: 'yeaster',
+       openShiftBaseImageVersion: '1',
     ]
     jenkinsfile.gradle(version, overrides)
   } finally {
