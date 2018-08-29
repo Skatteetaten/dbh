@@ -12,7 +12,12 @@ node {
   }
 
   try {
-    def overrides = [piTests: false, disableAllReports: true]
+    def overrides = [
+       piTests: false, 
+       disableAllReports: true
+       openShiftBaseImage: 'yeaster',
+       openShiftBaseImageVersion: '1',
+    ]
     jenkinsfile.gradle(version, overrides)
   } finally {
     sh 'rm ~/.spring-boot-devtools.properties'
