@@ -54,9 +54,12 @@ public class DeprecatedEndpoints {
 
     @GetMapping("/schema/")
     @Timed
-    public ResponseEntity<ApiResponse> findAll(@RequestParam(name = "labels", required = false) String labelsParam) {
+    public ResponseEntity<ApiResponse> findAll(
+        @RequestParam(name = "labels", required = false) String labelsParam,
+        @RequestParam(name = "q", required = false) String query
+    ) {
 
-        return databaseSchemaController.findAll(labelsParam);
+        return databaseSchemaController.findAll(labelsParam, query);
     }
 
     @PostMapping("/schema/")
