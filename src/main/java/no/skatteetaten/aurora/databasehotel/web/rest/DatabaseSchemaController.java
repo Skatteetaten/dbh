@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.databasehotel.web.rest;
 
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 
 import static no.skatteetaten.aurora.databasehotel.utils.CollectionUtils.mapToList;
 import static no.skatteetaten.aurora.databasehotel.utils.MapUtils.kv;
@@ -41,6 +43,7 @@ public class DatabaseSchemaController {
     private final boolean schemaListingAllowed;
 
     private final boolean dropAllowed;
+
     private final DatabaseHotelService databaseHotelService;
 
     @Autowired
@@ -127,19 +130,27 @@ public class DatabaseSchemaController {
 
     @GetMapping("/")
     @Timed
-    public ResponseEntity<ApiResponse> findAll(@RequestParam(name = "labels", required = false) String labelsParam) {
+    public ResponseEntity<ApiResponse> findAll(
+        @RequestParam(name = "labels", required = false) String labelsParam,
+        @RequestParam(name = "q", required = false) String query
+    ) {
 
         if (!schemaListingAllowed) {
             throw new OperationDisabledException("Schema listing has been disabled for this instance");
         }
         Set<DatabaseSchema> schemas;
-        if (Strings.isNullOrEmpty(labelsParam)) {
+        if ("for-deletion".equals(query)) {
+            schemas = databaseHotelService.findAllDatabaseSchemasForDeletion();
+        } else if (Strings.isNullOrEmpty(labelsParam)) {
             schemas = databaseHotelService.findAllDatabaseSchemas();
         } else {
             Map<String, String> labels = parseLabelsParam(labelsParam);
             schemas = databaseHotelService.findAllDatabaseSchemasByLabels(labels);
         }
-        List<Map<String, Object>> resources = mapToList(schemas, DatabaseSchemaController::toResource);
+        List<DatabaseSchema> sortedSchemas = schemas.stream()
+            .sorted(comparing(DatabaseSchema::getLastUsedDate)).collect(toList());
+
+        List<Map<String, Object>> resources = mapToList(sortedSchemas, DatabaseSchemaController::toResource);
         return Responses.okResponse(resources);
     }
 

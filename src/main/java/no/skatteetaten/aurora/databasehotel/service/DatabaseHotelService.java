@@ -2,11 +2,13 @@ package no.skatteetaten.aurora.databasehotel.service;
 
 import static java.lang.String.format;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -72,6 +74,14 @@ public class DatabaseHotelService {
                 schemas.addAll(SchemaLabelMatcher.findAllMatchingSchemas(externalSchemas, labelsToMatch));
             });
         return schemas;
+    }
+
+    public Set<DatabaseSchema> findAllDatabaseSchemasForDeletion() {
+
+        return databaseHotelAdminService.findAllDatabaseInstances().stream()
+            .map(DatabaseInstance::findAllSchemasForDeletion)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
     }
 
     public DatabaseSchema createSchema() {

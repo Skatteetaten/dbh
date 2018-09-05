@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,23 +37,34 @@ import no.skatteetaten.aurora.databasehotel.utils.Assert;
 public class DatabaseInstance {
 
     public static final int DAYS_BACK = -7;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseInstance.class);
+
     private static final int RANDOM_LENGTH = 30;
+
     private final DatabaseInstanceMetaInfo metaInfo;
+
     private final DatabaseManager databaseManager;
+
     private final DatabaseHotelDataDao databaseHotelDataDao;
+
     private final JdbcUrlBuilder jdbcUrlBuilder;
+
     private final ResourceUsageCollector resourceUsageCollector;
+
     private List<Integration> integrations = new ArrayList<>();
+
     private SchemaNamePasswordStrategy schemaNamePasswordStrategy = () -> {
         String schemaName = RandomStringUtils.randomAlphabetic(RANDOM_LENGTH);
         String password = RandomStringUtils.randomAlphabetic(RANDOM_LENGTH);
         return Pair.of(schemaName, password);
     };
-    private final boolean createSchemaAllowed;
-    private final int cooldownAfterDeleteMonths;
-    private final int cooldownDaysForOldUnusedSchemas;
 
+    private final boolean createSchemaAllowed;
+
+    private final int cooldownAfterDeleteMonths;
+
+    private final int cooldownDaysForOldUnusedSchemas;
 
     public DatabaseInstance(DatabaseInstanceMetaInfo metaInfo, DatabaseManager databaseManager,
         DatabaseHotelDataDao databaseHotelDataDao,
@@ -178,19 +190,20 @@ public class DatabaseInstance {
         if (deleteParams.isAssertExists()) {
             optionalSchema
                 .orElseThrow(() -> new DatabaseServiceException(String.format("No schema named [%s]", schemaName)));
-        } else {
-            if (!optionalSchema.isPresent()) {
-                return;
-            }
         }
 
-        Optional<SchemaData> schemaDataOption = databaseHotelDataDao.findSchemaDataByName(schemaName);
-        schemaDataOption.ifPresent(schemaData -> {
-            LOGGER.info("Deleting schema name={}, id={}", schemaData.getName(), schemaData.getId());
-            databaseHotelDataDao.deactivateSchemaData(schemaData.getId());
+        optionalSchema.ifPresent(databaseSchema -> {
+            databaseHotelDataDao.findSchemaDataByName(schemaName).ifPresent(schemaData -> {
+                Date lastUsedDate = databaseSchema.getLastUsedDate();
+                String lastUsedString = lastUsedDate != null ? lastUsedDate.toInstant().toString() : "Never";
+                LOGGER.info("Deleting schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}",
+                    schemaData.getId(), lastUsedString, databaseSchema.getSizeMb(), schemaData.getName(),
+                    databaseSchema.getLabels());
+                databaseHotelDataDao.deactivateSchemaData(schemaData.getId());
+            });
+            integrations.forEach(
+                integration -> integration.onSchemaDeleted(databaseSchema, deleteParams.getCooldownDuration()));
         });
-        integrations.forEach(
-            integration -> integration.onSchemaDeleted(optionalSchema.get(), deleteParams.getCooldownDuration()));
     }
 
     @Transactional
@@ -202,20 +215,31 @@ public class DatabaseInstance {
     @Transactional
     public void deleteUnusedSchemas() {
 
-        LOGGER.info("Deleting schemas that have never been accessed and that was created more than {} days ago",
-            Math.abs(DAYS_BACK));
+        LOGGER.info("Deleting schemas old unused schemas for server {}", metaInfo.getInstanceName());
+
+        Set<DatabaseSchema> schemas = findAllSchemasForDeletion();
+        LOGGER.info("Found {} old and unused schemas", schemas.size());
+        schemas.parallelStream().forEach(schema -> {
+            deleteSchema(schema.getName(), new DeleteParams(Duration.ofDays(cooldownDaysForOldUnusedSchemas)));
+        });
+    }
+
+    public Set<DatabaseSchema> findAllSchemasForDeletion() {
 
         Calendar c = Calendar.getInstance();
         c.add(Calendar.DAY_OF_MONTH, DAYS_BACK);
         Date daysAgo = c.getTime();
 
-        List<DatabaseSchema> schemas = findAllSchemas(null).stream()
-            .filter(DatabaseSchema::isUnused)
-            .filter(s -> s.getCreatedDate().before(daysAgo)).collect(Collectors.toList());
-        LOGGER.info("Found {} old and unused schemas", schemas.size());
-        schemas.parallelStream().forEach(schema -> {
-            deleteSchema(schema.getName(), new DeleteParams(Duration.ofDays(cooldownDaysForOldUnusedSchemas)));
-        });
+        return findAllSchemas(null).stream()
+            .filter(it -> {
+                Map<String, String> labels = it.getLabels() != null ? it.getLabels() : new HashMap<>();
+                boolean isSystemTest = labels.getOrDefault("userId", "").endsWith(":jenkins-builder");
+                return it.isUnused() || isSystemTest;
+            })
+            .filter(s -> s.getLastUsedDate() != null
+                ? s.getLastUsedDate().before(daysAgo)
+                : s.getCreatedDate().before(daysAgo))
+            .collect(Collectors.toSet());
     }
 
     @Transactional
@@ -232,6 +256,7 @@ public class DatabaseInstance {
     }
 
     public boolean isCreateSchemaAllowed() {
+
         return createSchemaAllowed;
     }
 
@@ -247,10 +272,12 @@ public class DatabaseInstance {
     }
 
     public ResourceUsageCollector getResourceUsageCollector() {
+
         return resourceUsageCollector;
     }
 
     public DatabaseHotelDataDao getDatabaseHotelDataDao() {
+
         return databaseHotelDataDao;
     }
 
