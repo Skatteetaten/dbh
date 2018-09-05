@@ -63,6 +63,10 @@ public class DatabaseSchema {
         return lastUsedDate;
     }
 
+    public Date getLastUsedOrCreatedDate() {
+        return lastUsedDate != null ? lastUsedDate : createdDate;
+    }
+
     public void addUser(User user) {
 
         this.users.removeIf(u -> u.getName().equals(user.getName()));

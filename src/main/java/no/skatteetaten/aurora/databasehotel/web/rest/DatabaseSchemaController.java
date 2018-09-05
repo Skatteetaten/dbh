@@ -148,7 +148,7 @@ public class DatabaseSchemaController {
             schemas = databaseHotelService.findAllDatabaseSchemasByLabels(labels);
         }
         List<DatabaseSchema> sortedSchemas = schemas.stream()
-            .sorted(comparing(DatabaseSchema::getLastUsedDate)).collect(toList());
+            .sorted(comparing(DatabaseSchema::getLastUsedOrCreatedDate)).collect(toList());
 
         List<Map<String, Object>> resources = mapToList(sortedSchemas, DatabaseSchemaController::toResource);
         return Responses.okResponse(resources);

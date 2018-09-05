@@ -236,9 +236,7 @@ public class DatabaseInstance {
                 boolean isSystemTest = labels.getOrDefault("userId", "").endsWith(":jenkins-builder");
                 return it.isUnused() || isSystemTest;
             })
-            .filter(s -> s.getLastUsedDate() != null
-                ? s.getLastUsedDate().before(daysAgo)
-                : s.getCreatedDate().before(daysAgo))
+            .filter(s -> s.getLastUsedOrCreatedDate().before(daysAgo))
             .collect(Collectors.toSet());
     }
 
