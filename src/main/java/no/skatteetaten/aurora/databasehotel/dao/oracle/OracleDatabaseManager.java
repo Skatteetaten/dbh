@@ -46,6 +46,7 @@ public class OracleDatabaseManager extends DatabaseSupport implements DatabaseMa
                 schemaNameValid, dataFolder, schemaNameValid),
             format("create user %s identified by %s default tablespace %s", schemaNameValid, password, schemaNameValid),
             format("grant connect,resource to %s", schemaNameValid),
+            format("grant create view to %s", schemaNameValid),
             format("alter user %s quota unlimited on %s", schemaNameValid, schemaNameValid),
             format("alter user %s profile APP_USER", schemaNameValid)
         };
