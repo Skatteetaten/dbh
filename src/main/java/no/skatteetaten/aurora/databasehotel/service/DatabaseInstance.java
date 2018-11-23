@@ -198,9 +198,9 @@ public class DatabaseInstance {
             databaseHotelDataDao.findSchemaDataByName(schemaName).ifPresent(schemaData -> {
                 Date lastUsedDate = databaseSchema.getLastUsedDate();
                 String lastUsedString = lastUsedDate != null ? lastUsedDate.toInstant().toString() : "Never";
-                LOGGER.info("Deleting schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}",
+                LOGGER.info("Deleting schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}. Setting cooldown={}h",
                     schemaData.getId(), lastUsedString, databaseSchema.getSizeMb(), schemaData.getName(),
-                    databaseSchema.getLabels());
+                    databaseSchema.getLabels(), deleteParams.getCooldownDuration().toHours());
                 databaseHotelDataDao.deactivateSchemaData(schemaData.getId());
             });
             integrations.forEach(
