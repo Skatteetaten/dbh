@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -207,9 +209,13 @@ public class DatabaseInstance {
     }
 
     @Transactional
-    public void deleteSchema(String schemaName) {
+    public void deleteSchema(String schemaName, @Nullable Duration cooldownDuration) {
 
-        deleteSchema(schemaName, new DeleteParams(Duration.ofDays(30 * cooldownAfterDeleteMonths)));
+        if (cooldownDuration == null) {
+            cooldownDuration = Duration.ofDays(30 * cooldownAfterDeleteMonths);
+        }
+
+        deleteSchema(schemaName, new DeleteParams(cooldownDuration));
     }
 
     @Transactional
@@ -220,7 +226,7 @@ public class DatabaseInstance {
         Set<DatabaseSchema> schemas = findAllSchemasForDeletion();
         LOGGER.info("Found {} old and unused schemas", schemas.size());
         schemas.parallelStream().forEach(schema -> {
-            deleteSchema(schema.getName(), new DeleteParams(Duration.ofDays(cooldownDaysForOldUnusedSchemas)));
+            deleteSchema(schema.getName(), Duration.ofDays(cooldownDaysForOldUnusedSchemas));
         });
     }
 

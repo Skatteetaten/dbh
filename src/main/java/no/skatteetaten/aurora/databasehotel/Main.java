@@ -21,7 +21,7 @@ public class Main implements InitializingBean {
     @Autowired
     private DbhInitializer dbhInitializer;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         mapEnvironmentVarsToSystemProperties();
 

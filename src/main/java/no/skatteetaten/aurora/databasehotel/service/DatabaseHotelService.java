@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.databasehotel.service;
 
 import static java.lang.String.format;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -9,6 +10,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -104,26 +107,19 @@ public class DatabaseHotelService {
         return schema;
     }
 
-    public void deleteSchemaById(String id) {
+    public void deleteSchemaById(String id, @Nullable Duration cooldownDuration) {
 
         findSchemaById(id).ifPresent(schemaAndInstance -> {
             DatabaseSchema schema = schemaAndInstance.getLeft();
             DatabaseInstance databaseInstance = schemaAndInstance.getRight();
             if (databaseInstance != null) {
-                databaseInstance.deleteSchema(schema.getName());
+                databaseInstance.deleteSchema(schema.getName(), cooldownDuration);
             } else {
                 // If the schema was not found on a database instance, it is an external schema
                 databaseHotelAdminService.getExternalSchemaManager()
                     .ifPresent(externalSchemaManager -> externalSchemaManager.deleteSchema(id));
             }
         });
-    }
-
-    public void deleteSchema(String instanceName, String schema) {
-
-        DatabaseInstance databaseInstance = databaseHotelAdminService.findDatabaseInstanceByHost(instanceName)
-            .orElseThrow(() -> new DatabaseServiceException(format("No instance named [%s]", instanceName)));
-        databaseInstance.deleteSchema(schema);
     }
 
     public DatabaseSchema updateSchema(String id, Map<String, String> labels) {

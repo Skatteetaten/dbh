@@ -16,18 +16,6 @@ class DatabaseHotelServiceTest extends Specification {
 
   def databaseHotelService = new DatabaseHotelService(adminService)
 
-  def "Delete schema for nonexisting instance"() {
-
-    when:
-      new DatabaseHotelService(new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L))
-          .deleteSchema("nosuchinstance", "does not matter")
-      new DatabaseHotelService(new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1,"db", 300000L))
-          .deleteSchema("nosuchinstance", "does not matter")
-
-    then:
-      thrown(DatabaseServiceException)
-  }
-
   def "Create schema for non existing instance"() {
 
     when:

@@ -9,6 +9,7 @@ import static no.skatteetaten.aurora.databasehotel.utils.MapUtils.kv;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -118,13 +120,15 @@ public class DatabaseSchemaController {
 
     @DeleteMapping(value = "/{id}")
     @Timed
-    public ResponseEntity<ApiResponse> deleteById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse> deleteById(@PathVariable String id,
+        @RequestHeader(name = "cooldown-duration-hours", required = false) Integer cooldownDurationHours) {
 
         if (!dropAllowed) {
             throw new OperationDisabledException("Schema deletion has been disabled for this instance");
         }
 
-        databaseHotelService.deleteSchemaById(id);
+        Duration cooldownDuration = cooldownDurationHours != null ? Duration.ofHours(cooldownDurationHours) : null;
+        databaseHotelService.deleteSchemaById(id, cooldownDuration);
         return Responses.okResponse();
     }
 
