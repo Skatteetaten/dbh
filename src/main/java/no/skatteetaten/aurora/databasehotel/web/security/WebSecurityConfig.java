@@ -24,6 +24,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${aurora.authenticationEnabled:true}")
     private boolean authenticationEnabled;
 
+    @Value("${management.server.port:8081}")
+    private Integer managementPort;
+
     @Bean
     SharedSecretAuthenticationManager sharedSecretAuthenticationManager() {
 
@@ -56,13 +59,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.csrf().disable();
 
+
         if (authenticationEnabled) {
             http.authenticationProvider(preAuthenticationProvider())
                 .addFilter(requestHeaderAuthenticationFilter())
                 .authorizeRequests()
-                .antMatchers("/prometheus").permitAll()
-                .antMatchers("/health").permitAll()
-                .antMatchers("/info").permitAll()
+                .requestMatchers(request -> managementPort == request.getLocalPort()).permitAll()
                 .anyRequest().hasAuthority("admin");
         }
     }
