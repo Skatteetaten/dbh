@@ -16,10 +16,10 @@ class Datasources {
 
     Environment environment = TestConfig.loadTestConfig()
 
-    String host = environment.getProperty("databaseConfig.databases[0].host")
-    String service = environment.getProperty("databaseConfig.databases[0].service")
-    user = user ?: environment.getProperty("databaseConfig.databases[0].username")
-    password = password ?: environment.getProperty("databaseConfig.databases[0].password")
+    String host = environment.getProperty("database-config.databases[0].host")
+    String service = environment.getProperty("database-config.databases[0].service")
+    user = user ?: environment.getProperty("database-config.databases[0].username")
+    password = password ?: environment.getProperty("database-config.databases[0].password")
 
     DataSourceUtils.createDataSource(createJdbcUrl(host, port, service), user, password)
   }

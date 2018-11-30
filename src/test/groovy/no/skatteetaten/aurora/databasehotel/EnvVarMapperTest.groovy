@@ -31,7 +31,7 @@ class EnvVarMapperTest extends Specification {
       EnvVarMapper.mapEnvironmentVarsToSystemProperties()
 
     then:
-      def props = System.properties.findAll { it ==~ /databaseConfig.databases\[\d+\].*/ }
+      def props = System.properties.findAll { it ==~ /database-config.databases\[\d+\].*/ }
       props.size() == 12
   }
 }

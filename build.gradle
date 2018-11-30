@@ -37,9 +37,10 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'no.skatteetaten.plugins.aurora'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
-//[jar, distZip]*.enabled = true
-//[bootJar, distTar, bootDistTar, bootDistZip]*.enabled = false
-//configurations.archives.artifacts.removeIf { !it.archiveTask.enabled }
+[jar, distZip]*.enabled = true
+[bootJar, distTar, bootDistTar, bootDistZip]*.enabled = false
+configurations.archives.artifacts.removeIf { !it.delegate.archiveTask.enabled }
+
 
 group = 'no.skatteetaten.aurora'
 
@@ -62,12 +63,8 @@ dependencies {
   )
 
   testCompile(
-      "org.codehaus.groovy:groovy-all:2.4.4",
-      "org.spockframework:spock-core:1.1-groovy-2.4-rc-3",
-      "org.spockframework:spock-spring:1.1-groovy-2.4-rc-3",
+      "org.spockframework:spock-spring:1.2-groovy-2.5",
       "org.springframework.boot:spring-boot-starter-test",
-      "cglib:cglib-nodep:3.1",
-      "org.objenesis:objenesis:2.1",
       "org.springframework.restdocs:spring-restdocs-mockmvc"
   )
 }
