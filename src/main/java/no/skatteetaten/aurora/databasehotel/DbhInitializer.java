@@ -34,7 +34,7 @@ public class DbhInitializer {
 
     private DbhConfiguration configuration;
 
-    @Value("${databaseConfig.retryDelay}")
+    @Value("${database-config.retryDelay}")
     private Integer retryDelay;
 
     @Autowired

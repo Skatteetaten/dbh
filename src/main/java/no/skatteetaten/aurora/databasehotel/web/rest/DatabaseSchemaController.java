@@ -50,8 +50,8 @@ public class DatabaseSchemaController {
 
     @Autowired
     public DatabaseSchemaController(DatabaseHotelService databaseHotelService,
-        @Value("${databaseConfig.schemaListingAllowed}") boolean schemaListingAllowed,
-        @Value("${databaseConfig.dropAllowed}") boolean dropAllowed) {
+        @Value("${database-config.schemaListingAllowed}") boolean schemaListingAllowed,
+        @Value("${database-config.dropAllowed}") boolean dropAllowed) {
 
         this.databaseHotelService = databaseHotelService;
         this.schemaListingAllowed = schemaListingAllowed;

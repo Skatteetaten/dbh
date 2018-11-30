@@ -2,7 +2,7 @@ spring:
   profiles:
     active: development
     
-databaseConfig:
+database-config:
   databases: []
   retryDelay: 60000
   dropAllowed: false
@@ -32,7 +32,7 @@ aurora:
 spring:
   profiles: development
 
-databaseConfig:
+database-config:
   dropAllowed: true
   schemaListingAllowed: true
   defaultInstanceName: "${dbh.dev.db.instanceName:dev}"

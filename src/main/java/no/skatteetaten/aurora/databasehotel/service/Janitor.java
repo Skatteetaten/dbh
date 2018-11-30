@@ -16,7 +16,7 @@ public class Janitor {
 
     public Janitor(
         DatabaseHotelAdminService databaseHotelAdminService,
-        @Value("${databaseConfig.dropAllowed}") boolean dropAllowed
+        @Value("${database-config.dropAllowed}") boolean dropAllowed
     ) {
 
         this.databaseHotelAdminService = databaseHotelAdminService;

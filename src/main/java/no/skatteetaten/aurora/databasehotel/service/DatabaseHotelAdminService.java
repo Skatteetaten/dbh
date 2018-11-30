@@ -48,9 +48,9 @@ public class DatabaseHotelAdminService {
     private ExternalSchemaManager externalSchemaManager;
 
     public DatabaseHotelAdminService(DatabaseInstanceInitializer databaseInstanceInitializer,
-        @Value("${databaseConfig.cooldownMonths}") int cooldownAfterDeleteMonths,
-        @Value("${databaseConfig.cooldownDaysForOldUnusedSchemas:1}") int cooldownDaysForOldUnusedSchemas,
-        @Value("${databaseConfig.defaultInstanceName:}") String defaultInstanceName,
+        @Value("${database-config.cooldownMonths}") int cooldownAfterDeleteMonths,
+        @Value("${database-config.cooldownDaysForOldUnusedSchemas:1}") int cooldownDaysForOldUnusedSchemas,
+        @Value("${database-config.defaultInstanceName:}") String defaultInstanceName,
         @Value("${metrics.resourceUseCollectInterval}") Long resourceUseCollectInterval) {
 
         this.databaseInstanceInitializer = databaseInstanceInitializer;
@@ -168,7 +168,7 @@ public class DatabaseHotelAdminService {
         }
         if (Strings.isNullOrEmpty(defaultInstanceName)) {
             throw new DatabaseServiceException("More than one database instance registered but "
-                + "databaseConfig.defaultInstanceName has not been specified.");
+                + "database-config.defaultInstanceName has not been specified.");
         }
         return findDatabaseInstanceByInstanceName(defaultInstanceName)
             .orElseThrow(() -> new DatabaseServiceException(format("Unable to find database instance %s among "
