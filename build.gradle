@@ -52,14 +52,15 @@ dependencies {
       "org.springframework.boot:spring-boot-starter-security",
       "org.springframework.boot:spring-boot-starter-aop",
       "org.springframework.boot:spring-boot-starter-actuator",
+      "org.springframework.boot:spring-boot-starter-jdbc",
 
-      "org.apache.commons:commons-lang3:3.5",
-      "com.google.guava:guava:23.5-jre",
+      "org.apache.commons:commons-lang3",
+      "com.google.guava:guava:27.0.1-jre",
 
-      "com.oracle:ojdbc7:12.1.0.2",
-      "org.springframework:spring-jdbc",
-      "com.zaxxer:HikariCP:2.4.1",
-      "org.flywaydb:flyway-core:4.0.3"
+//      "com.oracle:ojdbc7:12.1.0.2",
+//      "com.oracle:ojdbc14:10.2.0.4.0",l
+      "com.oracle:ojdbc8:12.2.0.1",
+      "org.flywaydb:flyway-core"
   )
 
   testCompile(
