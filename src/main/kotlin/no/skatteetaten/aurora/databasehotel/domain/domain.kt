@@ -27,7 +27,7 @@ data class DatabaseSchema @JvmOverloads constructor(
     val name: String,
     val createdDate: Date,
     val lastUsedDate: Date?,
-    private val _metaData: DatabaseSchemaMetaData,
+    private val _metaData: DatabaseSchemaMetaData?,
     val type: Type = Type.MANAGED
 ) {
     private val _users = HashSet<User>()
@@ -54,7 +54,7 @@ data class DatabaseSchema @JvmOverloads constructor(
             this._labels.putAll(labels)
         }
 
-    val metadata get() : Optional<DatabaseSchemaMetaData> = Optional.ofNullable(_metaData)
+    val metadata get(): Optional<DatabaseSchemaMetaData> = Optional.ofNullable(_metaData)
 
     enum class Type {
         MANAGED,

@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.service
 
 import no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceInitializer
+import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData
 import spock.lang.Specification
@@ -39,7 +40,7 @@ class DatabaseHotelServiceTest extends Specification {
       databaseHotelService.createSchema(INSTANCE_NAME, labels)
 
     then:
-      1 * databaseInstance.createSchema(labels) >> new DatabaseSchema(null, null, null, null, null, null, new DatabaseSchemaMetaData(0.0))
+      1 * databaseInstance.createSchema(labels) >> databaseSchema()
   }
 
   def "Update schema labels"() {
@@ -48,7 +49,7 @@ class DatabaseHotelServiceTest extends Specification {
       def databaseInstance = Mock(DatabaseInstance)
 
       adminService.findAllDatabaseInstances() >> [databaseInstance]
-      def databaseSchema = new DatabaseSchema("some_id", null, null, null, null, null, null)
+      def databaseSchema = databaseSchema("some_id")
       databaseInstance.findSchemaById(databaseSchema.id) >> Optional.of(databaseSchema)
 
       Map<String, String> labels = [deploymentId: "TestDeployment"]
@@ -58,5 +59,9 @@ class DatabaseHotelServiceTest extends Specification {
 
     then:
       1 * databaseInstance.replaceLabels(databaseSchema, labels)
+  }
+
+  private static DatabaseSchema databaseSchema(String id="id") {
+    new DatabaseSchema(id, new DatabaseInstanceMetaInfo("name", "host", 0), "-", "-", new Date(), new Date(), new DatabaseSchemaMetaData(0.0))
   }
 }

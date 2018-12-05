@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData
+import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
 import spock.lang.Specification
 
 class DatabaseInstanceTest extends Specification {
@@ -25,7 +26,7 @@ class DatabaseInstanceTest extends Specification {
   def resourceUsageCollector = Mock(ResourceUsageCollector)
 
   def databaseInstance = new DatabaseInstance(databaseInstanceMetaInfo,
-      databaseDao, databaseHotelDataDao, Mock(JdbcUrlBuilder), resourceUsageCollector, true, 6, 1).with {
+      databaseDao, databaseHotelDataDao, new OracleJdbcUrlBuilder("service"), resourceUsageCollector, true, 6, 1).with {
     it.registerIntegration(integration)
     it
   }
@@ -52,7 +53,7 @@ class DatabaseInstanceTest extends Specification {
       def password = "any_pass"
 
       databaseDao.createSchema(schemaName, password) >> schemaName
-      databaseDao.findSchemaByName(schemaName) >> of(new Schema(username: schemaName))
+      databaseDao.findSchemaByName(schemaName) >> of(new Schema(username: schemaName, created: new Date()))
       def schemaData = new SchemaData(id: "A", name: schemaName, schemaType: DatabaseSchema.Type.MANAGED.name())
       databaseHotelDataDao.createSchemaData(schemaName) >> schemaData
       databaseHotelDataDao.findSchemaDataByName(schemaName) >> of(schemaData)
@@ -97,17 +98,11 @@ class DatabaseInstanceTest extends Specification {
       1 * databaseHotelDataDao.replaceLabels(schema.id, [deploymentId: "SomeDeploymentId"])
   }
 
-  def "Replace labels with empty or null removes all labels"() {
+  def "Replace labels with empty removes all labels"() {
 
     given:
       DatabaseSchema schema = new DatabaseSchema("id", databaseInstanceMetaInfo, "", "", new Date(), new Date(),
           new DatabaseSchemaMetaData(0.0))
-
-    when:
-      databaseInstance.replaceLabels(schema, null)
-
-    then:
-      schema.labels == [:]
 
     when:
       databaseInstance.replaceLabels(schema, [:])

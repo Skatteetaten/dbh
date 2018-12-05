@@ -1,4 +1,6 @@
 buildscript {
+  ext.junitVersion="5.3.1"
+
   ext.addRepos = {
     mavenLocal()
     mavenCentral()
@@ -61,12 +63,34 @@ dependencies {
       "com.google.guava:guava:27.0.1-jre",
 
       "com.oracle:ojdbc8:12.2.0.1",
+      "org.postgresql:postgresql:42.2.5",
+
       "org.flywaydb:flyway-core"
   )
 
   testCompile(
       "org.spockframework:spock-spring:1.2-groovy-2.5",
       "org.springframework.boot:spring-boot-starter-test",
-      "org.springframework.restdocs:spring-restdocs-mockmvc"
+      "org.springframework.restdocs:spring-restdocs-mockmvc",
+      "io.mockk:mockk:1.8.12",
+      "com.willowtreeapps.assertk:assertk:0.10",
+      "org.junit.jupiter:junit-jupiter-params:$junitVersion",
+      "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+  )
+  testImplementation(
+      "com.squareup.okhttp3:mockwebserver:3.11.0"
+  )
+  testRuntimeOnly(
+      "org.junit.jupiter:junit-jupiter-engine:$junitVersion",
+      "org.junit.vintage:junit-vintage-engine:$junitVersion"
   )
 }
+
+test {
+  maxHeapSize = "512m"
+  useJUnitPlatform()
+
+}
+compileTestGroovy.dependsOn compileTestKotlin
+compileTestGroovy.classpath += files(compileTestKotlin.destinationDir)
+testClasses.dependsOn compileTestGroovy
