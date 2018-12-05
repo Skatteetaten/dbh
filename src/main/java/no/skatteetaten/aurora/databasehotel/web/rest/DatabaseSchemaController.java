@@ -75,7 +75,7 @@ public class DatabaseSchemaController {
             kv("labels", schema.getLabels()),
             kv("metadata", new HashMap<String, Object>() {
                 {
-                    put("sizeInMb", schema.getMetaData().map(DatabaseSchemaMetaData::getSizeInMb).orElse(null));
+                    put("sizeInMb", schema.getMetadata().map(DatabaseSchemaMetaData::getSizeInMb).orElse(null));
                 }
             })
         );
