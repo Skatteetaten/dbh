@@ -13,7 +13,7 @@ import com.google.common.base.Joiner;
 
 import no.skatteetaten.aurora.databasehotel.utils.CollectionUtils;
 
-@ConfigurationProperties(prefix = "databaseConfig")
+@ConfigurationProperties(prefix = "database-config")
 @Component
 public class DbhConfiguration {
 

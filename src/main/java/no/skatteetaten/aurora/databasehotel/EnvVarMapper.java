@@ -69,7 +69,7 @@ public class EnvVarMapper {
             .collect(Collectors.toList());
 
         databaseConfigs.forEach(dbConfig -> {
-            String propertyName = format("databaseConfig.databases[%s].%s", dbConfig.index, dbConfig.propertyName);
+            String propertyName = format("database-config.databases[%s].%s", dbConfig.index, dbConfig.propertyName);
             System.setProperty(propertyName, dbConfig.value);
         });
     }

@@ -12,15 +12,15 @@ class DbhInitializerTest extends Specification {
 
   def dbConfig = [
       "dbhost.example.com", // This server does not exist an cannot be connected to
-      testConfig.getProperty("databaseConfig.databases[0].host")
+      testConfig.getProperty("database-config.databases[0].host")
   ].collect { host ->
     [
         host         : host,
-        service      : testConfig.getProperty("databaseConfig.databases[0].service"),
+        service      : testConfig.getProperty("database-config.databases[0].service"),
         instanceName : "test-dev",
-        username     : testConfig.getProperty("databaseConfig.databases[0].username"),
-        password     : testConfig.getProperty("databaseConfig.databases[0].password"),
-        clientService: testConfig.getProperty("databaseConfig.databases[0].clientService")
+        username     : testConfig.getProperty("database-config.databases[0].username"),
+        password     : testConfig.getProperty("database-config.databases[0].password"),
+        clientService: testConfig.getProperty("database-config.databases[0].clientService")
     ]
   }
 

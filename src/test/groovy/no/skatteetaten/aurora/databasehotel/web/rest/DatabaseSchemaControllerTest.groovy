@@ -11,6 +11,7 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
+import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedRequestFields
 import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields
@@ -146,7 +147,7 @@ class DatabaseSchemaControllerTest extends Specification {
           .andDo(
           document('schemas-post',
               preprocessResponse(prettyPrint()),
-              requestFields(
+              relaxedRequestFields(
                   fieldWithPath("labels").type(JsonFieldType.OBJECT).optional().
                       description(
                           "Labels til skjemaet som opprettes. Kan brukes til å indikere eier og andre metadata, og kan også brukes til filtrering."),
@@ -192,7 +193,7 @@ class DatabaseSchemaControllerTest extends Specification {
           .andDo(
           document('schemas-post-external',
               preprocessResponse(prettyPrint()),
-              requestFields(
+              relaxedRequestFields(
                   fieldWithPath("labels").type(JsonFieldType.OBJECT).optional().
                       description(
                           "Labels til skjemaet som opprettes. Kan brukes til å indikere eier og andre metadata, og kan også brukes til filtrering."),

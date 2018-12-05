@@ -1,4 +1,4 @@
-databaseConfig:
+database-config:
   retryDelay: 60000
   dropAllowed: true
   schemaListingAllowed: true
@@ -17,10 +17,11 @@ databaseConfig:
 metrics:
   resourceUseCollectInterval: "300000"
 
-flyway:
-  out-of-order: true
-
 aurora:
   token:
     headerValuePrefix: aurora-token
     value: shared-secret
+
+spring:
+    flyway:
+        out-of-order: true

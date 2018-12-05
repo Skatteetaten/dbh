@@ -78,8 +78,16 @@ class OracleResourceUsageCollectorTest extends AbstractOracleSpec {
 
   private static DataSource cleanUpPreviousRun(DatabaseManager databaseManager) {
 
-    databaseManager.deleteSchema(DEFAULT_SCHEMA_NAME)
-    databaseManager.createSchema(DEFAULT_SCHEMA_NAME, DEFAULT_SCHEMA_NAME)
+    def attempts = 3
+    while(attempts != 0) {
+      try {
+        databaseManager.deleteSchema(DEFAULT_SCHEMA_NAME)
+        databaseManager.createSchema(DEFAULT_SCHEMA_NAME, DEFAULT_SCHEMA_NAME)
+        break
+      } catch (Exception e) {
+        attempts --
+      }
+    }
     def dataSource = Datasources.createTestDs(DEFAULT_SCHEMA_NAME, DEFAULT_SCHEMA_NAME)
 
     TEST_SCHEMAS.each { tableName ->
