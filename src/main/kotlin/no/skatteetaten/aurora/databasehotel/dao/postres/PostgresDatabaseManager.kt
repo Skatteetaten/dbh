@@ -8,9 +8,6 @@ import java.util.Optional
 import javax.sql.DataSource
 
 class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSource), DatabaseManager {
-    override fun getCurrentUserName(): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
     override fun createSchema(schemaName: String, password: String): String {
 
