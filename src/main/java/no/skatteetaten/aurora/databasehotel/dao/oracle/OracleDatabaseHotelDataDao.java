@@ -18,6 +18,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport;
 import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema;
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData;
@@ -45,7 +46,8 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     public SchemaData createSchemaData(String name, String schemaType) {
 
         String id = generateId();
-        jdbcTemplate.update("insert into SCHEMA_DATA (id, name, schema_type) values (?, ?, ?)", id, name, schemaType);
+        getJdbcTemplate()
+            .update("insert into SCHEMA_DATA (id, name, schema_type) values (?, ?, ?)", id, name, schemaType);
         return findSchemaDataById(id).orElseThrow(() -> new DataAccessException("Unable to create schema data"));
     }
 
@@ -66,13 +68,13 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     @Override
     public void deleteSchemaData(String id) {
 
-        jdbcTemplate.update("delete from SCHEMA_DATA where id=?", id);
+        getJdbcTemplate().update("delete from SCHEMA_DATA where id=?", id);
     }
 
     @Override
     public void deactivateSchemaData(String id) {
 
-        jdbcTemplate.update("update SCHEMA_DATA set active=0 where id=?", id);
+        getJdbcTemplate().update("update SCHEMA_DATA set active=0 where id=?", id);
     }
 
     @Override
@@ -97,7 +99,7 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
      */
     public List<SchemaData> findAllManagedSchemaDataByLabels(Map<String, String> labels) {
 
-        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(getJdbcTemplate());
         MapSqlParameterSource parameters = new MapSqlParameterSource();
         List<String> labelNames = newArrayList(labels.keySet());
         Collections.sort(labelNames);
@@ -128,7 +130,7 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
             new DataAccessException(String.format("Cannot create user for nonexisting schema [%s]", username)));
 
         String id = generateId();
-        jdbcTemplate.update("insert into USERS (id, schema_id, type, username, password) values (?, ?, ?, ?, ?)",
+        getJdbcTemplate().update("insert into USERS (id, schema_id, type, username, password) values (?, ?, ?, ?, ?)",
             id, schemaId, userType, username, password);
 
         return findUserById(id)
@@ -157,15 +159,15 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     @Override
     public void deleteUsersForSchema(String schemaId) {
 
-        jdbcTemplate.update("delete from USERS where schema_id=?", schemaId);
+        getJdbcTemplate().update("delete from USERS where schema_id=?", schemaId);
     }
 
     @Override
     public void updateUserPassword(String schemaId, String password) {
 
         String username =
-            jdbcTemplate.queryForObject("select name from SCHEMA_DATA where id=?", String.class, schemaId);
-        jdbcTemplate
+            getJdbcTemplate().queryForObject("select name from SCHEMA_DATA where id=?", String.class, schemaId);
+        getJdbcTemplate()
             .update("update USERS set password=? where schema_id=? and username=?", password, schemaId, username);
     }
 
@@ -189,20 +191,20 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
             return;
         }
         labels.entrySet().forEach(label ->
-            jdbcTemplate.update("insert into LABELS (id, schema_id, name, value) values (?, ?, ?, ?)",
+            getJdbcTemplate().update("insert into LABELS (id, schema_id, name, value) values (?, ?, ?, ?)",
                 generateId(), schemaId, label.getKey(), label.getValue()));
     }
 
     @Override
     public void deleteLabelsForSchema(String schemaId) {
 
-        jdbcTemplate.update("delete from LABELS where schema_id=?", schemaId);
+        getJdbcTemplate().update("delete from LABELS where schema_id=?", schemaId);
     }
 
     @Override
     public ExternalSchema registerExternalSchema(String schemaId, String jdbcUrl) {
 
-        jdbcTemplate.update("insert into EXTERNAL_SCHEMA (id, created_date, schema_id, jdbc_url) values (?, ?, ?, ?)",
+        getJdbcTemplate().update("insert into EXTERNAL_SCHEMA (id, created_date, schema_id, jdbc_url) values (?, ?, ?, ?)",
             generateId(), new Date(), schemaId, jdbcUrl);
         return new ExternalSchema(new Date(), jdbcUrl);
     }
@@ -217,18 +219,18 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     @Override
     public void deleteExternalSchema(String schemaId) {
 
-        jdbcTemplate.update("delete from EXTERNAL_SCHEMA where schema_id=?", schemaId);
+        getJdbcTemplate().update("delete from EXTERNAL_SCHEMA where schema_id=?", schemaId);
     }
 
     @Override
     public void updateExternalSchema(String schemaId, String username, String jdbcUrl, String password) {
 
         if (username != null) {
-            jdbcTemplate.update("update SCHEMA_DATA set name=? where id=?", username, schemaId);
-            jdbcTemplate.update("update USERS set username=? where schema_id=?", username, schemaId);
+            getJdbcTemplate().update("update SCHEMA_DATA set name=? where id=?", username, schemaId);
+            getJdbcTemplate().update("update USERS set username=? where schema_id=?", username, schemaId);
         }
         if (jdbcUrl != null) {
-            jdbcTemplate.update("update EXTERNAL_SCHEMA set jdbc_url=? where schema_id=?", jdbcUrl, schemaId);
+            getJdbcTemplate().update("update EXTERNAL_SCHEMA set jdbc_url=? where schema_id=?", jdbcUrl, schemaId);
         }
         if (password != null) {
             updateUserPassword(schemaId, password);

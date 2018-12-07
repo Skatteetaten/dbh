@@ -11,9 +11,9 @@ import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCo
 
 public interface ResourceUsageCollector {
 
-    List<OracleResourceUsageCollector.SchemaSize> getSchemaSizes();
+    List<SchemaSize> getSchemaSizes();
 
-    Optional<OracleResourceUsageCollector.SchemaSize> getSchemaSize(String schemaName);
+    Optional<SchemaSize> getSchemaSize(String schemaName);
 
     class SchemaSize {
         private final String owner;

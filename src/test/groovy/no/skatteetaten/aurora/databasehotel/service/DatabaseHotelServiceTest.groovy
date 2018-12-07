@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.service
 
-import no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceInitializer
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData

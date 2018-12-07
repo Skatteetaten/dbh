@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager;
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport;
 import no.skatteetaten.aurora.databasehotel.dao.dto.Schema;
 
 public class OracleDatabaseManager extends DatabaseSupport implements DatabaseManager {
@@ -33,7 +34,7 @@ public class OracleDatabaseManager extends DatabaseSupport implements DatabaseMa
     public boolean schemaExists(String schemaName) {
 
         String query = "SELECT * FROM dba_users u WHERE username=?";
-        return jdbcTemplate.queryForList(query, schemaName).size() == 1;
+        return getJdbcTemplate().queryForList(query, schemaName).size() == 1;
     }
 
     @Override
@@ -77,13 +78,12 @@ public class OracleDatabaseManager extends DatabaseSupport implements DatabaseMa
 
         String query = "SELECT * FROM dba_users u WHERE username=?";
         return queryForOne(query, Schema.class, name);
-
     }
 
     @Override
     public List<Schema> findAllNonSystemSchemas() {
 
-        String currentUserName = getCurrentUserName();
+        String currentUserName = getJdbcTemplate().queryForObject("select user from dual", String.class);
         String query = "SELECT * FROM dba_users u WHERE default_tablespace not in ('SYSTEM', 'SYSAUX', 'USERS') "
             + "and default_tablespace=username and username!=?";
         return queryForMany(query, Schema.class, currentUserName);
@@ -101,32 +101,6 @@ public class OracleDatabaseManager extends DatabaseSupport implements DatabaseMa
         executeStatementsOnlyLogErrors(dropSchemaStatements);
     }
 
-    @Override
-    public void executeStatements(String... statements) {
-
-        for (String statement : statements) {
-            jdbcTemplate.execute(statement);
-        }
-    }
-
-    @Override
-    public String getCurrentUserName() {
-
-        return jdbcTemplate.queryForObject("select user from dual", String.class);
-    }
-
-    @Override
-    public List<Map<String, Object>> query(String query, Object... params) {
-
-        return jdbcTemplate.queryForList(query, params);
-    }
-
-    @Override
-    public DataSource getDataSource() {
-
-        return jdbcTemplate.getDataSource();
-    }
-
     /**
      * Will try to disconnect all active users and connections against a specified schema.
      * <p>
@@ -142,7 +116,7 @@ public class OracleDatabaseManager extends DatabaseSupport implements DatabaseMa
         // We may not be able to disconnect all users on our first try, so try a few times before moving on.
         for (int attempt = 1; attempt <= maxNumberOfDisconnectAttempts; attempt++) {
             List<Map<String, Object>> activeSessions =
-                jdbcTemplate.queryForList("SELECT s.sid, s.serial# FROM v$session s where username=?", schemaName);
+                getJdbcTemplate().queryForList("SELECT s.sid, s.serial# FROM v$session s where username=?", schemaName);
             if (activeSessions.isEmpty()) {
                 // Only when there are no active sessions are we actually successfully finished.
                 return;
@@ -174,14 +148,14 @@ public class OracleDatabaseManager extends DatabaseSupport implements DatabaseMa
         String dataFolderQuery =
             "SELECT SUBSTR(FILE_NAME, 1, INSTR(FILE_NAME, '/', -1) -1) as DATA_FOLDER FROM DBA_DATA_FILES where "
                 + "TABLESPACE_NAME='SYSTEM'";
-        return jdbcTemplate.queryForObject(dataFolderQuery, String.class);
+        return getJdbcTemplate().queryForObject(dataFolderQuery, String.class);
     }
 
     private void executeStatementsOnlyLogErrors(String... statements) {
 
         for (String statement : statements) {
             try {
-                jdbcTemplate.execute(statement);
+                getJdbcTemplate().execute(statement);
             } catch (Exception e) {
                 logger.warn(format("Error executing statement=[%s]", statement), e);
             }

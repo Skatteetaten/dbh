@@ -16,7 +16,7 @@ import com.zaxxer.hikari.HikariDataSource
 
 import groovy.json.JsonOutput
 import groovy.sql.Sql
-import no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceInitializer
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.oracle.Datasources
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
 import spock.lang.Specification

@@ -1,13 +1,12 @@
 package no.skatteetaten.aurora.databasehotel.service.oracle
 
-import static no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceInitializer.DEFAULT_SCHEMA_NAME
+import static no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer.DEFAULT_SCHEMA_NAME
 
 import javax.sql.DataSource
 
-import groovy.sql.Sql
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.oracle.AbstractOracleSpec
-import no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceInitializer
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.oracle.Datasources
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager

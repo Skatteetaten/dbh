@@ -38,6 +38,7 @@ database-config:
   defaultInstanceName: "${dbh.dev.db.instanceName:dev}"
   databases:
   - host: "${dbh.dev.db.host:localhost}"
+    engine: "${dbh.dev.db.engine:postgres}"
     service: "${dbh.dev.db.service:dbhotel}"
     instanceName: "${dbh.dev.db.instanceName:dev}"
     createSchemaAllowed: "${dbh.dev.db.createSchemaAllowed:true}"

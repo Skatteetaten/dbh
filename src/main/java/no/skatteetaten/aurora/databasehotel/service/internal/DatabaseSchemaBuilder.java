@@ -72,7 +72,7 @@ public class DatabaseSchemaBuilder {
     public DatabaseSchema createOne(SchemaData schemaData, Schema schema, List<SchemaUser> users,
         Optional<List<Label>> labelsOption, Optional<SchemaSize> schemaSize, DatabaseSchema.Type type) {
 
-        String jdbcUrl = jdbcUrlBuilder.create(metaInfo.getHost(), metaInfo.getPort());
+        String jdbcUrl = jdbcUrlBuilder.create(metaInfo.getHost(), metaInfo.getPort(), schema.getUsername());
 
         DatabaseSchema databaseSchema = new DatabaseSchema(
             schemaData.getId(),
@@ -93,7 +93,7 @@ public class DatabaseSchemaBuilder {
         return databaseSchema;
     }
 
-    private DatabaseSchemaMetaData createMetaData(Optional<OracleResourceUsageCollector.SchemaSize> schemaSize) {
+    private DatabaseSchemaMetaData createMetaData(Optional<SchemaSize> schemaSize) {
 
         double size = schemaSize
             .map(ResourceUsageCollector.SchemaSize::getSchemaSizeMb)

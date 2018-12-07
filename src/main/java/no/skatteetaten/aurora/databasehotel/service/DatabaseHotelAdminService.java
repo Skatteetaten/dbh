@@ -2,9 +2,11 @@ package no.skatteetaten.aurora.databasehotel.service;
 
 import static java.lang.String.format;
 
-import static no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceInitializer.DEFAULT_SCHEMA_NAME;
+import static no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer.DEFAULT_SCHEMA_NAME;
 
+import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,15 +23,18 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
 
+import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager;
-import no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceInitializer;
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDataSourceUtils;
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao;
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager;
+import no.skatteetaten.aurora.databasehotel.dao.postres.PostgresDatabaseManager;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo;
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder;
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector;
+import no.skatteetaten.aurora.databasehotel.service.postgres.PostgresJdbcUrlBuilder;
 import no.skatteetaten.aurora.databasehotel.service.sits.ResidentsIntegration;
 
 @Service
@@ -76,7 +81,7 @@ public class DatabaseHotelAdminService {
         String username, String password, String clientService, boolean createSchemaAllowed,
         boolean oracleScriptRequired) {
 
-        String managementJdbcUrl = new OracleJdbcUrlBuilder(service).create(dbHost, port);
+        String managementJdbcUrl = new OracleJdbcUrlBuilder(service).create(dbHost, port, null);
         DatabaseInstanceMetaInfo databaseInstanceMetaInfo = new DatabaseInstanceMetaInfo(instanceName, dbHost, port);
 
         DataSource managementDataSource = OracleDataSourceUtils.createDataSource(
@@ -102,6 +107,43 @@ public class DatabaseHotelAdminService {
         ResidentsIntegration residentsIntegration =
             new ResidentsIntegration(managementDataSource);
         databaseInstance.registerIntegration(residentsIntegration);
+
+        registerDatabaseInstance(databaseInstance);
+    }
+
+    public void registerPostgresDatabaseInstance(String instanceName, String dbHost, int port, String username,
+        String password, boolean createSchemaAllowed) {
+
+        PostgresJdbcUrlBuilder urlBuilder = new PostgresJdbcUrlBuilder();
+        String managementJdbcUrl = urlBuilder.create(dbHost, port, "postgres");
+        DatabaseInstanceMetaInfo databaseInstanceMetaInfo = new DatabaseInstanceMetaInfo(instanceName, dbHost, port);
+        DataSource managementDataSource = DataSourceUtils.createDataSource(managementJdbcUrl, username, password);
+        DatabaseManager databaseManager = new PostgresDatabaseManager(managementDataSource);
+
+        databaseInstanceInitializer.assertInitialized(databaseManager, password);
+
+        String database = DEFAULT_SCHEMA_NAME.toLowerCase();
+        String jdbcUrl = urlBuilder.create(dbHost, port, database);
+        DataSource databaseHotelDs = DataSourceUtils.createDataSource(jdbcUrl, database, password);
+        databaseInstanceInitializer.migrate(databaseHotelDs);
+
+        DatabaseHotelDataDao databaseHotelDataDao = new OracleDatabaseHotelDataDao(databaseHotelDs);
+
+        ResourceUsageCollector resourceUsageCollector =
+            new ResourceUsageCollector() {
+                @Override
+                public List<SchemaSize> getSchemaSizes() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public Optional<SchemaSize> getSchemaSize(String schemaName) {
+                    return Optional.of(new SchemaSize(schemaName, BigDecimal.ZERO));
+                }
+            };
+        DatabaseInstance databaseInstance = new DatabaseInstance(databaseInstanceMetaInfo, databaseManager,
+            databaseHotelDataDao, urlBuilder, resourceUsageCollector, createSchemaAllowed,
+            cooldownAfterDeleteMonths, cooldownDaysForOldUnusedSchemas);
 
         registerDatabaseInstance(databaseInstance);
     }
