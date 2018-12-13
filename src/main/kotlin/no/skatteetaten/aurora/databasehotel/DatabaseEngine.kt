@@ -22,4 +22,3 @@ val String.databaseEngine
             else -> throw java.lang.IllegalArgumentException("Unsupported database engine $engineName")
         }
     }
-

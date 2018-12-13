@@ -1,10 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
-import java.util.Optional
-
-import javax.sql.DataSource
-
 import no.skatteetaten.aurora.databasehotel.dao.dto.Schema
+import java.util.Optional
 
 interface DatabaseManager {
 

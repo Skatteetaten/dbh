@@ -16,10 +16,13 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
 
         val safeName = schemaName.toSafe()
         executeStatements(
-            "create user $schemaName with password '$password'",
-            "create database $safeName with owner $safeName"
+            "create user $safeName with password '$password'",
+            "create database $safeName",
+            "GRANT CREATE ON DATABASE $safeName TO $safeName",
+            "GRANT CONNECT ON DATABASE $safeName TO $safeName",
+            "grant app_user to $safeName"
         )
-        return safeName;
+        return safeName
     }
 
     override fun updatePassword(schemaName: String, password: String) {
