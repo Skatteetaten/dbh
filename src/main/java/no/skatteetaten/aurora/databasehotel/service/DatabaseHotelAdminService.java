@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
+import com.zaxxer.hikari.HikariDataSource;
 
 import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
@@ -91,7 +92,7 @@ public class DatabaseHotelAdminService {
 
         databaseInstanceInitializer.assertInitialized(databaseManager, password);
 
-        DataSource databaseHotelDs = OracleDataSourceUtils.createDataSource(
+        HikariDataSource databaseHotelDs = OracleDataSourceUtils.createDataSource(
             managementJdbcUrl, DEFAULT_SCHEMA_NAME, password, oracleScriptRequired);
         databaseInstanceInitializer.migrate(databaseHotelDs);
 
@@ -124,7 +125,7 @@ public class DatabaseHotelAdminService {
 
         String database = DEFAULT_SCHEMA_NAME.toLowerCase();
         String jdbcUrl = urlBuilder.create(dbHost, port, database);
-        DataSource databaseHotelDs = DataSourceUtils.createDataSource(jdbcUrl, database, password);
+        HikariDataSource databaseHotelDs = DataSourceUtils.createDataSource(jdbcUrl, database, password);
         databaseInstanceInitializer.migrate(databaseHotelDs);
 
         DatabaseHotelDataDao databaseHotelDataDao = new OracleDatabaseHotelDataDao(databaseHotelDs);

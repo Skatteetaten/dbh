@@ -74,10 +74,10 @@ public class OracleDatabaseManager extends DatabaseSupport implements DatabaseMa
     }
 
     @Override
-    public Optional<Schema> findSchemaByName(String name) {
+    public Optional<Schema> findSchemaByName(String schemaName) {
 
         String query = "SELECT * FROM dba_users u WHERE username=?";
-        return queryForOne(query, Schema.class, name);
+        return queryForOne(query, Schema.class, schemaName);
     }
 
     @Override

@@ -14,7 +14,7 @@ interface DatabaseManager {
 
     fun updatePassword(schemaName: String, password: String)
 
-    fun findSchemaByName(name: String): Optional<Schema>
+    fun findSchemaByName(schemaName: String): Optional<Schema>
 
     fun findAllNonSystemSchemas(): List<Schema>
 

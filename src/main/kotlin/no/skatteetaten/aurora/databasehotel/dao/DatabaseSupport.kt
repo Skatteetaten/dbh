@@ -22,6 +22,4 @@ abstract class DatabaseSupport(dataSource: DataSource) {
 
         statements.forEach(jdbcTemplate::execute)
     }
-
-    fun getDataSource(): DataSource = jdbcTemplate.dataSource!!
 }
