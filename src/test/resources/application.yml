@@ -6,6 +6,7 @@ database-config:
 
   databases:
   - host: "${dbh.test.db.host:localhost}"
+    engine: oracle
     service: "${dbh.test.db.service:dbhotel}"
     instanceName: "${dbh.test.db.instanceName:dev}"
     createSchemaAllowed: "${dbh.test.db.createSchemaAllowed:true}"

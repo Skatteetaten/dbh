@@ -58,7 +58,7 @@ public class DatabaseInstance {
 
     private SchemaNamePasswordStrategy schemaNamePasswordStrategy = () -> {
         String schemaName = RandomStringUtils.randomAlphabetic(RANDOM_LENGTH);
-        String password = RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH) + "a1";
+        String password = "a1" + RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH-2);
         return Pair.of(schemaName, password);
     };
 

@@ -1,15 +1,14 @@
 package no.skatteetaten.aurora.databasehotel.service.internal
 
-import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
-import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData
+import no.skatteetaten.aurora.databasehotel.DomainUtils
 import spock.lang.Specification
 
-public class SchemaLabelMatcherTest extends Specification {
+class SchemaLabelMatcherTest extends Specification {
 
   def "Label matching"() {
 
     given:
-      def databaseSchema = new DatabaseSchema(null, null, null, null, null, null, new DatabaseSchemaMetaData(0.0))
+      def databaseSchema = DomainUtils.createDatabaseSchema()
       databaseSchema.labels = schemaLabels
 
     expect:

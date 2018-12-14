@@ -41,8 +41,6 @@ import no.skatteetaten.aurora.databasehotel.service.sits.ResidentsIntegration;
 @Service
 public class DatabaseHotelAdminService {
 
-    public static final int PORT = 1521;
-
     private final Map<String, DatabaseInstance> databaseInstances = new HashMap<>();
     private final Long resourceUseCollectInterval;
 
@@ -69,13 +67,6 @@ public class DatabaseHotelAdminService {
     public Set<DatabaseInstance> findAllDatabaseInstances() {
 
         return new HashSet<>(databaseInstances.values());
-    }
-
-    public void registerOracleDatabaseInstance(String instanceName, String dbHost, String service, String username,
-        String password, String clientService, boolean createSchemaAllowed, boolean oracleScriptRequired) {
-
-        registerOracleDatabaseInstance(instanceName, dbHost, PORT, service, username, password,
-            clientService, createSchemaAllowed, oracleScriptRequired);
     }
 
     public void registerOracleDatabaseInstance(String instanceName, String dbHost, int port, String service,

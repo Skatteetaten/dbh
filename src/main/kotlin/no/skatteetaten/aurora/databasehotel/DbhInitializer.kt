@@ -75,6 +75,7 @@ class DbhInitializer(
                 databaseHotelAdminService.registerOracleDatabaseInstance(
                     instanceName,
                     host,
+                    1521,
                     service,
                     username,
                     password,

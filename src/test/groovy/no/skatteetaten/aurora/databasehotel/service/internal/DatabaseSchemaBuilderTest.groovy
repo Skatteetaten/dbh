@@ -5,11 +5,12 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.JdbcUrlBuilder
+import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
 import spock.lang.Specification
 
 class DatabaseSchemaBuilderTest extends Specification {
 
-  def builder = new DatabaseSchemaBuilder(new DatabaseInstanceMetaInfo("test", "localhost", 1521), Mock(JdbcUrlBuilder))
+  def builder = new DatabaseSchemaBuilder(new DatabaseInstanceMetaInfo("test", "localhost", 1521), new OracleJdbcUrlBuilder("none"))
 
   def "Returns empty list when no schema data is specified"() {
 
