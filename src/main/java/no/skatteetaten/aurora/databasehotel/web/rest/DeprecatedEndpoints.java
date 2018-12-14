@@ -41,22 +41,22 @@ public class DeprecatedEndpoints {
 
     @GetMapping("/schema/{id}")
     @Timed
-    public ResponseEntity<ApiResponse> findById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<?>> findById(@PathVariable String id) {
 
         return databaseSchemaController.findById(id);
     }
 
     @DeleteMapping("/schema/{id}")
     @Timed
-    public ResponseEntity<ApiResponse> deleteById(@PathVariable String id,
-        @RequestHeader(name = "cooldown-duration-hours", required = false) Integer cooldownDurationHours) {
+    public ResponseEntity<ApiResponse<?>> deleteById(@PathVariable String id,
+        @RequestHeader(name = "cooldown-duration-hours", required = false) Long cooldownDurationHours) {
 
         return databaseSchemaController.deleteById(id, cooldownDurationHours);
     }
 
     @GetMapping("/schema/")
     @Timed
-    public ResponseEntity<ApiResponse> findAll(
+    public ResponseEntity<ApiResponse<?>> findAll(
         @RequestParam(name = "labels", required = false) String labelsParam,
         @RequestParam(name = "q", required = false) String query
     ) {
@@ -66,7 +66,7 @@ public class DeprecatedEndpoints {
 
     @PostMapping("/schema/")
     @Timed
-    public ResponseEntity<ApiResponse> create(@RequestBody SchemaCreationRequest schemaCreationRequest) {
+    public ResponseEntity<ApiResponse<?>> create(@RequestBody SchemaCreationRequest schemaCreationRequest) {
 
         return databaseSchemaController.create(schemaCreationRequest);
     }

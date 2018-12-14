@@ -3,11 +3,10 @@ package no.skatteetaten.aurora.databasehotel.domain
 import java.util.Date
 import java.util.HashMap
 import java.util.HashSet
-import java.util.Optional
 
 data class DatabaseInstanceMetaInfo(
     val instanceName: String,
-    val host: String?,
+    val host: String,
     val port: Int
 )
 
@@ -27,7 +26,7 @@ data class DatabaseSchema @JvmOverloads constructor(
     val name: String,
     val createdDate: Date,
     val lastUsedDate: Date?,
-    private val _metaData: DatabaseSchemaMetaData?,
+    val metadata: DatabaseSchemaMetaData?,
     val type: Type = Type.MANAGED
 ) {
     private val _users = HashSet<User>()
@@ -37,7 +36,7 @@ data class DatabaseSchema @JvmOverloads constructor(
 
     val isUnused: Boolean get() = lastUsedDate == null
 
-    val sizeMb: Double get() = metadata.map { it.sizeInMb }.orElse(0.0)
+    val sizeMb: Double get() = metadata?.sizeInMb ?: 0.0
 
     fun addUser(user: User) {
 
@@ -53,8 +52,6 @@ data class DatabaseSchema @JvmOverloads constructor(
             this._labels.clear()
             this._labels.putAll(labels)
         }
-
-    val metadata get(): Optional<DatabaseSchemaMetaData> = Optional.ofNullable(_metaData)
 
     enum class Type {
         MANAGED,
