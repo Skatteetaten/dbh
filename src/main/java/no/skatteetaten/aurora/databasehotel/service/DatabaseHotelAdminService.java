@@ -31,7 +31,7 @@ import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager;
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDataSourceUtils;
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao;
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager;
-import no.skatteetaten.aurora.databasehotel.dao.postres.PostgresDatabaseManager;
+import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo;
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder;
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector;

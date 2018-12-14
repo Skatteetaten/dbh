@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.databasehotel.dao.postres
+package no.skatteetaten.aurora.databasehotel.dao.postgres
 
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
