@@ -15,7 +15,7 @@ import spock.lang.Specification
 
 class DatabaseInstanceTest extends Specification {
 
-  DatabaseInstanceMetaInfo databaseInstanceMetaInfo = new DatabaseInstanceMetaInfo('dev', "localhost", 1521)
+  DatabaseInstanceMetaInfo databaseInstanceMetaInfo = new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo('dev', "localhost", 1521)
 
   def databaseDao = Mock(OracleDatabaseManager)
 

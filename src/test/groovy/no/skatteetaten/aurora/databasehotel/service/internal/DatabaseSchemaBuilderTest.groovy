@@ -10,7 +10,7 @@ import spock.lang.Specification
 
 class DatabaseSchemaBuilderTest extends Specification {
 
-  def builder = new DatabaseSchemaBuilder(new DatabaseInstanceMetaInfo("test", "localhost", 1521), new OracleJdbcUrlBuilder("none"))
+  def builder = new DatabaseSchemaBuilder(new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo("test", "localhost", 1521), new OracleJdbcUrlBuilder("none"))
 
   def "Returns empty list when no schema data is specified"() {
 

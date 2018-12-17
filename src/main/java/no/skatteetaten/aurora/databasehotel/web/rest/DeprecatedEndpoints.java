@@ -27,14 +27,14 @@ public class DeprecatedEndpoints {
 
     @GetMapping("/admin/databaseInstance/")
     @Timed
-    public ResponseEntity<ApiResponse> databaseInstanceControllerFindAll() {
+    public ResponseEntity<ApiResponse<?>> databaseInstanceControllerFindAll() {
 
         return databaseInstanceController.findAll();
     }
 
     @PostMapping("/admin/databaseInstance/{host}/deleteUnused")
     @Timed
-    public ResponseEntity<ApiResponse> databaseInstanceControllerDeleteUnused(@PathVariable String host) {
+    public ResponseEntity<ApiResponse<?>> databaseInstanceControllerDeleteUnused(@PathVariable String host) {
 
         return databaseInstanceController.deleteUnused(host);
     }

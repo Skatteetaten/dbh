@@ -17,7 +17,7 @@ class ResidentsIntegrationTest extends Specification {
 
   def integration = new ResidentsIntegration(dataSource)
 
-  DatabaseSchema schema = new DatabaseSchema("id", new DatabaseInstanceMetaInfo("A", "B", 1234), "jdbc", "schema_name",
+  DatabaseSchema schema = new DatabaseSchema("id", new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo("A", "B", 1234), "jdbc", "schema_name",
       new Date(), new Date(), new DatabaseSchemaMetaData(0.0)).with {
     it.setLabels([userId: 'k77319', affiliation: 'aurora', environment: 'dev', application: 'dbh', 'name': 'db'])
     it

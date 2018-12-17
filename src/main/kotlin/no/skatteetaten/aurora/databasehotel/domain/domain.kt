@@ -7,7 +7,8 @@ import java.util.HashSet
 data class DatabaseInstanceMetaInfo(
     val instanceName: String,
     val host: String,
-    val port: Int
+    val port: Int,
+    val createSchemaAllowed: Boolean
 )
 
 data class DatabaseSchemaMetaData(val sizeInMb: Double)

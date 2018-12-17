@@ -92,7 +92,7 @@ public class ExternalSchemaManager {
 
         List<Label> labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.getId());
 
-        DatabaseInstanceMetaInfo metaInfo = new DatabaseInstanceMetaInfo("external", null, 0);
+        DatabaseInstanceMetaInfo metaInfo = new DatabaseInstanceMetaInfo("external", null, 0, false);
         JdbcUrlBuilder jdbcUrlBuilder = (host, port, database) -> externalSchema.getJdbcUrl();
 
         return new DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder).createOne(schemaData, schema, users,

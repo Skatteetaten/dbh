@@ -62,6 +62,6 @@ class DatabaseHotelServiceTest extends Specification {
   }
 
   private static DatabaseSchema databaseSchema(String id="id") {
-    new DatabaseSchema(id, new DatabaseInstanceMetaInfo("name", "host", 0), "-", "-", new Date(), new Date(), new DatabaseSchemaMetaData(0.0))
+    new DatabaseSchema(id, new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo("name", "host", 0), "-", "-", new Date(), new Date(), new DatabaseSchemaMetaData(0.0))
   }
 }

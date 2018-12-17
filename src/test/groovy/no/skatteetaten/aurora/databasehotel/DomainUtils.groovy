@@ -7,7 +7,7 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData
 class DomainUtils {
 
   static DatabaseSchema createDatabaseSchema() {
-    new DatabaseSchema("ID", new DatabaseInstanceMetaInfo("test", "localhost", 1521), "jdbc", "local",
+    new DatabaseSchema("ID", new DatabaseInstanceMetaInfo("test", "localhost", 1521, true), "jdbc", "local",
         new Date(), new Date(), new DatabaseSchemaMetaData(0.0))
   }
 }

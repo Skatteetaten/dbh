@@ -55,7 +55,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def EXAMPLE_SCHEMA = new DatabaseSchema(
       EXAMPLE_SCHEMA_ID,
-      new DatabaseInstanceMetaInfo('test', 'dbhost.example.com', 1521),
+      new DatabaseInstanceMetaInfo('test', 'dbhost.example.com', 1521, true),
       'jdbc:oracle:thin:@dbhost.example.com:1521/dbhotel',
       'AIOIFPXHHLFLTVDPSUWEERCTMMWJUD',
       new Date(),
@@ -68,7 +68,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def EXAMPLE_SCHEMA_EXTERNAL = new DatabaseSchema(
       EXAMPLE_SCHEMA_ID,
-      new DatabaseInstanceMetaInfo('external', null, 0),
+      new DatabaseInstanceMetaInfo('external', null, 0, false),
       'jdbc:oracle:thin:@some-other-dbserver.example.com:1521/dbhotel',
       'AIOIFPXHHLFLTVDPSUWEERCTMMWJUD',
       new Date(),

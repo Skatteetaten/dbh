@@ -11,10 +11,10 @@ class DatabaseHotelAdminServiceTest extends Specification {
   def setup() {
 
     def databaseInstance1 = Mock(DatabaseInstance)
-    databaseInstance1.getMetaInfo() >> new DatabaseInstanceMetaInfo("test", "localhost", 1521)
+    databaseInstance1.getMetaInfo() >> new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo("test", "localhost", 1521)
     databaseInstance1.getInstanceName() >> "test"
     def databaseInstance2 = Mock(DatabaseInstance)
-    databaseInstance2.getMetaInfo() >> new DatabaseInstanceMetaInfo("prod", "remotehost", 1521)
+    databaseInstance2.getMetaInfo() >> new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo("prod", "remotehost", 1521)
     databaseInstance2.getInstanceName() >> "prod"
 
     adminService.registerDatabaseInstance(databaseInstance1)
@@ -26,7 +26,7 @@ class DatabaseHotelAdminServiceTest extends Specification {
     given:
       adminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L)
       def databaseInstance = Mock(DatabaseInstance)
-      databaseInstance.getMetaInfo() >> new DatabaseInstanceMetaInfo("test", "localhost", 1521)
+      databaseInstance.getMetaInfo() >> new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo("test", "localhost", 1521)
 
     expect:
       adminService.findAllDatabaseInstances().empty
@@ -90,7 +90,7 @@ class DatabaseHotelAdminServiceTest extends Specification {
 
   private def createMockInstance(String name, boolean isCreateSchemaAllowed) {
     def databaseInstance = Mock(DatabaseInstance)
-    databaseInstance.getMetaInfo() >> new DatabaseInstanceMetaInfo(name, "$name-localhost", 1521)
+    databaseInstance.getMetaInfo() >> new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo(name, "$name-localhost", 1521)
     databaseInstance.getInstanceName() >> name
     databaseInstance.isCreateSchemaAllowed() >> isCreateSchemaAllowed
     return databaseInstance

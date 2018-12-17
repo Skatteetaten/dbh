@@ -42,7 +42,7 @@ class DatabaseInstanceControllerTest extends Specification {
   def "List instances"() {
     given:
       databaseHotelAdminService.findAllDatabaseInstances() >> [new DatabaseInstance(
-          new DatabaseInstanceMetaInfo("test", "dbhost.example.com", 1521),
+          new DatabaseInstanceMetaInfo("test", "dbhost.example.com", 1521, true),
           Mock(DatabaseManager),
           Mock(DatabaseHotelDataDao),
           Mock(JdbcUrlBuilder),

@@ -23,8 +23,6 @@ import java.net.URLDecoder
 import java.time.Duration
 import java.util.Date
 
-data class DatabaseInstanceResource(val host: String, val port: Int)
-
 data class SchemaMetadataResource(val sizeInMb: Double?)
 
 data class DatabaseSchemaResource(
@@ -144,10 +142,7 @@ fun DatabaseSchema.toResource() = DatabaseSchemaResource(
     name = name,
     createdDate = createdDate,
     lastUsedDate = lastUsedDate,
-    databaseInstance = DatabaseInstanceResource(
-        databaseInstanceMetaInfo.host,
-        databaseInstanceMetaInfo.port
-    ),
+    databaseInstance = databaseInstanceMetaInfo.toResource(),
     users = users.map(User::toResource),
     labels = labels,
     metadata = SchemaMetadataResource(metadata?.sizeInMb)
