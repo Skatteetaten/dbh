@@ -18,7 +18,6 @@ import no.skatteetaten.aurora.databasehotel.service.postgres.PostgresJdbcUrlBuil
 import no.skatteetaten.aurora.databasehotel.service.sits.ResidentsIntegration
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.lang.String.format
 import java.math.BigDecimal
 import java.util.HashMap
 import java.util.HashSet
@@ -40,8 +39,14 @@ class DatabaseHotelAdminService(
     fun findAllDatabaseInstances(): Set<DatabaseInstance> = HashSet(databaseInstances.values)
 
     fun registerOracleDatabaseInstance(
-        instanceName: String, dbHost: String, port: Int, service: String,
-        username: String, password: String, clientService: String, createSchemaAllowed: Boolean,
+        instanceName: String,
+        dbHost: String,
+        port: Int,
+        service: String,
+        username: String,
+        password: String,
+        clientService: String,
+        createSchemaAllowed: Boolean,
         oracleScriptRequired: Boolean
     ) {
 
@@ -78,8 +83,12 @@ class DatabaseHotelAdminService(
     }
 
     fun registerPostgresDatabaseInstance(
-        instanceName: String, dbHost: String, port: Int, username: String,
-        password: String, createSchemaAllowed: Boolean
+        instanceName: String,
+        dbHost: String,
+        port: Int,
+        username: String,
+        password: String,
+        createSchemaAllowed: Boolean
     ) {
 
         val urlBuilder = PostgresJdbcUrlBuilder()

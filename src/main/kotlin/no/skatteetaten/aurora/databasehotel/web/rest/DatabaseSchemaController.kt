@@ -85,10 +85,8 @@ class DatabaseSchemaController(
     @GetMapping("/")
     @Timed
     fun findAll(
-        @RequestParam(
-            required = false,
-            defaultValue = ""
-        ) labels: String, @RequestParam(required = false) q: String?
+        @RequestParam(required = false, defaultValue = "") labels: String,
+        @RequestParam(required = false) q: String?
     ): ResponseEntity<ApiResponse<*>> {
 
         if (!schemaListingAllowed) {

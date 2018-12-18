@@ -9,11 +9,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.lang.String.format
 import java.time.Duration
-import java.util.*
+import java.util.Optional
 
 data class DatabaseInstanceRequirements(
-        val databaseEngine: DatabaseEngine = DatabaseEngine.ORACLE,
-        val instanceName: String? = null
+    val databaseEngine: DatabaseEngine = DatabaseEngine.ORACLE,
+    val instanceName: String? = null
 )
 
 @Service
@@ -80,17 +80,20 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
                 else -> databaseInstance.deleteSchema(name, cooldownDuration)
             }
             if (databaseInstance != null) {
-
             } else {
                 // If the schema was not found on a database instance, it is an external schema
-
             }
         }
     }
 
     @JvmOverloads
-    fun updateSchema(id: String, labels: Map<String, String>, username: String? = null, jdbcUrl: String? = null,
-                     password: String? = null): DatabaseSchema {
+    fun updateSchema(
+        id: String,
+        labels: Map<String, String>,
+        username: String? = null,
+        jdbcUrl: String? = null,
+        password: String? = null
+    ): DatabaseSchema {
 
         log.info("Updating labels for schema with id={} to labels={}", id, labels)
 
