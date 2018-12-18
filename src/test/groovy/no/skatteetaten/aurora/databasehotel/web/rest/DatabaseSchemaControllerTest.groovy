@@ -20,6 +20,9 @@ import static org.springframework.restdocs.request.RequestDocumentation.pathPara
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
+import static no.skatteetaten.aurora.databasehotel.DomainUtils.createDatabaseInstanceMetaInfo
+import static no.skatteetaten.aurora.databasehotel.DomainUtils.createDatabaseInstanceMetaInfo
+
 import org.apache.commons.lang3.tuple.Pair
 import org.junit.Rule
 import org.springframework.restdocs.JUnitRestDocumentation
@@ -29,6 +32,7 @@ import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 import groovy.json.JsonOutput
+import no.skatteetaten.aurora.databasehotel.DomainUtils
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.User
@@ -55,7 +59,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def EXAMPLE_SCHEMA = new DatabaseSchema(
       EXAMPLE_SCHEMA_ID,
-      new DatabaseInstanceMetaInfo('test', 'dbhost.example.com', 1521, true),
+      createDatabaseInstanceMetaInfo('test', 'dbhost.example.com', 1521, true),
       'jdbc:oracle:thin:@dbhost.example.com:1521/dbhotel',
       'AIOIFPXHHLFLTVDPSUWEERCTMMWJUD',
       new Date(),
@@ -68,7 +72,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def EXAMPLE_SCHEMA_EXTERNAL = new DatabaseSchema(
       EXAMPLE_SCHEMA_ID,
-      new DatabaseInstanceMetaInfo('external', null, 0, false),
+      createDatabaseInstanceMetaInfo('external', null, 0, false),
       'jdbc:oracle:thin:@some-other-dbserver.example.com:1521/dbhotel',
       'AIOIFPXHHLFLTVDPSUWEERCTMMWJUD',
       new Date(),

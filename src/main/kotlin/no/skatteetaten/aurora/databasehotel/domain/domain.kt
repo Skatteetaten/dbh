@@ -1,10 +1,12 @@
 package no.skatteetaten.aurora.databasehotel.domain
 
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import java.util.Date
 import java.util.HashMap
 import java.util.HashSet
 
 data class DatabaseInstanceMetaInfo(
+    val engine: DatabaseEngine,
     val instanceName: String,
     val host: String,
     val port: Int,

@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
-import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData
 import spock.lang.Specification
@@ -21,7 +21,7 @@ class DatabaseHotelServiceTest extends Specification {
 
     when:
       new DatabaseHotelService(new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L))
-          .createSchema("nosuchlevel")
+          .createSchema(new DatabaseInstanceRequirements(DatabaseEngine.ORACLE, "nosuchlevel"))
 
     then:
       thrown(DatabaseServiceException)
@@ -61,7 +61,7 @@ class DatabaseHotelServiceTest extends Specification {
       1 * databaseInstance.replaceLabels(databaseSchema, labels)
   }
 
-  private static DatabaseSchema databaseSchema(String id="id") {
-    new DatabaseSchema(id, new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo("name", "host", 0), "-", "-", new Date(), new Date(), new DatabaseSchemaMetaData(0.0))
+  private static DatabaseSchema databaseSchema(String id = "id") {
+    new DatabaseSchema(id, DatabaseInstanceMetaInfo("name", "host", 0, true), "-", "-", new Date(), new Date(), new DatabaseSchemaMetaData(0.0))
   }
 }

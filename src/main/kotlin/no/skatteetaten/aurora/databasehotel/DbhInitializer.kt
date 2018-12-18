@@ -44,19 +44,19 @@ class DbhInitializer(
         val defaultDatabaseInstance = databaseHotelAdminService.findDefaultDatabaseInstance()
         val databaseHotelDataDao = defaultDatabaseInstance.databaseHotelDataDao
         val externalSchemaManager = ExternalSchemaManager(databaseHotelDataDao)
-        databaseHotelAdminService.registerExternalSchemaManager(externalSchemaManager)
+        databaseHotelAdminService.externalSchemaManager = externalSchemaManager
         LOGGER.info("Registered ExternalSchemaManager")
     }
 
     private fun registerDatabase(databaseConfig: Map<String, Any>) {
 
-        val engine: String = databaseConfig.get2("engine")
+        val engine: String = databaseConfig.typedGet("engine")
 
-        val host: String = databaseConfig.get2("host")
-        val createSchemaAllowed = databaseConfig.get2("createSchemaAllowed", "true").toBoolean()
-        val instanceName: String = databaseConfig.get2("instanceName")
-        val username: String = databaseConfig.get2("username")
-        val password: String = databaseConfig.get2("password")
+        val host: String = databaseConfig.typedGet("host")
+        val createSchemaAllowed = databaseConfig.typedGet("createSchemaAllowed", "true").toBoolean()
+        val instanceName: String = databaseConfig.typedGet("instanceName")
+        val username: String = databaseConfig.typedGet("username")
+        val password: String = databaseConfig.typedGet("password")
         when (engine) {
             "postgres" -> {
                 databaseHotelAdminService.registerPostgresDatabaseInstance(
@@ -69,9 +69,9 @@ class DbhInitializer(
                 )
             }
             "oracle" -> {
-                val oracleScriptRequired: Boolean = databaseConfig.get2("oracleScriptRequired", "false").toBoolean()
-                val service: String = databaseConfig.get2("service")
-                val clientService: String = databaseConfig.get2("clientService")
+                val oracleScriptRequired: Boolean = databaseConfig.typedGet("oracleScriptRequired", "false").toBoolean()
+                val service: String = databaseConfig.typedGet("service")
+                val clientService: String = databaseConfig.typedGet("clientService")
                 databaseHotelAdminService.registerOracleDatabaseInstance(
                     instanceName,
                     host,
@@ -88,7 +88,7 @@ class DbhInitializer(
         LOGGER.info("Registered host [{}]", host)
     }
 
-    private inline fun <reified T> Map<String, *>.get2(key: String, default: T? = null): T =
+    private inline fun <reified T> Map<String, *>.typedGet(key: String, default: T? = null): T =
         this.getOrDefault(key, default) as T
 
     companion object {

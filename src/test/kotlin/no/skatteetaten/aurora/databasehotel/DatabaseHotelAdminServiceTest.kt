@@ -24,7 +24,7 @@ class DatabaseHotelAdminServiceTest {
             true
         )
 
-        val instance = databaseHotelAdminService.findDatabaseInstanceByInstanceName("postgres").get()
+        val instance = databaseHotelAdminService.findDatabaseInstanceByInstanceName("postgres")!!
         val schema = instance.createSchema(emptyMap())
 
         schema.users.forEach {

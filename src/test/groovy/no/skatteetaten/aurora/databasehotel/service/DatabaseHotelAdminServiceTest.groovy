@@ -1,7 +1,11 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import static no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
+import static no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
+import static no.skatteetaten.aurora.databasehotel.DomainUtils.createDatabaseInstanceMetaInfo
+
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
-import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import spock.lang.Specification
 
 class DatabaseHotelAdminServiceTest extends Specification {
@@ -11,10 +15,10 @@ class DatabaseHotelAdminServiceTest extends Specification {
   def setup() {
 
     def databaseInstance1 = Mock(DatabaseInstance)
-    databaseInstance1.getMetaInfo() >> new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo("test", "localhost", 1521)
+    databaseInstance1.getMetaInfo() >> createDatabaseInstanceMetaInfo("test", "localhost", 1521)
     databaseInstance1.getInstanceName() >> "test"
     def databaseInstance2 = Mock(DatabaseInstance)
-    databaseInstance2.getMetaInfo() >> new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo("prod", "remotehost", 1521)
+    databaseInstance2.getMetaInfo() >> createDatabaseInstanceMetaInfo("prod", "remotehost", 1521, true)
     databaseInstance2.getInstanceName() >> "prod"
 
     adminService.registerDatabaseInstance(databaseInstance1)
@@ -26,7 +30,7 @@ class DatabaseHotelAdminServiceTest extends Specification {
     given:
       adminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L)
       def databaseInstance = Mock(DatabaseInstance)
-      databaseInstance.getMetaInfo() >> new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo("test", "localhost", 1521)
+      databaseInstance.getMetaInfo() >> createDatabaseInstanceMetaInfo("test", "localhost", 1521, true)
 
     expect:
       adminService.findAllDatabaseInstances().empty
@@ -41,45 +45,45 @@ class DatabaseHotelAdminServiceTest extends Specification {
   def "Find database instance by host"() {
 
     expect:
-      adminService.findDatabaseInstanceByHost("localhost").get().metaInfo.host == "localhost"
-      adminService.findDatabaseInstanceByHost("remotehost").get().metaInfo.host == "remotehost"
+      adminService.findDatabaseInstanceByHost("localhost").metaInfo.host == "localhost"
+      adminService.findDatabaseInstanceByHost("remotehost").metaInfo.host == "remotehost"
 
     when:
-      Optional<DatabaseInstance> databaseInstance = adminService.findDatabaseInstanceByHost("nosuchhost")
+      DatabaseInstance databaseInstance = adminService.findDatabaseInstanceByHost("nosuchhost")
 
     then:
-      !databaseInstance.isPresent()
+      !databaseInstance
   }
 
-  def "Find database instance by instance"() {
+  def "Find database instance by name"() {
 
     expect:
-      adminService.findDatabaseInstanceByInstanceName("test").get().metaInfo.host == "localhost"
-      adminService.findDatabaseInstanceByInstanceName("prod").get().metaInfo.host == "remotehost"
+      adminService.findDatabaseInstanceByInstanceName("test").metaInfo.host == "localhost"
+      adminService.findDatabaseInstanceByInstanceName("prod").metaInfo.host == "remotehost"
 
     when:
-      Optional<DatabaseInstance> databaseInstance = adminService.findDatabaseInstanceByInstanceName("dev")
+      DatabaseInstance databaseInstance = adminService.findDatabaseInstanceByInstanceName("dev")
 
     then:
-      !databaseInstance.isPresent()
+      !databaseInstance
   }
 
-  def "Not specifying instance fails when several instances exist"() {
+  def "Get random instance when not specifying any instance requirements"() {
 
     given:
       adminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L)
 
-    [createMockInstance("dev1", true),
-     createMockInstance("dev2", true),
-     createMockInstance("dev3", false)
-    ].each {
-      adminService.registerDatabaseInstance(it)
-    }
+      [createMockInstance("dev1", true),
+       createMockInstance("dev2", true),
+       createMockInstance("dev3", false)
+      ].each {
+        adminService.registerDatabaseInstance(it)
+      }
 
     expect:
       def usedInstances = [] as Set
       (0..1000).each {
-        def instance = adminService.findDatabaseInstanceOrFail(null)
+        def instance = adminService.findDatabaseInstanceOrFail()
         assert instance != null
         assert instance.instanceName != "dev3"
         usedInstances << instance.instanceName
@@ -88,20 +92,45 @@ class DatabaseHotelAdminServiceTest extends Specification {
       usedInstances.containsAll(["dev1", "dev2"])
   }
 
-  private def createMockInstance(String name, boolean isCreateSchemaAllowed) {
-    def databaseInstance = Mock(DatabaseInstance)
-    databaseInstance.getMetaInfo() >> new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo(name, "$name-localhost", 1521)
-    databaseInstance.getInstanceName() >> name
-    databaseInstance.isCreateSchemaAllowed() >> isCreateSchemaAllowed
-    return databaseInstance
+  def "Get random instance matching requirements when specifying engine"() {
+
+    given:
+      adminService = new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L)
+
+      [
+          createMockInstance("dev1", true, POSTGRES),
+          createMockInstance("dev2", true, ORACLE),
+          createMockInstance("dev3", false, POSTGRES),
+          createMockInstance("dev4", true, ORACLE),
+          createMockInstance("dev5", true, POSTGRES),
+          createMockInstance("dev6", false, ORACLE)
+      ].each {
+        adminService.registerDatabaseInstance(it)
+      }
+
+    expect:
+      def usedInstances = (0..1000).collect {
+        adminService.findDatabaseInstanceOrFail(new DatabaseInstanceRequirements(POSTGRES, null)).instanceName
+      } as Set
+
+      usedInstances == ["dev1", "dev5"] as Set
   }
 
   def "Specifying a missing instance fails"() {
 
     when:
-      adminService.findDatabaseInstanceOrFail("relay")
+      adminService.findDatabaseInstanceOrFail(new DatabaseInstanceRequirements(ORACLE, "relay"))
 
     then:
       thrown(DatabaseServiceException)
+  }
+
+  private def createMockInstance(String name, boolean isCreateSchemaAllowed, DatabaseEngine engine = ORACLE) {
+    def databaseInstance = Mock(DatabaseInstance)
+    databaseInstance.getMetaInfo() >>
+        createDatabaseInstanceMetaInfo(name, "$name-localhost", 1521, isCreateSchemaAllowed, engine)
+    databaseInstance.getInstanceName() >> name
+    databaseInstance.isCreateSchemaAllowed() >> isCreateSchemaAllowed
+    return databaseInstance
   }
 }

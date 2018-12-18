@@ -1,9 +1,11 @@
 package no.skatteetaten.aurora.databasehotel.service.oracle
 
+import static no.skatteetaten.aurora.databasehotel.DomainUtils.createDatabaseInstanceMetaInfo
 import static no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer.DEFAULT_SCHEMA_NAME
 
 import javax.sql.DataSource
 
+import no.skatteetaten.aurora.databasehotel.DomainUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.oracle.AbstractOracleSpec
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
@@ -30,7 +32,7 @@ class OracleResourceUsageCollectorTest extends AbstractOracleSpec {
     def dataSource = cleanUpPreviousRun(databaseManager)
 
     def databaseHotelDataDao = new OracleDatabaseHotelDataDao(dataSource)
-    def databaseInstance = new DatabaseInstance(new no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo.DatabaseInstanceMetaInfo("a", "b", 1512), databaseManager,
+    def databaseInstance = new DatabaseInstance(createDatabaseInstanceMetaInfo("a", "b", 1512, true), databaseManager,
         databaseHotelDataDao, new OracleJdbcUrlBuilder("dbhotel"), resourceUsageCollector, true, 6, 1)
 
     createTestSchemas(databaseInstance, databaseManager)

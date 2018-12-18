@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.databasehotel.service;
 
 import static java.lang.String.format;
 
+import static no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE;
 import static no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao.SCHEMA_TYPE_EXTERNAL;
 import static no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.EXTERNAL;
 import static no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA;
@@ -92,7 +93,7 @@ public class ExternalSchemaManager {
 
         List<Label> labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.getId());
 
-        DatabaseInstanceMetaInfo metaInfo = new DatabaseInstanceMetaInfo("external", null, 0, false);
+        DatabaseInstanceMetaInfo metaInfo = new DatabaseInstanceMetaInfo(ORACLE, "external", null, 0, false);
         JdbcUrlBuilder jdbcUrlBuilder = (host, port, database) -> externalSchema.getJdbcUrl();
 
         return new DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder).createOne(schemaData, schema, users,
