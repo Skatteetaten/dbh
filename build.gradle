@@ -32,7 +32,7 @@ repositories addRepos
 
 ext.aurora = [
     requireStaging   : false,
-    applyCheckstylePlugin: false
+    checkstyleConfigVersion: "2.1.0"
 ]
 
 apply plugin: 'io.spring.dependency-management'
