@@ -84,11 +84,13 @@ dependencies {
   )
 }
 
+test.onlyIf { Boolean.getBoolean('run.tests') }
+
 test {
   maxHeapSize = "512m"
   useJUnitPlatform()
-
 }
+
 compileTestGroovy.dependsOn compileTestKotlin
 compileTestGroovy.classpath += files(compileTestKotlin.destinationDir)
 testClasses.dependsOn compileTestGroovy
