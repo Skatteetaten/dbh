@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.User
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstanceRequirements
+import no.skatteetaten.aurora.databasehotel.toDatabaseEngine
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -85,6 +86,7 @@ class DatabaseSchemaController(
     @GetMapping("/")
     @Timed
     fun findAll(
+        @RequestParam(name = "engine", required = false) engineName: String?,
         @RequestParam(required = false, defaultValue = "") labels: String,
         @RequestParam(required = false) q: String?
     ): ResponseEntity<ApiResponse<*>> {
@@ -92,10 +94,11 @@ class DatabaseSchemaController(
         if (!schemaListingAllowed) {
             throw OperationDisabledException("Schema listing has been disabled for this instance")
         }
+        val engine = engineName?.toDatabaseEngine()
         val schemas: Set<DatabaseSchema> = when {
             q == "for-deletion" -> databaseHotelService.findAllDatabaseSchemasForDeletion()
-            labels.isBlank() -> databaseHotelService.findAllDatabaseSchemas()
-            else -> databaseHotelService.findAllDatabaseSchemasByLabels(parseLabelsParam(labels))
+            labels.isBlank() -> databaseHotelService.findAllDatabaseSchemas(engine)
+            else -> databaseHotelService.findAllDatabaseSchemasByLabels(engine, parseLabelsParam(labels))
         }
 
         val resources = schemas

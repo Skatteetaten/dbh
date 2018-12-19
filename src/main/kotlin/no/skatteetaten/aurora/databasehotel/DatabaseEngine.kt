@@ -10,15 +10,20 @@ enum class DatabaseEngine {
  * - jdbc:oracle:thin:@uil0map-drivein-db01:1521/dbhotel
  * - jdbc:postgresql://localhost:5432/postgres
  */
-val String.databaseEngine
-    get(): DatabaseEngine {
+fun String.toDatabaseEngineFromJdbcUrl(): DatabaseEngine {
 
-        val engineName = ("jdbc:(.*?):.*".toRegex().find(this)?.groupValues?.get(1)
-            ?: throw IllegalArgumentException("$this does not appear to be a valid jdbc string"))
+    val engineName = ("jdbc:(.*?):.*".toRegex().find(this)?.groupValues?.get(1)
+        ?: throw IllegalArgumentException("$this does not appear to be a valid jdbc string"))
 
-        return when (engineName) {
-            "postgresql" -> DatabaseEngine.POSTGRES
-            "oracle" -> DatabaseEngine.ORACLE
-            else -> throw java.lang.IllegalArgumentException("Unsupported database engine $engineName")
-        }
+    return when (engineName) {
+        "postgresql" -> DatabaseEngine.POSTGRES
+        "oracle" -> DatabaseEngine.ORACLE
+        else -> throw java.lang.IllegalArgumentException("Unsupported database engine $engineName")
     }
+}
+
+fun String.toDatabaseEngine(): DatabaseEngine? = try {
+    DatabaseEngine.valueOf(this)
+} catch (e: IllegalArgumentException) {
+    null
+}

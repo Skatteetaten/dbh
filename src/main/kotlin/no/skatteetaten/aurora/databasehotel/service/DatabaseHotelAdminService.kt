@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.service
 
 import com.google.common.base.Strings
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
@@ -20,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.util.HashMap
-import java.util.HashSet
 import java.util.Optional
 import java.util.Random
 
@@ -36,7 +36,10 @@ class DatabaseHotelAdminService(
     var externalSchemaManager: ExternalSchemaManager? = null
     private val databaseInstances: MutableMap<String, DatabaseInstance> = HashMap()
 
-    fun findAllDatabaseInstances(): Set<DatabaseInstance> = HashSet(databaseInstances.values)
+    fun findAllDatabaseInstances(databaseEngine: DatabaseEngine? = null): Set<DatabaseInstance> =
+        databaseInstances.values
+            .filter { databaseEngine == null || it.metaInfo.engine == databaseEngine }
+            .toSet()
 
     fun registerOracleDatabaseInstance(
         instanceName: String,

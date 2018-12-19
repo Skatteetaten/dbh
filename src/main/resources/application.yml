@@ -38,7 +38,7 @@ database-config:
   defaultInstanceName: "${dbh.dev.db.instanceName:dev-postgres}"
   databases:
   - host: "${dbh.dev.db.oracle.host:localhost}"
-    engine: "${dbh.dev.db.oracle.engine:oralce}"
+    engine: "${dbh.dev.db.oracle.engine:oracle}"
     service: "${dbh.dev.db.oracle.service:dbhotel}"
     instanceName: "${dbh.dev.db.oracle.instanceName:dev-oracle}"
     createSchemaAllowed: "${dbh.dev.db.oracle.createSchemaAllowed:true}"

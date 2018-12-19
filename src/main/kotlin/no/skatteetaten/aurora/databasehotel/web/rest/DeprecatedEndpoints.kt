@@ -39,9 +39,10 @@ class DeprecatedEndpoints(
     @GetMapping("/schema/")
     @Timed
     fun findAll(
-        @RequestParam(name = "labels", required = false, defaultValue = "") labelsParam: String,
+        @RequestParam(name = "engine", required = false) engineName: String?,
+        @RequestParam(required = false, defaultValue = "") labels: String,
         @RequestParam(name = "q", required = false) query: String?
-    ) = databaseSchemaController.findAll(labelsParam, query)
+    ) = databaseSchemaController.findAll(engineName, labels, query)
 
     @PostMapping("/schema/")
     @Timed

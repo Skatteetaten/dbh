@@ -3,7 +3,7 @@ package no.skatteetaten.aurora.databasehotel.service
 import com.google.common.collect.Lists
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
-import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher
+import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher.findAllMatchingSchemas
 import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -39,17 +39,17 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return if (candidates.size == 0) Optional.empty() else Optional.of(candidates[0])
     }
 
-    fun findAllDatabaseSchemas(): Set<DatabaseSchema> {
+    fun findAllDatabaseSchemas(engine: DatabaseEngine?): Set<DatabaseSchema> {
 
-        return findAllDatabaseSchemasByLabels(emptyMap())
+        return findAllDatabaseSchemasByLabels(engine, emptyMap())
     }
 
-    fun findAllDatabaseSchemasByLabels(labelsToMatch: Map<String, String?>): Set<DatabaseSchema> {
+    fun findAllDatabaseSchemasByLabels(engine: DatabaseEngine? = null, labelsToMatch: Map<String, String?> = emptyMap()): Set<DatabaseSchema> {
 
-        val schemas = databaseHotelAdminService.findAllDatabaseInstances()
+        val schemas = databaseHotelAdminService.findAllDatabaseInstances(engine)
                 .flatMap { it.findAllSchemas(labelsToMatch) }.toSet()
         val externalSchemas = databaseHotelAdminService.externalSchemaManager?.findAllSchemas()
-        val matchingExternalSchemas = SchemaLabelMatcher.findAllMatchingSchemas(externalSchemas, labelsToMatch)
+        val matchingExternalSchemas = findAllMatchingSchemas(externalSchemas, labelsToMatch)
         return schemas + matchingExternalSchemas
     }
 
