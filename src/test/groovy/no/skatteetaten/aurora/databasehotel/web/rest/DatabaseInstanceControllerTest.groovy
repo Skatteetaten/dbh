@@ -37,7 +37,7 @@ class DatabaseInstanceControllerTest extends Specification {
   void setup() {
     def databaseInstanceController = new DatabaseInstanceController(databaseHotelAdminService)
     mockMvc = MockMvcBuilders.
-        standaloneSetup(databaseInstanceController, new DeprecatedEndpoints(databaseInstanceController, null))
+        standaloneSetup(databaseInstanceController, new DeprecatedEndpoints(databaseInstanceController, Mock(DatabaseSchemaController)))
         .apply(documentationConfiguration(this.restDocumentation))
         .build()
   }

@@ -20,6 +20,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.pathPara
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
+import static no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import static no.skatteetaten.aurora.databasehotel.DomainUtils.createDatabaseInstanceMetaInfo
 import static no.skatteetaten.aurora.databasehotel.DomainUtils.createDatabaseInstanceMetaInfo
 
@@ -32,11 +33,13 @@ import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 import groovy.json.JsonOutput
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.DomainUtils
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.User
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
+import no.skatteetaten.aurora.databasehotel.service.DatabaseInstanceRequirements
 import spock.lang.Specification
 
 class DatabaseSchemaControllerTest extends Specification {
@@ -72,7 +75,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def EXAMPLE_SCHEMA_EXTERNAL = new DatabaseSchema(
       EXAMPLE_SCHEMA_ID,
-      createDatabaseInstanceMetaInfo('external', null, 0, false),
+      createDatabaseInstanceMetaInfo('external', "-", 0, false),
       'jdbc:oracle:thin:@some-other-dbserver.example.com:1521/dbhotel',
       'AIOIFPXHHLFLTVDPSUWEERCTMMWJUD',
       new Date(),
@@ -88,7 +91,7 @@ class DatabaseSchemaControllerTest extends Specification {
   void setup() {
     def databaseSchemaController = new DatabaseSchemaController(databaseHotelService, true, true)
     mockMvc = MockMvcBuilders.
-        standaloneSetup(databaseSchemaController, new DeprecatedEndpoints(null, databaseSchemaController))
+        standaloneSetup(databaseSchemaController, new DeprecatedEndpoints(Mock(DatabaseInstanceController), databaseSchemaController))
         .apply(documentationConfiguration(this.restDocumentation))
         .build()
   }
@@ -124,7 +127,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def "Create schema without labels"() {
     given:
-      databaseHotelService.createSchema(null, null) >> EXAMPLE_SCHEMA
+      databaseHotelService.createSchema(new DatabaseInstanceRequirements(), [:]) >> EXAMPLE_SCHEMA
 
     when:
       String payload = JsonOutput.toJson([:])
@@ -139,7 +142,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def "Create schema with labels"() {
     given:
-      databaseHotelService.createSchema('test', EXAMPLE_LABELS) >> EXAMPLE_SCHEMA
+      databaseHotelService.createSchema(new DatabaseInstanceRequirements(ORACLE, 'test'), EXAMPLE_LABELS) >> EXAMPLE_SCHEMA
 
     when:
       String payload = JsonOutput.toJson([labels: EXAMPLE_LABELS, instanceName: 'test'])
@@ -291,26 +294,5 @@ class DatabaseSchemaControllerTest extends Specification {
                   parameterWithName("id").description("Id til skjema som skal slettes")
               )
           ))
-  }
-
-  def "ParseLabelsParam"() {
-
-    expect:
-      Map<String, String> labels = DatabaseSchemaController.parseLabelsParam(labelsParam)
-      labels == expectedLabels
-
-    where:
-      labelsParam                                                    | expectedLabels
-      "deploymentId%3Dsometestdeployment%2CresourceName%3Ddatabase1" |
-          [deploymentId: 'sometestdeployment', resourceName: 'database1']
-      "deploymentId=sometestdeployment,resourceName=database1"       |
-          [deploymentId: 'sometestdeployment', resourceName: 'database1']
-      "deploymentId=sometestdeployment,resourceName="                |
-          [deploymentId: 'sometestdeployment', resourceName: null]
-      "deploymentId=,resourceName="                                  | [deploymentId: null, resourceName: null]
-      "deploymentId,resourceName"                                    | [deploymentId: null, resourceName: null]
-      "deploymentId,resourceName=55"                                 | [deploymentId: null, resourceName: "55"]
-      ""                                                             | [:]
-      null                                                           | [:]
   }
 }
