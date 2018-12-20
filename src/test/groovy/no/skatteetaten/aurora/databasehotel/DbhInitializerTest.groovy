@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.databasehotel
 
-import no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceInitializer
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelAdminService
 import spock.lang.Specification
 

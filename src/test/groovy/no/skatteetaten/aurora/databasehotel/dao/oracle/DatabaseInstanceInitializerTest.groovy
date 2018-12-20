@@ -1,6 +1,10 @@
 package no.skatteetaten.aurora.databasehotel.dao.oracle
 
-import static DatabaseInstanceInitializer.DEFAULT_SCHEMA_NAME
+import static no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer.DEFAULT_SCHEMA_NAME
+
+import org.springframework.jdbc.core.JdbcTemplate
+
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 
 class DatabaseInstanceInitializerTest extends AbstractOracleSpec {
 
@@ -22,6 +26,6 @@ class DatabaseInstanceInitializerTest extends AbstractOracleSpec {
     then:
       databaseManager.schemaExists(DEFAULT_SCHEMA_NAME)
       databaseManager.executeStatements("ALTER SESSION SET CURRENT_SCHEMA=$DEFAULT_SCHEMA_NAME")
-      databaseManager.query("select * from SCHEMA_VERSION").max { it.installed_rank }.installed_rank == 9
+      new JdbcTemplate(managerDs).queryForList("select * from SCHEMA_VERSION").max { it.installed_rank }.installed_rank == 9
   }
 }

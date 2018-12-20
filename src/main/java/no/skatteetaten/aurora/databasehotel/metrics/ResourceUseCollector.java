@@ -41,7 +41,7 @@ public class ResourceUseCollector {
         long start = System.currentTimeMillis();
         LOG.info("Collecting resource use metrics");
 
-        Set<DatabaseSchema> allSchemas = databaseHotelService.findAllDatabaseSchemas();
+        Set<DatabaseSchema> allSchemas = databaseHotelService.findAllDatabaseSchemas(null);
         LOG.debug("Found {} schemas total", allSchemas.size());
 
         List<DatabaseSchema> databaseSchemas = allSchemas.stream()

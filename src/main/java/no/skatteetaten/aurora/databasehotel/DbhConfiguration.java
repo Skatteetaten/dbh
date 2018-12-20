@@ -17,8 +17,7 @@ import no.skatteetaten.aurora.databasehotel.utils.CollectionUtils;
 @Component
 public class DbhConfiguration {
 
-    private static final String[] REQUIRED_PARAMS = new String[] { "username", "password", "instanceName", "service",
-        "clientService", "host" };
+    private static final String[] REQUIRED_PARAMS = new String[] { "username", "password", "instanceName", "host" };
     private static final Logger LOGGER = LoggerFactory.getLogger(DbhConfiguration.class);
     private List<Map<String, Object>> databases;
 

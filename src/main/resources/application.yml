@@ -35,16 +35,23 @@ spring:
 database-config:
   dropAllowed: true
   schemaListingAllowed: true
-  defaultInstanceName: "${dbh.dev.db.instanceName:dev}"
+  defaultInstanceName: "${dbh.dev.db.instanceName:dev-postgres}"
   databases:
-  - host: "${dbh.dev.db.host:localhost}"
-    service: "${dbh.dev.db.service:dbhotel}"
-    instanceName: "${dbh.dev.db.instanceName:dev}"
-    createSchemaAllowed: "${dbh.dev.db.createSchemaAllowed:true}"
-    username: "${dbh.dev.db.username:aos_api_user as sysdba}"
-    password: "${dbh.dev.db.password:dbh}"
-    clientService: "${dbh.dev.db.clientService:dbhotel}"
-    oracleScriptRequired: "${dbh.dev.db.oracleScriptRequired:true}"
+  - host: "${dbh.dev.db.oracle.host:localhost}"
+    engine: "${dbh.dev.db.oracle.engine:oracle}"
+    service: "${dbh.dev.db.oracle.service:dbhotel}"
+    instanceName: "${dbh.dev.db.oracle.instanceName:dev-oracle}"
+    createSchemaAllowed: "${dbh.dev.db.oracle.createSchemaAllowed:true}"
+    username: "${dbh.dev.db.oracle.username:aos_api_user as sysdba}"
+    password: "${dbh.dev.db.oracle.password:dbh}"
+    clientService: "${dbh.dev.db.oracle.clientService:dbhotel}"
+    oracleScriptRequired: "${dbh.dev.db.oracle.oracleScriptRequired:true}"
+  - host: "${dbh.dev.db.postgres.host:localhost}"
+    engine: "${dbh.dev.db.postgres.engine:postgres}"
+    instanceName: "${dbh.dev.db.postgres.instanceName:dev-postgres}"
+    createSchemaAllowed: "${dbh.dev.db.postgres.createSchemaAllowed:true}"
+    username: "${dbh.dev.db.postgres.username:aos_api_user as sysdba}"
+    password: "${dbh.dev.db.postgres.password:dbh}"
 
 aurora:
   authenticationEnabled: false

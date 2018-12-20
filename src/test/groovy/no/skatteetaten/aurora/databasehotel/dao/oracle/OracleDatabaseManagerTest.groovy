@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.dao.oracle
 
-import groovy.sql.GroovyRowResult
 import groovy.sql.Sql
 import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 

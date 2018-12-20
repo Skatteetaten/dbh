@@ -1,26 +1,25 @@
 package no.skatteetaten.aurora.databasehotel.service
 
-import no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseInstanceInitializer
+import static no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
+
+import no.skatteetaten.aurora.databasehotel.DomainUtils
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
-import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData
 import spock.lang.Specification
 
 class DatabaseHotelServiceTest extends Specification {
 
-  public static final String INSTANCE_NAME = "test-dev"
-
-  def adminService = Mock(DatabaseHotelAdminService).with {
-    it.getExternalSchemaManager() >> Optional.empty()
-    it
-  }
+  def adminService = Mock(DatabaseHotelAdminService)
 
   def databaseHotelService = new DatabaseHotelService(adminService)
+
+  def requirements = new DatabaseInstanceRequirements(ORACLE, "test-dev")
 
   def "Create schema for non existing instance"() {
 
     when:
       new DatabaseHotelService(new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L))
-          .createSchema("nosuchlevel")
+          .createSchema(new DatabaseInstanceRequirements(ORACLE, "nosuchlevel"))
 
     then:
       thrown(DatabaseServiceException)
@@ -31,15 +30,15 @@ class DatabaseHotelServiceTest extends Specification {
     given:
       def databaseInstance = Mock(DatabaseInstance)
 
-      adminService.findDatabaseInstanceOrFail(INSTANCE_NAME) >> databaseInstance
+      adminService.findDatabaseInstanceOrFail(requirements) >> databaseInstance
 
       Map<String, String> labels = [deploymentId: "TestDeployment"]
 
     when:
-      databaseHotelService.createSchema(INSTANCE_NAME, labels)
+      databaseHotelService.createSchema(requirements, labels)
 
     then:
-      1 * databaseInstance.createSchema(labels) >> new DatabaseSchema(null, null, null, null, null, null, new DatabaseSchemaMetaData(0.0))
+      1 * databaseInstance.createSchema(labels) >> databaseSchema()
   }
 
   def "Update schema labels"() {
@@ -48,7 +47,7 @@ class DatabaseHotelServiceTest extends Specification {
       def databaseInstance = Mock(DatabaseInstance)
 
       adminService.findAllDatabaseInstances() >> [databaseInstance]
-      def databaseSchema = new DatabaseSchema("some_id", null, null, null, null, null, null)
+      def databaseSchema = databaseSchema("some_id")
       databaseInstance.findSchemaById(databaseSchema.id) >> Optional.of(databaseSchema)
 
       Map<String, String> labels = [deploymentId: "TestDeployment"]
@@ -58,5 +57,9 @@ class DatabaseHotelServiceTest extends Specification {
 
     then:
       1 * databaseInstance.replaceLabels(databaseSchema, labels)
+  }
+
+  private static DatabaseSchema databaseSchema(String id = "id") {
+    return DomainUtils.createDatabaseSchema(id)
   }
 }

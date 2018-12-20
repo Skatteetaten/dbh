@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.dao.oracle
 
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
 import spock.lang.Shared

@@ -58,7 +58,7 @@ public class DatabaseInstance {
 
     private SchemaNamePasswordStrategy schemaNamePasswordStrategy = () -> {
         String schemaName = RandomStringUtils.randomAlphabetic(RANDOM_LENGTH);
-        String password = RandomStringUtils.randomAlphabetic(RANDOM_LENGTH);
+        String password = "a1" + RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH-2);
         return Pair.of(schemaName, password);
     };
 
@@ -299,7 +299,7 @@ public class DatabaseInstance {
             List<SchemaUser> users = databaseHotelDataDao.findAllUsersForSchema(schemaData.getId());
             List<Label> labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.getId());
 
-            Optional<OracleResourceUsageCollector.SchemaSize> schemaSize =
+            Optional<ResourceUsageCollector.SchemaSize> schemaSize =
                 resourceUsageCollector.getSchemaSize(schemaData.getName());
 
             return new DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder).createOne(schemaData, schema, users,

@@ -13,7 +13,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
-import no.skatteetaten.aurora.databasehotel.dao.oracle.DatabaseSupport;
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport;
 import no.skatteetaten.aurora.databasehotel.service.DatabaseServiceException;
 import no.skatteetaten.aurora.databasehotel.service.ResourceUsageCollector;
 
@@ -34,7 +34,7 @@ public class OracleResourceUsageCollector extends DatabaseSupport implements Res
                 @Override
                 public List<SchemaSize> load(Object key) throws Exception {
                     List<SchemaSize> schemaSizes =
-                        jdbcTemplate.query("SELECT owner, sum(bytes)/1024/1024 schema_size_mb "
+                        getJdbcTemplate().query("SELECT owner, sum(bytes)/1024/1024 schema_size_mb "
                             + "FROM dba_segments "
                             + "where owner in (select name from DATABASEHOTEL_INSTANCE_DATA.SCHEMA_DATA) "
                             + "group BY owner", SCHEMA_SIZE_ROWMAPPER);
