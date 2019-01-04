@@ -2,7 +2,7 @@
 
 def jenkinsfile
 def overrides = [
-    scriptVersion  : 'AOS-3004',
+    scriptVersion  : 'v6',
     pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
     disableAllReports: true,
     javaVersion : 11,
