@@ -32,7 +32,8 @@ repositories addRepos
 
 ext.aurora = [
     requireStaging   : false,
-    checkstyleConfigVersion: "2.1.0"
+    checkstyleConfigVersion: "2.1.0",
+    setProjectVersionFromGit: false
 ]
 
 apply plugin: 'io.spring.dependency-management'
@@ -46,6 +47,8 @@ configurations.archives.artifacts.removeIf { !it.delegate.archiveTask.enabled }
 springBoot {
   buildInfo()
 }
+
+version "${version}"
 
 group = 'no.skatteetaten.aurora'
 
