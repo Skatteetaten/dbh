@@ -1,7 +1,6 @@
 #!/usr/bin/env groovy
 
-def jenkinsfile
-def overrides = [
+def config = [
     scriptVersion  : 'v6',
     pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
     disableAllReports: true,
@@ -13,7 +12,7 @@ def overrides = [
     ]
 ]
 
-fileLoader.withGit(overrides.pipelineScript,, overrides.scriptVersion) {
+fileLoader.withGit(config.pipelineScript, config.scriptVersion) {
    jenkinsfile = fileLoader.load('templates/leveransepakke')
 }
-jenkinsfile.gradle(overrides.scriptVersion, overrides)
+jenkinsfile.gradle(config.scriptVersion, config)

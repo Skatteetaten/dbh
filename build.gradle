@@ -50,7 +50,7 @@ springBoot {
 
 version "${version}"
 
-group = 'no.skatteetaten.aurora'
+group = groupId
 
 dependencies {
   compile(

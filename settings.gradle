@@ -7,4 +7,4 @@ pluginManagement {
   }
 }
 
-rootProject.name = "dbh"
+rootProject.name = artifactId
