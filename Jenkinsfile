@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 def config = [
-    scriptVersion  : 'v6',
+    scriptVersion  : 'v6-fix-build',
     pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
     disableAllReports: true,
     javaVersion : 11,
