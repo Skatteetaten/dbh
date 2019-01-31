@@ -47,6 +47,17 @@ data class SchemaCreationRequest(
     val schema: Schema? = null
 )
 
+data class JdbcUser(
+    val jdbcUrl: String,
+    val username: String,
+    val password: String
+)
+
+data class ConnectionVerificationRequest(
+    val id: String? = null,
+    val jdbcUser: JdbcUser? = null
+)
+
 data class Schema(val username: String, val password: String, val jdbcUrl: String)
 
 @RestController
@@ -137,6 +148,16 @@ class DatabaseSchemaController(
             databaseHotelService.createSchema(instanceRequirements, labels)
         } else databaseHotelService.registerExternalSchema(schema.username, schema.password, schema.jdbcUrl, labels)
         return Responses.okResponse(databaseSchema.toResource())
+    }
+
+    @PutMapping("/validate")
+    fun validate(@RequestBody connectionVerificationRequest: ConnectionVerificationRequest): ResponseEntity<ApiResponse<*>> {
+        val success = connectionVerificationRequest.id?.let {
+            databaseHotelService.validateConnection(it)
+        } ?: connectionVerificationRequest.jdbcUser?.let {
+            databaseHotelService.validateConnection(it.jdbcUrl, it.username, it.password)
+        } ?: throw IllegalArgumentException("id or jdbcUser is required")
+        return Responses.okResponse(success)
     }
 }
 
