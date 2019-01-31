@@ -8,6 +8,8 @@ import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.lang.String.format
+import java.sql.DriverManager
+import java.sql.SQLException
 import java.time.Duration
 import java.util.Optional
 
@@ -85,6 +87,19 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
             }
         }
     }
+
+    fun validateConnection(id: String) =
+        findSchemaById(id).orElse(null)?.let {
+            val user = it.left.users.first()
+            validateConnection(it.left.jdbcUrl, user.name, user.password)
+        } ?: throw IllegalArgumentException("no database schema found for id: $id")
+
+    fun validateConnection(jdbcUrl: String, username: String, password: String) =
+        try {
+            DriverManager.getConnection(jdbcUrl, username, password).use { true }
+        } catch (ex: SQLException) {
+            false
+        }
 
     @JvmOverloads
     fun updateSchema(
