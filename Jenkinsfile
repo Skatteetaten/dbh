@@ -1,21 +1,18 @@
 #!/usr/bin/env groovy
 
-def jenkinsfile
-def version = 'feature/template-without-executor'
-fileLoader.withGit('https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',version) {
-  jenkinsfile = fileLoader.load('templates/no-executor/leveransepakke')
+def config = [
+    scriptVersion  : 'v6-fix-build',
+    pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
+    disableAllReports: true,
+    javaVersion : 11,
+    credentialsId: "github",
+    mountCredentials: [[ credentialId : "dbh-application.properties", path: "~/.spring-boot-devtools.properties"]],
+    versionStrategy: [
+      [ branch: 'master', versionHint: '1' ]
+    ]
+]
+
+fileLoader.withGit(config.pipelineScript, config.scriptVersion) {
+   jenkinsfile = fileLoader.load('templates/leveransepakke')
 }
-
-node {
-  withCredentials([file(credentialsId: 'dbh-application.properties', variable: 'FILE')]) {
-    sh 'cat $FILE > ~/.spring-boot-devtools.properties'
-  }
-
-  try {
-    def overrides = [piTests: false, disableAllReports: true]
-    jenkinsfile.gradle(version, overrides)
-  } finally {
-    sh 'rm ~/.spring-boot-devtools.properties'
-  }
-}
-
+jenkinsfile.gradle(config.scriptVersion, config)

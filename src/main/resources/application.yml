@@ -14,8 +14,7 @@ metrics:
 
 logging:
   level:
-    no.skatteetaten.aurora: DEBUG
-    no.skatteetaten.aurora.filter: INFO
+    no.skatteetaten.aurora: INFO
     no.skatteetaten.aurora.databasehotell.DbhConfigurator: WARN
     com.zaxxer.hikari: WARN
     org:

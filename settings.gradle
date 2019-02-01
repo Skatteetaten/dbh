@@ -1,1 +1,10 @@
-rootProject.name = "dbh"
+pluginManagement {
+  repositories {
+    maven {
+      url 'http://aurora/nexus/content/repositories/gradle-plugins'
+    }
+    gradlePluginPortal()
+  }
+}
+
+rootProject.name = artifactId
