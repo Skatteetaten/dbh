@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.web.rest;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,14 +54,13 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Map<String, Object> error = new HashMap<String, Object>() {
-            {
-                put("errorMessage", e.getMessage());
-                if (e.getCause() != null) {
-                    put("cause", e.getCause().getMessage());
-                }
-            }
-        };
-        return handleExceptionInternal(e, error, headers, httpStatus, request);
+        List<String> errorMessageList = new ArrayList<>();
+        errorMessageList.add(e.getMessage());
+        if (e.getCause() != null) {
+            errorMessageList.add("cause: " + e.getCause().getMessage());
+        }
+
+        return handleExceptionInternal(e, new ApiResponse<String>("Failed", 1, errorMessageList), headers, httpStatus,
+            request);
     }
 }
