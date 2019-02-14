@@ -58,7 +58,9 @@ data class ConnectionVerificationRequest(
     val jdbcUser: JdbcUser? = null
 )
 
-data class Schema(val username: String, val password: String, val jdbcUrl: String)
+data class Schema(val username: String, val password: String, val jdbcUrl: String) {
+    fun isValid() = username.isNotEmpty() && password.isNotEmpty() && jdbcUrl.isNotEmpty()
+}
 
 @RestController
 @RequestMapping("/api/v1/schema")
@@ -127,9 +129,16 @@ class DatabaseSchemaController(
 
         val labels = schemaCreationRequest.labels ?: emptyMap()
         val schema = schemaCreationRequest.schema
-        val databaseSchema = when (schema) {
-            null -> databaseHotelService.updateSchema(id, labels)
-            else -> databaseHotelService.updateSchema(id, labels, schema.username, schema.jdbcUrl, schema.password)
+        val databaseSchema = when {
+            schema == null -> databaseHotelService.updateSchema(id, labels)
+            schema.isValid() -> databaseHotelService.updateSchema(
+                id,
+                labels,
+                schema.username,
+                schema.jdbcUrl,
+                schema.password
+            )
+            else -> throw IllegalArgumentException("Missing JDBC input")
         }
         return Responses.okResponse(databaseSchema.toResource())
     }
@@ -146,7 +155,11 @@ class DatabaseSchemaController(
                 instanceName = schemaCreationRequest.instanceName
             )
             databaseHotelService.createSchema(instanceRequirements, labels)
-        } else databaseHotelService.registerExternalSchema(schema.username, schema.password, schema.jdbcUrl, labels)
+        } else if (schema.isValid()) {
+            databaseHotelService.registerExternalSchema(schema.username, schema.password, schema.jdbcUrl, labels)
+        } else {
+            throw IllegalArgumentException("Missing JDBC input")
+        }
         return Responses.okResponse(databaseSchema.toResource())
     }
 

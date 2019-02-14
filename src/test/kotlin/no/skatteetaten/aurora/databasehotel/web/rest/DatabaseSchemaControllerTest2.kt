@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -76,5 +77,27 @@ class DatabaseSchemaControllerTest2 {
         mockMvc.perform(put("/api/v1/schema/validate").content(json).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.errorMessage").value("id or jdbcUser is required"))
+    }
+
+    @Test
+    fun `validate jdbc input for update database schema`() {
+        val input = SchemaCreationRequest(schema = Schema("", "", ""))
+        val json = jacksonObjectMapper().writeValueAsString(input)
+
+        val databaseSchemaController = DatabaseSchemaController(mockk(), true, true)
+        val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
+        mockMvc.perform(put("/api/v1/schema/123").content(json).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `validate jdbc input for create database schema`() {
+        val input = SchemaCreationRequest(schema = Schema("", "", ""))
+        val json = jacksonObjectMapper().writeValueAsString(input)
+
+        val databaseSchemaController = DatabaseSchemaController(mockk(), true, true)
+        val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
+        mockMvc.perform(post("/api/v1/schema/").content(json).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest)
     }
 }
