@@ -76,7 +76,9 @@ class DatabaseSchemaControllerTest2 {
         val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
         mockMvc.perform(put("/api/v1/schema/validate").content(json).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.errorMessage").value("id or jdbcUser is required"))
+            .andExpect(jsonPath("$.status").value("Failed"))
+            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.items[0]").value("id or jdbcUser is required"))
     }
 
     @Test
