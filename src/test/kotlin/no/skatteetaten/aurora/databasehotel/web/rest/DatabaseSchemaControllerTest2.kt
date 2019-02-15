@@ -77,6 +77,7 @@ class DatabaseSchemaControllerTest2 {
         mockMvc.perform(put("/api/v1/schema/validate").content(json).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.status").value("Failed"))
+            .andExpect(jsonPath("$.totalCount").value(1))
             .andExpect(jsonPath("$.items.length()").value(1))
             .andExpect(jsonPath("$.items[0]").value("id or jdbcUser is required"))
     }

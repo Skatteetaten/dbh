@@ -60,7 +60,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
             errorMessageList.add("cause: " + e.getCause().getMessage());
         }
 
-        return handleExceptionInternal(e, new ApiResponse<String>("Failed", 1, errorMessageList), headers, httpStatus,
+        return handleExceptionInternal(e, new ApiResponse<>("Failed", errorMessageList), headers, httpStatus,
             request);
     }
 }
