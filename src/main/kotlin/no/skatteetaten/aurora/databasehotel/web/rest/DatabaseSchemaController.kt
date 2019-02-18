@@ -143,7 +143,8 @@ class DatabaseSchemaController(
         val databaseSchema = if (schema == null) {
             val instanceRequirements = DatabaseInstanceRequirements(
                 databaseEngine = schemaCreationRequest.engine,
-                instanceName = schemaCreationRequest.instanceName
+                instanceName = schemaCreationRequest.instanceName,
+                affiliation = labels["affiliation"]
             )
             databaseHotelService.createSchema(instanceRequirements, labels)
         } else databaseHotelService.registerExternalSchema(schema.username, schema.password, schema.jdbcUrl, labels)

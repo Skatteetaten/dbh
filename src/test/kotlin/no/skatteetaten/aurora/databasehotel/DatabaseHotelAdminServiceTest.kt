@@ -21,7 +21,8 @@ class DatabaseHotelAdminServiceTest {
             5432,
             "postgres",
             "ar3nda1",
-            true
+            true,
+            null
         )
 
         val instance = databaseHotelAdminService.findDatabaseInstanceByInstanceName("postgres")!!

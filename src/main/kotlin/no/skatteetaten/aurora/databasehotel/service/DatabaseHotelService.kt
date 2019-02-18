@@ -15,7 +15,8 @@ import java.util.Optional
 
 data class DatabaseInstanceRequirements(
     val databaseEngine: DatabaseEngine = DatabaseEngine.ORACLE,
-    val instanceName: String? = null
+    val instanceName: String? = null,
+    val affiliation: String? = null
 )
 
 @Service

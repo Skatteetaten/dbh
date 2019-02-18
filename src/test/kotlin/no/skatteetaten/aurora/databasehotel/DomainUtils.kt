@@ -26,6 +26,6 @@ class DomainUtils {
             port: Int,
             createSchemaAllowed: Boolean = true,
             engine: DatabaseEngine = DatabaseEngine.ORACLE
-        ) = DatabaseInstanceMetaInfo(engine, name, host, port, createSchemaAllowed)
+        ) = DatabaseInstanceMetaInfo(engine, name, host, port, createSchemaAllowed, null)
     }
 }

@@ -50,11 +50,13 @@ class DatabaseHotelAdminService(
         password: String,
         clientService: String,
         createSchemaAllowed: Boolean,
-        oracleScriptRequired: Boolean
+        oracleScriptRequired: Boolean,
+        affiliation: String?
     ) {
 
         val managementJdbcUrl = OracleJdbcUrlBuilder(service).create(dbHost, port, null)
-        val databaseInstanceMetaInfo = DatabaseInstanceMetaInfo(ORACLE, instanceName, dbHost, port, createSchemaAllowed)
+        val databaseInstanceMetaInfo =
+            DatabaseInstanceMetaInfo(ORACLE, instanceName, dbHost, port, createSchemaAllowed, affiliation)
 
         val managementDataSource = OracleDataSourceUtils.createDataSource(
             managementJdbcUrl, username, password, oracleScriptRequired
@@ -91,13 +93,14 @@ class DatabaseHotelAdminService(
         port: Int,
         username: String,
         password: String,
-        createSchemaAllowed: Boolean
+        createSchemaAllowed: Boolean,
+        affiliation: String?
     ) {
 
         val urlBuilder = PostgresJdbcUrlBuilder()
         val managementJdbcUrl = urlBuilder.create(dbHost, port, "postgres")
         val databaseInstanceMetaInfo =
-            DatabaseInstanceMetaInfo(POSTGRES, instanceName, dbHost, port, createSchemaAllowed)
+            DatabaseInstanceMetaInfo(POSTGRES, instanceName, dbHost, port, createSchemaAllowed, affiliation)
         val managementDataSource = DataSourceUtils.createDataSource(managementJdbcUrl, username, password)
         val databaseManager = PostgresDatabaseManager(managementDataSource)
 
@@ -149,12 +152,22 @@ class DatabaseHotelAdminService(
             .filter(DatabaseInstance::isCreateSchemaAllowed)
             .filter { it.metaInfo.engine == requirements.databaseEngine }
             .takeIf { it.isNotEmpty() }
-            ?: throw DatabaseServiceException("Schema creation has been disabled for all instances with the required engine ${requirements.databaseEngine}")
+            ?: throw DatabaseServiceException("Schema creation has been disabled for all instances with the required engine=${requirements.databaseEngine}")
 
-        val instanceName = if (requirements.instanceName == null) {
-            val random = Random().nextInt(availableInstances.size)
-            availableInstances[random].instanceName
-        } else requirements.instanceName
+        fun getRandomInstanceName(): String {
+            val availableOpenInstances = availableInstances.filter { it.metaInfo.affiliation == null }.takeIf {
+                it.isNotEmpty()
+            } ?: throw DatabaseServiceException("No available open instances for engine=${requirements.databaseEngine}")
+
+            val random = Random().nextInt(availableOpenInstances.size)
+            return availableOpenInstances[random].instanceName
+        }
+
+        val affiliationInstanceName = requirements.affiliation?.let { affiliation ->
+            availableInstances.find { it.metaInfo.affiliation == affiliation }?.instanceName
+        }
+
+        val instanceName = requirements.instanceName ?: affiliationInstanceName ?: getRandomInstanceName()
 
         return findDatabaseInstanceByInstanceName(instanceName)
             ?: throw DatabaseServiceException("No available instance named [%s] with the required engine $instanceName")
