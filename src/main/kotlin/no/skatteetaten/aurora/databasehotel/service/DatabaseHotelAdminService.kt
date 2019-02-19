@@ -51,12 +51,12 @@ class DatabaseHotelAdminService(
         clientService: String,
         createSchemaAllowed: Boolean,
         oracleScriptRequired: Boolean,
-        affiliation: String?
+        instanceLabels: Map<String, String>
     ) {
 
         val managementJdbcUrl = OracleJdbcUrlBuilder(service).create(dbHost, port, null)
         val databaseInstanceMetaInfo =
-            DatabaseInstanceMetaInfo(ORACLE, instanceName, dbHost, port, createSchemaAllowed, affiliation)
+            DatabaseInstanceMetaInfo(ORACLE, instanceName, dbHost, port, createSchemaAllowed, instanceLabels)
 
         val managementDataSource = OracleDataSourceUtils.createDataSource(
             managementJdbcUrl, username, password, oracleScriptRequired
@@ -94,13 +94,13 @@ class DatabaseHotelAdminService(
         username: String,
         password: String,
         createSchemaAllowed: Boolean,
-        affiliation: String?
+        instanceLabels: Map<String, String>
     ) {
 
         val urlBuilder = PostgresJdbcUrlBuilder()
         val managementJdbcUrl = urlBuilder.create(dbHost, port, "postgres")
         val databaseInstanceMetaInfo =
-            DatabaseInstanceMetaInfo(POSTGRES, instanceName, dbHost, port, createSchemaAllowed, affiliation)
+            DatabaseInstanceMetaInfo(POSTGRES, instanceName, dbHost, port, createSchemaAllowed, instanceLabels)
         val managementDataSource = DataSourceUtils.createDataSource(managementJdbcUrl, username, password)
         val databaseManager = PostgresDatabaseManager(managementDataSource)
 
@@ -154,20 +154,18 @@ class DatabaseHotelAdminService(
             .takeIf { it.isNotEmpty() }
             ?: throw DatabaseServiceException("Schema creation has been disabled for all instances with the required engine=${requirements.databaseEngine}")
 
-        fun getRandomInstanceName(): String {
-            val availableOpenInstances = availableInstances.filter { it.metaInfo.affiliation == null }.takeIf {
-                it.isNotEmpty()
-            } ?: throw DatabaseServiceException("No available open instances for engine=${requirements.databaseEngine}")
+        val openInstances = availableInstances.filter { it.metaInfo.labels.isEmpty() }
 
-            val random = Random().nextInt(availableOpenInstances.size)
-            return availableOpenInstances[random].instanceName
+        val matchedLabelsInstances = availableInstances.filter { instance ->
+            instance.metaInfo.labels.isNotEmpty() && instance.metaInfo.labels.all {
+                it.value == requirements.instanceLabels[it.key]
+            }
         }
 
-        val affiliationInstanceName = requirements.affiliation?.let { affiliation ->
-            availableInstances.find { it.metaInfo.affiliation == affiliation }?.instanceName
-        }
-
-        val instanceName = requirements.instanceName ?: affiliationInstanceName ?: getRandomInstanceName()
+        val instanceName = requirements.instanceName
+            ?: getRandomInstanceName(matchedLabelsInstances)
+            ?: (if (requirements.fallback) getRandomInstanceName(openInstances) else null)
+            ?: throw DatabaseServiceException("No available instances found with the required engine=${requirements.databaseEngine}")
 
         return findDatabaseInstanceByInstanceName(instanceName)
             ?: throw DatabaseServiceException("No available instance named [%s] with the required engine $instanceName")
@@ -200,5 +198,12 @@ class DatabaseHotelAdminService(
         }
         return findDatabaseInstanceByInstanceName(defaultInstanceName)
             ?: throw DatabaseServiceException("Unable to find database instance $defaultInstanceName among registered instances ${databaseInstances.keys}")
+    }
+
+    private fun getRandomInstanceName(instances: List<DatabaseInstance>): String? {
+        if (instances.isEmpty()) return null
+
+        val random = Random().nextInt(instances.size)
+        return instances[random].instanceName
     }
 }

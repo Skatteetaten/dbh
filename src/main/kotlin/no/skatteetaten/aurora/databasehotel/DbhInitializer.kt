@@ -52,7 +52,7 @@ class DbhInitializer(
 
         val engine: String = databaseConfig.typedGet("engine")
 
-        val affiliation: String? = databaseConfig.typedGet("affiliation")
+        val instanceLabels: Map<String, String> = databaseConfig.typedGet("labels", emptyMap())
         val host: String = databaseConfig.typedGet("host")
         val createSchemaAllowed = databaseConfig.typedGet("createSchemaAllowed", "true").toBoolean()
         val instanceName: String = databaseConfig.typedGet("instanceName")
@@ -67,7 +67,7 @@ class DbhInitializer(
                     username,
                     password,
                     createSchemaAllowed,
-                    affiliation
+                    instanceLabels
                 )
             }
             "oracle" -> {
@@ -84,7 +84,7 @@ class DbhInitializer(
                     clientService,
                     createSchemaAllowed,
                     oracleScriptRequired,
-                    affiliation
+                    instanceLabels
                 )
             }
         }

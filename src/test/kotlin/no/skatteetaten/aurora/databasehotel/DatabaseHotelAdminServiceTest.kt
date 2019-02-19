@@ -22,7 +22,7 @@ class DatabaseHotelAdminServiceTest {
             "postgres",
             "ar3nda1",
             true,
-            null
+            mapOf()
         )
 
         val instance = databaseHotelAdminService.findDatabaseInstanceByInstanceName("postgres")!!

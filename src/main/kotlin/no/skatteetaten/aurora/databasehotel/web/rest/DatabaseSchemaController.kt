@@ -43,9 +43,14 @@ data class DatabaseSchemaResource(
 data class SchemaCreationRequest(
     val engine: DatabaseEngine = DatabaseEngine.ORACLE,
     val instanceName: String? = null,
+    val instanceLabels: Map<String, String> = emptyMap(),
+    val instanceFallback: Boolean? = null,
     val labels: Map<String, String>? = null,
     val schema: Schema? = null
-)
+) {
+    val fallback: Boolean
+        get() = instanceFallback ?: (engine == DatabaseEngine.ORACLE)
+}
 
 data class JdbcUser(
     val jdbcUrl: String,
@@ -144,7 +149,8 @@ class DatabaseSchemaController(
             val instanceRequirements = DatabaseInstanceRequirements(
                 databaseEngine = schemaCreationRequest.engine,
                 instanceName = schemaCreationRequest.instanceName,
-                affiliation = labels["affiliation"]
+                instanceLabels = schemaCreationRequest.instanceLabels,
+                fallback = schemaCreationRequest.fallback
             )
             databaseHotelService.createSchema(instanceRequirements, labels)
         } else databaseHotelService.registerExternalSchema(schema.username, schema.password, schema.jdbcUrl, labels)

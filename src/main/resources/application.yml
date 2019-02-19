@@ -46,12 +46,14 @@ database-config:
     clientService: "${dbh.dev.db.oracle.clientService:dbhotel}"
     oracleScriptRequired: "${dbh.dev.db.oracle.oracleScriptRequired:true}"
   - host: "${dbh.dev.db.postgres.host:localhost}"
-    affiliation: "${dbh.dev.db.postgres.affiliation:aurora}"
     engine: "${dbh.dev.db.postgres.engine:postgres}"
     instanceName: "${dbh.dev.db.postgres.instanceName:dev-postgres}"
     createSchemaAllowed: "${dbh.dev.db.postgres.createSchemaAllowed:true}"
     username: "${dbh.dev.db.postgres.username:aos_api_user as sysdba}"
     password: "${dbh.dev.db.postgres.password:dbh}"
+    labels:
+        affiliation: aurora
+        type: prod
 
 aurora:
   authenticationEnabled: false

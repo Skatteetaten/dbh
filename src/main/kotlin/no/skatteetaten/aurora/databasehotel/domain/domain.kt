@@ -11,7 +11,7 @@ data class DatabaseInstanceMetaInfo(
     val host: String,
     val port: Int,
     val createSchemaAllowed: Boolean,
-    val affiliation: String?
+    val labels: Map<String, String>
 )
 
 data class DatabaseSchemaMetaData(val sizeInMb: Double)
