@@ -165,7 +165,7 @@ class DatabaseHotelAdminService(
         val instanceName = requirements.instanceName
             ?: getRandomInstanceName(matchedLabelsInstances)
             ?: (if (requirements.fallback) getRandomInstanceName(openInstances) else null)
-            ?: throw DatabaseServiceException("No available instances found with the required engine=${requirements.databaseEngine}")
+            ?: throw DatabaseServiceException("No matching instances found for labels=${requirements.instanceLabels} engine=${requirements.databaseEngine} fallback=${requirements.fallback}")
 
         return findDatabaseInstanceByInstanceName(instanceName)
             ?: throw DatabaseServiceException("No available instance named [%s] with the required engine $instanceName")
