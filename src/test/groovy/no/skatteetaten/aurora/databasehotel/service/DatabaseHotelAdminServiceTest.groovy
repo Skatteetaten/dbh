@@ -110,7 +110,7 @@ class DatabaseHotelAdminServiceTest extends Specification {
 
     expect:
       def usedInstances = (0..1000).collect {
-        adminService.findDatabaseInstanceOrFail(new DatabaseInstanceRequirements(POSTGRES, null, [:], false)).instanceName
+        adminService.findDatabaseInstanceOrFail(new DatabaseInstanceRequirements(POSTGRES, null, [:], true)).instanceName
       } as Set
 
       usedInstances == ["dev1", "dev5"] as Set
