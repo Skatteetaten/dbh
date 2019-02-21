@@ -150,7 +150,7 @@ class DatabaseSchemaController(
                 databaseEngine = schemaCreationRequest.engine,
                 instanceName = schemaCreationRequest.instanceName,
                 instanceLabels = schemaCreationRequest.instanceLabels,
-                fallback = schemaCreationRequest.fallback
+                instanceFallback = schemaCreationRequest.fallback
             )
             databaseHotelService.createSchema(instanceRequirements, labels)
         } else databaseHotelService.registerExternalSchema(schema.username, schema.password, schema.jdbcUrl, labels)

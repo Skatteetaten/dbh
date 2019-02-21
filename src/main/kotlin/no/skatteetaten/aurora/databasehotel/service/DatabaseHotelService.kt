@@ -17,7 +17,7 @@ data class DatabaseInstanceRequirements(
     val databaseEngine: DatabaseEngine = DatabaseEngine.ORACLE,
     val instanceName: String? = null,
     val instanceLabels: Map<String, String> = emptyMap(),
-    val fallback: Boolean = true
+    val instanceFallback: Boolean = true
 )
 
 @Service
