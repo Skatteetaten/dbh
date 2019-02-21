@@ -5,7 +5,6 @@ import static no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import com.zaxxer.hikari.HikariDataSource
 
 import groovy.sql.Sql
-import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.dao.oracle.Datasources
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
@@ -20,7 +19,7 @@ class ResidentsIntegrationTest extends Specification {
 
   def integration = new ResidentsIntegration(dataSource)
 
-  DatabaseSchema schema = new DatabaseSchema("id", new DatabaseInstanceMetaInfo(ORACLE, "A", "B", 1234, true), "jdbc", "schema_name",
+  DatabaseSchema schema = new DatabaseSchema("id", new DatabaseInstanceMetaInfo(ORACLE, "A", "B", 1234, true, [:]), "jdbc", "schema_name",
       new Date(), new Date(), new DatabaseSchemaMetaData(0.0)).with {
     it.setLabels([userId: 'k77319', affiliation: 'aurora', environment: 'dev', application: 'dbh', 'name': 'db'])
     it
