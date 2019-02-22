@@ -15,7 +15,9 @@ import java.util.Optional
 
 data class DatabaseInstanceRequirements(
     val databaseEngine: DatabaseEngine = DatabaseEngine.ORACLE,
-    val instanceName: String? = null
+    val instanceName: String? = null,
+    val instanceLabels: Map<String, String> = emptyMap(),
+    val instanceFallback: Boolean = true
 )
 
 @Service
@@ -50,7 +52,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
 
         val schemas = databaseHotelAdminService.findAllDatabaseInstances(engine)
                 .flatMap { it.findAllSchemas(labelsToMatch) }.toSet()
-        val externalSchemas = databaseHotelAdminService.externalSchemaManager?.findAllSchemas()
+        val externalSchemas = databaseHotelAdminService.externalSchemaManager?.findAllSchemas() ?: emptySet()
         val matchingExternalSchemas = findAllMatchingSchemas(externalSchemas, labelsToMatch)
         return schemas + matchingExternalSchemas
     }

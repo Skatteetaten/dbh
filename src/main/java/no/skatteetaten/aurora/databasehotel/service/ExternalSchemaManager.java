@@ -8,6 +8,7 @@ import static no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.EX
 import static no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -93,7 +94,7 @@ public class ExternalSchemaManager {
 
         List<Label> labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.getId());
 
-        DatabaseInstanceMetaInfo metaInfo = new DatabaseInstanceMetaInfo(ORACLE, "external", "-", 0, false);
+        DatabaseInstanceMetaInfo metaInfo = new DatabaseInstanceMetaInfo(ORACLE, "external", "-", 0, false, new HashMap<>());
         JdbcUrlBuilder jdbcUrlBuilder = (host, port, database) -> externalSchema.getJdbcUrl();
 
         return new DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder).createOne(schemaData, schema, users,

@@ -51,6 +51,9 @@ database-config:
     createSchemaAllowed: "${dbh.dev.db.postgres.createSchemaAllowed:true}"
     username: "${dbh.dev.db.postgres.username:aos_api_user as sysdba}"
     password: "${dbh.dev.db.postgres.password:dbh}"
+    labels:
+        affiliation: aurora
+        type: prod
 
 aurora:
   authenticationEnabled: false

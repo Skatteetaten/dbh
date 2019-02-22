@@ -25,7 +25,8 @@ class DomainUtils {
             host: String,
             port: Int,
             createSchemaAllowed: Boolean = true,
-            engine: DatabaseEngine = DatabaseEngine.ORACLE
-        ) = DatabaseInstanceMetaInfo(engine, name, host, port, createSchemaAllowed)
+            engine: DatabaseEngine = DatabaseEngine.ORACLE,
+            labels: Map<String, String> = mapOf()
+        ) = DatabaseInstanceMetaInfo(engine, name, host, port, createSchemaAllowed, labels)
     }
 }
