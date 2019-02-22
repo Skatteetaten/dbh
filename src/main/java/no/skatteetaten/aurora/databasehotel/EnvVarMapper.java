@@ -60,7 +60,7 @@ public class EnvVarMapper {
                 return new DbConfig() {
                     {
                         index = matcher.group(1);
-                        propertyName = matcher.group(2);
+                        propertyName = matcher.group(2).replaceAll("_", ".");
                         value = System.getenv(name);
                     }
                 };
