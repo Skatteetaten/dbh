@@ -16,6 +16,12 @@ public class ApiResponse<T> {
         this.items = items;
     }
 
+    public ApiResponse(String status, List<T> items) {
+        this.status = status;
+        this.totalCount = items.size();
+        this.items = items;
+    }
+
     public ApiResponse(List<T> items) {
         this("OK", items.size(), items);
     }
