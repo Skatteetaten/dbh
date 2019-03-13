@@ -1,18 +1,23 @@
 #!/usr/bin/env groovy
 
-def config = [
+def jenkinsfile
+
+def overrides = [
     scriptVersion  : 'v6',
     pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
-    disableAllReports: true,
-    javaVersion : 11,
     credentialsId: "github",
+    checkstyle : false,
+    javaVersion: "11",
+    jiraFiksetIKomponentversjon: true,
+    chatRoom: "#aos-notifications",
     mountCredentials: [[ credentialId : "dbh-application.properties", path: "~/.spring-boot-devtools.properties"]],
+    sonarQube: false,
     versionStrategy: [
-      [ branch: 'master', versionHint: '2' ]
+        [ branch: 'master', versionHint: '2' ]
     ]
 ]
 
-fileLoader.withGit(config.pipelineScript, config.scriptVersion) {
-   jenkinsfile = fileLoader.load('templates/leveransepakke')
+fileLoader.withGit(overrides.pipelineScript,, overrides.scriptVersion) {
+  jenkinsfile = fileLoader.load('templates/leveransepakke')
 }
-jenkinsfile.gradle(config.scriptVersion, config)
+jenkinsfile.gradle(overrides.scriptVersion, overrides)
