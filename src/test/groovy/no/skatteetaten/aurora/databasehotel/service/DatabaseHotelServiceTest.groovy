@@ -13,13 +13,13 @@ class DatabaseHotelServiceTest extends Specification {
 
   def databaseHotelService = new DatabaseHotelService(adminService)
 
-  def requirements = new DatabaseInstanceRequirements(ORACLE, "test-dev")
+  def requirements = new DatabaseInstanceRequirements(ORACLE, "test-dev", [:], false)
 
   def "Create schema for non existing instance"() {
 
     when:
       new DatabaseHotelService(new DatabaseHotelAdminService(new DatabaseInstanceInitializer(), 6, 1, "db", 300000L))
-          .createSchema(new DatabaseInstanceRequirements(ORACLE, "nosuchlevel"))
+          .createSchema(new DatabaseInstanceRequirements(ORACLE, "nosuchlevel", [:], false))
 
     then:
       thrown(DatabaseServiceException)
