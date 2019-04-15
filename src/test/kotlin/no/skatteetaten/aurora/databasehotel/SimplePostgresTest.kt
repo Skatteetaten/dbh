@@ -20,7 +20,7 @@ class SimplePostgresTest {
             val resultSet = performQuery(postgres, "SELECT 1")
 
             val resultSetInt = resultSet.getInt(1)
-            assertThat(resultSetInt).isEqualTo(1);
+            assertThat(resultSetInt).isEqualTo(1)
         }
     }
 
