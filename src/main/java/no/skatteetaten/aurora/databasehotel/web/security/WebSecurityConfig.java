@@ -1,11 +1,10 @@
 package no.skatteetaten.aurora.databasehotel.web.security;
 
-import static jdk.nashorn.internal.runtime.PropertyDescriptor.GET;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -67,7 +66,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilter(requestHeaderAuthenticationFilter())
                 .authorizeRequests()
                 .requestMatchers(request -> managementPort == request.getLocalPort()).permitAll()
-                .antMatchers(GET, "/docs/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/docs/**").permitAll()
                 .anyRequest().hasAuthority("admin");
         }
     }
