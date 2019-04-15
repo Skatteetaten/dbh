@@ -4,14 +4,17 @@ import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer.Companion.DEFAULT_SCHEMA_NAME
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelAdminService
+import org.junit.Ignore
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.JdbcTemplate
 
 class DatabaseHotelAdminServiceTest {
 
     @Test
+    @Ignore
     fun a() {
 
+/*
         val databaseInstanceInitializer = DatabaseInstanceInitializer(DEFAULT_SCHEMA_NAME.toLowerCase())
         val databaseHotelAdminService = DatabaseHotelAdminService(databaseInstanceInitializer, 6, 1, "postgres", 10000)
 
@@ -34,5 +37,6 @@ class DatabaseHotelAdminServiceTest {
 
             JdbcTemplate(dataSource).execute("create table test(id integer not null);")
         }
+*/
     }
 }

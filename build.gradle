@@ -101,7 +101,7 @@ task createSnippetsFolder {
 // When tests are disabled, the build will fail because the generated-snippets folder does not exist.
 // Let's create this folder to avoid a breaking build.
 compileTestGroovy.dependsOn(createSnippetsFolder)
-test.onlyIf { Boolean.getBoolean('run.tests') }
+//test.onlyIf { Boolean.getBoolean('run.tests') }
 
 test {
   maxHeapSize = "512m"
