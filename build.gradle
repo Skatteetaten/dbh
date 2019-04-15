@@ -68,7 +68,7 @@ dependencies {
       "org.apache.commons:commons-lang3",
       "com.google.guava:guava:27.0.1-jre",
 
-      "com.oracle:ojdbc8:12.2.0.1",
+//      "com.oracle:ojdbc8:12.2.0.1",
       "org.postgresql:postgresql:42.2.5",
 
       "org.flywaydb:flyway-core"
