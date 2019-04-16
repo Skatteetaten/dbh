@@ -26,7 +26,7 @@ dependencies {
     implementation("org.apache.commons:commons-lang3")
     implementation("com.google.guava:guava:27.0.1-jre")
     implementation("com.oracle:ojdbc8:12.2.0.1")
-    implementation("org.postgresql:postgresql:42.2.5")
+    implementation("org.postgresql:postgresql")
     implementation("org.flywaydb:flyway-core")
 
     testImplementation("com.squareup.okhttp3:mockwebserver:3.13.1")
