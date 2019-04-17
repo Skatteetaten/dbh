@@ -26,3 +26,20 @@ aurora:
 spring:
     flyway:
         out-of-order: true
+
+test:
+    datasource:
+        host: localhost
+        port: 25432
+        password: ar3nda1
+
+---
+
+spring:
+    profiles: ci
+
+test:
+    datasource:
+        host: postgresql
+        port: 5432
+        password: postgres
