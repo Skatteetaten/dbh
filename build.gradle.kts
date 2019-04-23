@@ -40,3 +40,4 @@ dependencies {
 }
 
 System.getProperties().list(System::out.get())
+System.getenv().entries.map { "${it.key}=${it.value}" }.forEach(System.out::println)
