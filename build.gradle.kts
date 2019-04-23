@@ -38,3 +38,5 @@ dependencies {
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.13")
     testImplementation("com.nhaarman:mockito-kotlin:1.6.0")
 }
+
+System.getProperties().list(System::out.get())
