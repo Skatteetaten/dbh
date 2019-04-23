@@ -27,6 +27,8 @@ class DatabaseHotelAdminServiceTest {
     @Test
     fun a() {
 
+        System.getProperties().toMap().entries.toMutableList().also { it.sortBy { it.key as String } }.forEach(System.out::println)
+
         println(testHost)
         println(testPort)
 

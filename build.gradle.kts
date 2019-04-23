@@ -39,5 +39,12 @@ dependencies {
     testImplementation("com.nhaarman:mockito-kotlin:1.6.0")
 }
 
-System.getProperties().list(System::out.get())
-System.getenv().entries.map { "${it.key}=${it.value}" }.forEach(System.out::println)
+tasks {
+    test {
+        val jenkinsUser: String? = System.getenv("JENKINS_USER")
+        if (!jenkinsUser.isNullOrBlank()) {
+            // We activate the ci profile when we build on Jenkins
+            systemProperties["spring.profiles.active"] = "ci"
+        }
+    }
+}

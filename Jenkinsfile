@@ -17,10 +17,6 @@ def overrides = [
     ]
 ]
 
-environment {
-  SPRING_PROFILES_ACTIVE = 'ci'
-}
-
 fileLoader.withGit(overrides.pipelineScript, overrides.scriptVersion) {
   jenkinsfile = fileLoader.load('templates/leveransepakke')
 }
