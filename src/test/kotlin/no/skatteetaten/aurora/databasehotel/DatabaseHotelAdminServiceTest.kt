@@ -25,18 +25,15 @@ class DatabaseHotelAdminServiceTest {
     lateinit var testPassword: String
 
     @Test
-    fun a() {
+    fun `postgres smoke test`() {
 
-        System.getProperties().toMap().entries.toMutableList().also { it.sortBy { it.key as String } }.forEach(System.out::println)
-
-        println(testHost)
-        println(testPort)
-
+        val defaultInstanceName = "postgres"
         val databaseInstanceInitializer = DatabaseInstanceInitializer(DEFAULT_SCHEMA_NAME.toLowerCase())
-        val databaseHotelAdminService = DatabaseHotelAdminService(databaseInstanceInitializer, 6, 1, "postgres", 10000)
+        val databaseHotelAdminService = DatabaseHotelAdminService(databaseInstanceInitializer, 6, 1,
+            defaultInstanceName, 10000)
 
         databaseHotelAdminService.registerPostgresDatabaseInstance(
-            "postgres",
+            defaultInstanceName,
             testHost,
             testPort.toInt(),
             "postgres",
