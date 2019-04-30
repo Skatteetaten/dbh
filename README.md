@@ -16,6 +16,21 @@ Dbh can easily be run locally either from your ide (IntellJ will be assumed) or
 from gradle. Before you can run or build the application, however, there are a couple of prerequisites that must be
 handled.
 
+### Setup
+ 
+ In order to use this project you must set repositories in your `~/.gradle/init.gradle` file
+ 
+     allprojects {
+         ext.repos= {
+             mavenCentral()
+             jcenter()
+         }
+         repositories repos
+         buildscript {
+          repositories repos
+         }
+     }
+
 ### Oracle JDBC driver
 
 You will need to provide the Oracle JDBC driver as this dependency does not exist (legally) in any public maven repository.
