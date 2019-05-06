@@ -31,7 +31,7 @@ test:
     datasource:
         host: localhost
         port: 25432
-        password: ar3nda1
+        password: postgres
 
 ---
 

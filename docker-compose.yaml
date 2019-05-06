@@ -9,7 +9,7 @@ services:
             - 15432:5432
         environment:
             POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: ar3nda1
+            POSTGRES_PASSWORD: postgres
 
     postgres-unittest:
         image: postgres
@@ -18,4 +18,4 @@ services:
             - 25432:5432
         environment:
             POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: ar3nda1
+            POSTGRES_PASSWORD: postgres
