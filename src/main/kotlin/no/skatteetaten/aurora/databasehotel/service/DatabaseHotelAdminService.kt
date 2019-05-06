@@ -52,7 +52,7 @@ class DatabaseHotelAdminService(
         createSchemaAllowed: Boolean,
         oracleScriptRequired: Boolean,
         instanceLabels: Map<String, String>
-    ) {
+    ): DatabaseInstance {
 
         val managementJdbcUrl = OracleJdbcUrlBuilder(service).create(dbHost, port, null)
         val databaseInstanceMetaInfo =
@@ -84,7 +84,7 @@ class DatabaseHotelAdminService(
         val residentsIntegration = ResidentsIntegration(managementDataSource)
         databaseInstance.registerIntegration(residentsIntegration)
 
-        registerDatabaseInstance(databaseInstance)
+        return registerDatabaseInstance(databaseInstance)
     }
 
     fun registerPostgresDatabaseInstance(
@@ -95,7 +95,7 @@ class DatabaseHotelAdminService(
         password: String,
         createSchemaAllowed: Boolean,
         instanceLabels: Map<String, String>
-    ) {
+    ): DatabaseInstance {
 
         val urlBuilder = PostgresJdbcUrlBuilder()
         val managementJdbcUrl = urlBuilder.create(dbHost, port, "postgres")
@@ -128,23 +128,15 @@ class DatabaseHotelAdminService(
             cooldownAfterDeleteMonths, cooldownDaysForOldUnusedSchemas
         )
 
-        registerDatabaseInstance(databaseInstance)
+        return registerDatabaseInstance(databaseInstance)
     }
 
-    fun registerDatabaseInstance(databaseInstance: DatabaseInstance) {
+    fun registerDatabaseInstance(databaseInstance: DatabaseInstance): DatabaseInstance {
 
         databaseInstances[databaseInstance.metaInfo.host] = databaseInstance
+        return databaseInstance
     }
 
-    /**
-     * Will try to find the DatabaseInstance with the instanceName `instanceNameOption`. If
-     * `instanceNameOption` is null the method will return a DatabaseInstance if-and-only-if there is only
-     * one DatabaseInstance registered. In all other cases it will throw a
-     * `[DatabaseServiceException]`.
-     *
-     * @param instanceNameOption the nullable instanceName
-     * @return
-     */
     @JvmOverloads
     fun findDatabaseInstanceOrFail(requirements: DatabaseInstanceRequirements = DatabaseInstanceRequirements()): DatabaseInstance {
 
