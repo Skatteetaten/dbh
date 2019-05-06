@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.databasehotel
 import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer.Companion.DEFAULT_SCHEMA_NAME
-import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelAdminService
 import no.skatteetaten.aurora.databasehotel.service.postgres.PostgresJdbcUrlBuilder
 import org.junit.jupiter.api.BeforeAll
@@ -64,7 +63,6 @@ class DatabaseHotelAdminServiceTest {
     }
 
     internal fun deleteTestDatabases(jdbcUrl: String, username: String, password: String) {
-        val databaseManager = PostgresDatabaseManager(DataSourceUtils.createDataSource(jdbcUrl, username, password))
         val jdbcTemplate = JdbcTemplate(DataSourceUtils.createDataSource(jdbcUrl, username, password))
         jdbcTemplate.queryForStrings("SELECT datname FROM pg_database WHERE datistemplate = false and datname not in ('postgres')")
             .forEach {

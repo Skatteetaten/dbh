@@ -16,6 +16,13 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
 
         val safeName = schemaName.toSafe()
         executeStatements(
+            """DO ${'$'}${'$'}
+BEGIN
+  CREATE ROLE app_user WITH NOLOGIN;
+  EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'not creating role app_user -- it already exists';
+END
+${'$'}${'$'};""",
             "create user $safeName with password '$password'",
             "create database $safeName",
             "GRANT CREATE ON DATABASE $safeName TO $safeName",

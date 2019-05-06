@@ -30,6 +30,23 @@ handled.
           repositories repos
          }
      }
+     
+### Running postgres locally
+
+    docker-compose up
+    
+### Connecting to postgres in the aurora-build namespace (for unit tests)
+
+    oc port-forward (oc get pods | grep postgresql | awk '{print $1;}') 35432:5432
+
+or
+
+    oc port-forward (oc get pods -o=custom-columns=NAME:.metadata.name --no-headers -l deploymentconfig=postgresql) 35432:5432
+    
+Will forward port 5432 of the postgresql pod to localhost:35432. Connect using 
+* Jdbc url: ```jdbc:postgresql://localhost:35432/postgres```.
+* Username: ```postgres```
+* Password: ```postgres```
 
 ### Oracle JDBC driver
 
