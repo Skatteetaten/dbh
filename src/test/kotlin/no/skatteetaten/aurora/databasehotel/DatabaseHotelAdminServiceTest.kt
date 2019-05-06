@@ -66,8 +66,8 @@ class DatabaseHotelAdminServiceTest {
         val jdbcTemplate = JdbcTemplate(DataSourceUtils.createDataSource(jdbcUrl, username, password))
         jdbcTemplate.queryForStrings("SELECT datname FROM pg_database WHERE datistemplate = false and datname not in ('postgres')")
             .forEach {
-                jdbcTemplate.update("drop database ${it}")
-                jdbcTemplate.update("drop role ${it}")
+                jdbcTemplate.update("drop database $it")
+                jdbcTemplate.update("drop role $it")
             }
     }
 
