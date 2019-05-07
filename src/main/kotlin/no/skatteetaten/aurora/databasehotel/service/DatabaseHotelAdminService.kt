@@ -2,35 +2,16 @@ package no.skatteetaten.aurora.databasehotel.service
 
 import com.google.common.base.Strings
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
-import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
-import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
-import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
-import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer.Companion.DEFAULT_SCHEMA_NAME
-import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDataSourceUtils
-import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao
-import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
-import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseHotelDataDao
-import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
-import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
-import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
-import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector
-import no.skatteetaten.aurora.databasehotel.service.postgres.PostgresJdbcUrlBuilder
-import no.skatteetaten.aurora.databasehotel.service.sits.ResidentsIntegration
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 import java.util.HashMap
-import java.util.Optional
 import java.util.Random
 
 @Service
 class DatabaseHotelAdminService(
     private val databaseInstanceInitializer: DatabaseInstanceInitializer,
-    @Value("\${database-config.cooldownMonths}") private val cooldownAfterDeleteMonths: Int,
-    @Value("\${database-config.cooldownDaysForOldUnusedSchemas:1}") private val cooldownDaysForOldUnusedSchemas: Int,
-    @Value("\${database-config.defaultInstanceName:}") private val defaultInstanceName: String,
-    @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long?
+    @Value("\${database-config.defaultInstanceName:}") private val defaultInstanceName: String
 ) {
 
     var externalSchemaManager: ExternalSchemaManager? = null
@@ -54,36 +35,18 @@ class DatabaseHotelAdminService(
         instanceLabels: Map<String, String>
     ): DatabaseInstance {
 
-        val managementJdbcUrl = OracleJdbcUrlBuilder(service).create(dbHost, port, null)
-        val databaseInstanceMetaInfo =
-            DatabaseInstanceMetaInfo(ORACLE, instanceName, dbHost, port, createSchemaAllowed, instanceLabels)
-
-        val managementDataSource = OracleDataSourceUtils.createDataSource(
-            managementJdbcUrl, username, password, oracleScriptRequired
+        val databaseInstance = databaseInstanceInitializer.createInitializedOracleInstance(
+            instanceName,
+            dbHost,
+            port,
+            service,
+            username,
+            password,
+            clientService,
+            createSchemaAllowed,
+            oracleScriptRequired,
+            instanceLabels
         )
-
-        val databaseManager = OracleDatabaseManager(managementDataSource)
-
-        databaseInstanceInitializer.assertInitialized(databaseManager, password)
-
-        val databaseHotelDs = OracleDataSourceUtils.createDataSource(
-            managementJdbcUrl, DEFAULT_SCHEMA_NAME, password, oracleScriptRequired
-        )
-        databaseInstanceInitializer.migrate(databaseHotelDs)
-
-        val databaseHotelDataDao = OracleDatabaseHotelDataDao(databaseHotelDs)
-
-        val jdbcUrlBuilder = OracleJdbcUrlBuilder(clientService)
-
-        val resourceUsageCollector = OracleResourceUsageCollector(managementDataSource, resourceUseCollectInterval)
-        val databaseInstance = DatabaseInstance(
-            databaseInstanceMetaInfo, databaseManager,
-            databaseHotelDataDao, jdbcUrlBuilder, resourceUsageCollector, createSchemaAllowed,
-            cooldownAfterDeleteMonths, cooldownDaysForOldUnusedSchemas
-        )
-        val residentsIntegration = ResidentsIntegration(managementDataSource)
-        databaseInstance.registerIntegration(residentsIntegration)
-
         return registerDatabaseInstance(databaseInstance)
     }
 
@@ -97,37 +60,15 @@ class DatabaseHotelAdminService(
         instanceLabels: Map<String, String>
     ): DatabaseInstance {
 
-        val urlBuilder = PostgresJdbcUrlBuilder()
-        val managementJdbcUrl = urlBuilder.create(dbHost, port, "postgres")
-        val databaseInstanceMetaInfo =
-            DatabaseInstanceMetaInfo(POSTGRES, instanceName, dbHost, port, createSchemaAllowed, instanceLabels)
-        val managementDataSource = DataSourceUtils.createDataSource(managementJdbcUrl, username, password)
-        val databaseManager = PostgresDatabaseManager(managementDataSource)
-
-        databaseInstanceInitializer.assertInitialized(databaseManager, password)
-
-        val database = DEFAULT_SCHEMA_NAME.toLowerCase()
-        val jdbcUrl = urlBuilder.create(dbHost, port, database)
-        val databaseHotelDs = DataSourceUtils.createDataSource(jdbcUrl, database, password)
-        databaseInstanceInitializer.migrate(databaseHotelDs)
-
-        val databaseHotelDataDao = PostgresDatabaseHotelDataDao(databaseHotelDs)
-
-        val resourceUsageCollector = object : ResourceUsageCollector {
-            override fun getSchemaSizes(): List<ResourceUsageCollector.SchemaSize> {
-                return emptyList()
-            }
-
-            override fun getSchemaSize(schemaName: String): Optional<ResourceUsageCollector.SchemaSize> {
-                return Optional.of(ResourceUsageCollector.SchemaSize(schemaName, BigDecimal.ZERO))
-            }
-        }
-        val databaseInstance = DatabaseInstance(
-            databaseInstanceMetaInfo, databaseManager,
-            databaseHotelDataDao, urlBuilder, resourceUsageCollector, createSchemaAllowed,
-            cooldownAfterDeleteMonths, cooldownDaysForOldUnusedSchemas
+        val databaseInstance = databaseInstanceInitializer.createInitializedPostgresInstance(
+            instanceName,
+            dbHost,
+            port,
+            username,
+            password,
+            createSchemaAllowed,
+            instanceLabels
         )
-
         return registerDatabaseInstance(databaseInstance)
     }
 

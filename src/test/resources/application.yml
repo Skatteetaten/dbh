@@ -24,8 +24,8 @@ aurora:
     value: shared-secret
 
 spring:
-  flyway:
-    out-of-order: true
+  main:
+    banner-mode: "off"
 
 test:
   datasource:

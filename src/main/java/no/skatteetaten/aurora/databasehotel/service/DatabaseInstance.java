@@ -22,8 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.common.base.Verify;
-
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager;
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label;
@@ -58,7 +56,7 @@ public class DatabaseInstance {
 
     private SchemaNamePasswordStrategy schemaNamePasswordStrategy = () -> {
         String schemaName = RandomStringUtils.randomAlphabetic(RANDOM_LENGTH);
-        String password = "a1" + RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH-2);
+        String password = "a1" + RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH - 2);
         return Pair.of(schemaName, password);
     };
 
@@ -70,7 +68,7 @@ public class DatabaseInstance {
 
     public DatabaseInstance(DatabaseInstanceMetaInfo metaInfo, DatabaseManager databaseManager,
         DatabaseHotelDataDao databaseHotelDataDao,
-        JdbcUrlBuilder jdbcUrlBuilder, ResourceUsageCollector resourceUsageCollector, boolean createSchemaAllowed,
+        JdbcUrlBuilder jdbcUrlBuilder, ResourceUsageCollector resourceUsageCollector,
         int cooldownAfterDeleteMonths, int cooldownDaysForOldUnusedSchemas) {
 
         this.metaInfo = metaInfo;
@@ -79,7 +77,7 @@ public class DatabaseInstance {
         this.jdbcUrlBuilder = jdbcUrlBuilder;
         this.resourceUsageCollector =
             Assert.asNotNull(resourceUsageCollector, "%s must be set", ResourceUsageCollector.class);
-        this.createSchemaAllowed = createSchemaAllowed;
+        this.createSchemaAllowed = metaInfo.getCreateSchemaAllowed();
         this.cooldownAfterDeleteMonths = cooldownAfterDeleteMonths;
         this.cooldownDaysForOldUnusedSchemas = cooldownDaysForOldUnusedSchemas;
     }
@@ -202,6 +200,10 @@ public class DatabaseInstance {
                     schemaData.getId(), lastUsedString, databaseSchema.getSizeMb(), schemaData.getName(),
                     databaseSchema.getLabels(), deleteParams.getCooldownDuration().toHours());
                 databaseHotelDataDao.deactivateSchemaData(schemaData.getId());
+                // We need to make sure that users can no longer connect to the schema. Let's just create a new random
+                // password for the schema so that it is different from the one we have in the SchemaData.
+                // TODO: Uncomment the next line to complete this task
+                // databaseManager.updatePassword(schemaName, createSchemaNameAndPassword().getRight());
             });
             integrations.forEach(
                 integration -> integration.onSchemaDeleted(databaseSchema, deleteParams.getCooldownDuration()));
@@ -264,20 +266,9 @@ public class DatabaseInstance {
         return createSchemaAllowed;
     }
 
-    public void setSchemaNamePasswordStrategy(SchemaNamePasswordStrategy schemaNamePasswordStrategy) {
-
-        Verify.verifyNotNull(schemaNamePasswordStrategy, "SchemaNamePasswordStrategy cannot be null");
-        this.schemaNamePasswordStrategy = schemaNamePasswordStrategy;
-    }
-
     public void registerIntegration(Integration integration) {
 
         this.integrations.add(integration);
-    }
-
-    public ResourceUsageCollector getResourceUsageCollector() {
-
-        return resourceUsageCollector;
     }
 
     public DatabaseHotelDataDao getDatabaseHotelDataDao() {
@@ -285,7 +276,7 @@ public class DatabaseInstance {
         return databaseHotelDataDao;
     }
 
-    protected Pair<String, String> createSchemaNameAndPassword() {
+    private Pair<String, String> createSchemaNameAndPassword() {
 
         return schemaNamePasswordStrategy.createSchemaNameAndPassword();
     }

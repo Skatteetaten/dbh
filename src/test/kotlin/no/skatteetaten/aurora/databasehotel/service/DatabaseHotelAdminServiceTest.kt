@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test
 
 class DatabaseHotelAdminServiceTest {
 
-    private val adminService = DatabaseHotelAdminService(DatabaseInstanceInitializer(), 6, 1, "db", 300000L)
+    private val adminService = DatabaseHotelAdminService(DatabaseInstanceInitializer(), "db")
 
     @BeforeEach
     fun setup() {
