@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.service.internal
 
-import static no.skatteetaten.aurora.databasehotel.DomainUtils.createDatabaseInstanceMetaInfo
+import static no.skatteetaten.aurora.databasehotel.DomainUtils.metaInfo
 
 import no.skatteetaten.aurora.databasehotel.dao.dto.Schema
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
@@ -10,7 +10,7 @@ import spock.lang.Specification
 
 class DatabaseSchemaBuilderTest extends Specification {
 
-  def builder = new DatabaseSchemaBuilder(createDatabaseInstanceMetaInfo("test", "localhost", 1521, true),
+  def builder = new DatabaseSchemaBuilder(metaInfo("test", "localhost", 1521, true),
       new OracleJdbcUrlBuilder("none"))
 
   def "Returns empty list when no schema data is specified"() {

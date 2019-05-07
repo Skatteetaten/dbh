@@ -201,4 +201,8 @@ class DatabaseHotelAdminService(
         val random = Random().nextInt(instances.size)
         return instances[random].instanceName
     }
+
+    fun removeAllInstances() {
+        databaseInstances.clear()
+    }
 }

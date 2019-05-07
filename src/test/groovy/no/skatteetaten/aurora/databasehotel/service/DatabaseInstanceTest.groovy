@@ -2,9 +2,8 @@ package no.skatteetaten.aurora.databasehotel.service
 
 import static java.util.Optional.of
 
-import static no.skatteetaten.aurora.databasehotel.DomainUtils.createDatabaseInstanceMetaInfo
+import static no.skatteetaten.aurora.databasehotel.DomainUtils.metaInfo
 
-import no.skatteetaten.aurora.databasehotel.DomainUtils
 import no.skatteetaten.aurora.databasehotel.dao.dto.Schema
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
@@ -18,7 +17,7 @@ import spock.lang.Specification
 
 class DatabaseInstanceTest extends Specification {
 
-  DatabaseInstanceMetaInfo databaseInstanceMetaInfo = createDatabaseInstanceMetaInfo('dev', "localhost", 1521, true)
+  DatabaseInstanceMetaInfo databaseInstanceMetaInfo = metaInfo('dev', "localhost", 1521, true)
 
   def databaseDao = Mock(OracleDatabaseManager)
 

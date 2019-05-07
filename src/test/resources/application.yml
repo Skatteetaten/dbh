@@ -5,15 +5,15 @@ database-config:
   cooldownMonths: 6
 
   databases:
-  - host: "${dbh.test.db.host:localhost}"
-    engine: oracle
-    service: "${dbh.test.db.service:dbhotel}"
-    instanceName: "${dbh.test.db.instanceName:dev}"
-    createSchemaAllowed: "${dbh.test.db.createSchemaAllowed:true}"
-    username: "${dbh.test.db.username:aos_api_user as sysdba}"
-    password: "${dbh.test.db.password:dbh}"
-    clientService: "${dbh.test.db.clientService:dbhotel}"
-    oracleScriptRequired: "${dbh.test.db.oracleScriptRequired:true}"
+    - host: "${dbh.test.db.host:localhost}"
+      engine: oracle
+      service: "${dbh.test.db.service:dbhotel}"
+      instanceName: "${dbh.test.db.instanceName:dev}"
+      createSchemaAllowed: "${dbh.test.db.createSchemaAllowed:true}"
+      username: "${dbh.test.db.username:aos_api_user as sysdba}"
+      password: "${dbh.test.db.password:dbh}"
+      clientService: "${dbh.test.db.clientService:dbhotel}"
+      oracleScriptRequired: "${dbh.test.db.oracleScriptRequired:true}"
 
 metrics:
   resourceUseCollectInterval: "300000"
@@ -24,22 +24,24 @@ aurora:
     value: shared-secret
 
 spring:
-    flyway:
-        out-of-order: true
+  flyway:
+    out-of-order: true
 
 test:
-    datasource:
-        host: localhost
-        port: 25432
-        password: postgres
+  datasource:
+    postgres:
+      host: localhost
+      port: 25432
+      password: postgres
 
 ---
 
 spring:
-    profiles: ci
+  profiles: ci
 
 test:
-    datasource:
-        host: postgresql
-        port: 5432
-        password: postgres
+  datasource:
+    postgres:
+      host: postgresql
+      port: 5432
+      password: postgres

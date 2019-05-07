@@ -17,24 +17,24 @@ public class DomainUtils {
     public static DatabaseSchema createDatabaseSchema(String id) {
         return new DatabaseSchema(
             id,
-            createDatabaseInstanceMetaInfo("test", "localhost", 1521, true),
+            metaInfo("test", "localhost", 1521, true),
             "jdbc", "local",
             new Date(), new Date(),
             new DatabaseSchemaMetaData(0.0)
         );
     }
 
-    public static DatabaseInstanceMetaInfo createDatabaseInstanceMetaInfo(String name, String host, Integer port,
+    public static DatabaseInstanceMetaInfo metaInfo(String name, String host, Integer port,
         Boolean createSchemaAllowed) {
-        return createDatabaseInstanceMetaInfo(name, host, port, createSchemaAllowed, DatabaseEngine.ORACLE,
+        return metaInfo(name, host, port, createSchemaAllowed, DatabaseEngine.ORACLE,
             new HashMap<>());
     }
 
-    public static DatabaseInstanceMetaInfo createDatabaseInstanceMetaInfo(String name, String host, Integer port) {
-        return createDatabaseInstanceMetaInfo(name, host, port, true, DatabaseEngine.ORACLE, new HashMap<>());
+    public static DatabaseInstanceMetaInfo metaInfo(String name, String host, Integer port) {
+        return metaInfo(name, host, port, true, DatabaseEngine.ORACLE, new HashMap<>());
     }
 
-    public static DatabaseInstanceMetaInfo createDatabaseInstanceMetaInfo(String name,
+    public static DatabaseInstanceMetaInfo metaInfo(String name,
         String host,
         Integer port,
         Boolean createSchemaAllowed,

@@ -13,7 +13,6 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedRequestFields
 import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
-import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName
 import static org.springframework.restdocs.request.RequestDocumentation.pathParameters
@@ -21,8 +20,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.requestP
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 import static no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
-import static no.skatteetaten.aurora.databasehotel.DomainUtils.createDatabaseInstanceMetaInfo
-import static no.skatteetaten.aurora.databasehotel.DomainUtils.createDatabaseInstanceMetaInfo
+import static no.skatteetaten.aurora.databasehotel.DomainUtils.metaInfo
 
 import org.apache.commons.lang3.tuple.Pair
 import org.junit.Rule
@@ -33,9 +31,6 @@ import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 import groovy.json.JsonOutput
-import no.skatteetaten.aurora.databasehotel.DatabaseEngine
-import no.skatteetaten.aurora.databasehotel.DomainUtils
-import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.User
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
@@ -62,7 +57,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def EXAMPLE_SCHEMA = new DatabaseSchema(
       EXAMPLE_SCHEMA_ID,
-      createDatabaseInstanceMetaInfo('test', 'dbhost.example.com', 1521, true),
+      metaInfo('test', 'dbhost.example.com', 1521, true),
       'jdbc:oracle:thin:@dbhost.example.com:1521/dbhotel',
       'AIOIFPXHHLFLTVDPSUWEERCTMMWJUD',
       new Date(),
@@ -75,7 +70,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def EXAMPLE_SCHEMA_EXTERNAL = new DatabaseSchema(
       EXAMPLE_SCHEMA_ID,
-      createDatabaseInstanceMetaInfo('external', "-", 0, false),
+      metaInfo('external', "-", 0, false),
       'jdbc:oracle:thin:@some-other-dbserver.example.com:1521/dbhotel',
       'AIOIFPXHHLFLTVDPSUWEERCTMMWJUD',
       new Date(),

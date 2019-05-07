@@ -7,7 +7,7 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-import static no.skatteetaten.aurora.databasehotel.DomainUtils.createDatabaseInstanceMetaInfo
+import static no.skatteetaten.aurora.databasehotel.DomainUtils.metaInfo
 
 import org.junit.Rule
 import org.springframework.restdocs.JUnitRestDocumentation
@@ -15,10 +15,8 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
-import no.skatteetaten.aurora.databasehotel.DomainUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
-import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelAdminService
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance
 import no.skatteetaten.aurora.databasehotel.service.JdbcUrlBuilder
@@ -45,7 +43,7 @@ class DatabaseInstanceControllerTest extends Specification {
   def "List instances"() {
     given:
       databaseHotelAdminService.findAllDatabaseInstances() >> [new DatabaseInstance(
-          createDatabaseInstanceMetaInfo("test", "dbhost.example.com", 1521, true),
+          metaInfo("test", "dbhost.example.com", 1521, true),
           Mock(DatabaseManager),
           Mock(DatabaseHotelDataDao),
           Mock(JdbcUrlBuilder),

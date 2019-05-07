@@ -1,9 +1,9 @@
-package no.skatteetaten.aurora.databasehotel
+package no.skatteetaten.aurora.databasehotel.service
 
 import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer.Companion.DEFAULT_SCHEMA_NAME
-import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelAdminService
+import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import no.skatteetaten.aurora.databasehotel.service.postgres.PostgresJdbcUrlBuilder
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -11,21 +11,23 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.core.SingleColumnRowMapper
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
 @ExtendWith(SpringExtension::class)
 @JsonTest
-class DatabaseHotelAdminServiceTest {
+class DatabaseHotelAdminServicePostgresTest {
 
-    @Value("\${test.datasource.host}")
-    lateinit var testHost: String
+    @Value("\${test.datasource.postgres.host}")
+    lateinit var host: String
 
-    @Value("\${test.datasource.port}")
-    lateinit var testPort: String
+    @Value("\${test.datasource.postgres.port}")
+    lateinit var port: String
 
-    @Value("\${test.datasource.password}")
-    lateinit var testPassword: String
+    @Value("\${test.datasource.postgres.username:postgres}")
+    lateinit var username: String
+
+    @Value("\${test.datasource.postgres.password}")
+    lateinit var password: String
 
     @Test
     fun `postgres smoke test`() {
@@ -39,10 +41,10 @@ class DatabaseHotelAdminServiceTest {
 
         val instance = databaseHotelAdminService.registerPostgresDatabaseInstance(
             defaultInstanceName,
-            testHost,
-            testPort.toInt(),
-            "postgres",
-            testPassword,
+            host,
+            port.toInt(),
+            username,
+            password,
             true,
             mapOf()
         )
@@ -59,18 +61,9 @@ class DatabaseHotelAdminServiceTest {
     @BeforeAll
     fun clean() {
 
-        deleteTestDatabases(PostgresJdbcUrlBuilder().create(testHost, testPort.toInt(), "postgres"), "postgres", testPassword)
+        val jdbcUrl = PostgresJdbcUrlBuilder().create(host, port.toInt(), "postgres")
+        val dataSource = DataSourceUtils.createDataSource(jdbcUrl, username, password)
+        val databaseManager = PostgresDatabaseManager(dataSource)
+        databaseManager.findAllNonSystemSchemas().forEach { databaseManager.deleteSchema(it.username) }
     }
-
-    internal fun deleteTestDatabases(jdbcUrl: String, username: String, password: String) {
-        val jdbcTemplate = JdbcTemplate(DataSourceUtils.createDataSource(jdbcUrl, username, password))
-        jdbcTemplate.queryForStrings("SELECT datname FROM pg_database WHERE datistemplate = false and datname not in ('postgres')")
-            .forEach {
-                jdbcTemplate.update("drop database $it")
-                jdbcTemplate.update("drop role $it")
-            }
-    }
-
-    private fun JdbcTemplate.queryForStrings(query: String): List<String> =
-        this.query(query, SingleColumnRowMapper(String::class.java))
 }
