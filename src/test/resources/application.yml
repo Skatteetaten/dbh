@@ -32,8 +32,22 @@ test:
     postgres:
       host: localhost
       port: 25432
+      username: postgres
       password: postgres
-
+    oracle:
+      host: "${dbh.test.db.host:localhost}"
+      port: 1521
+      engine: oracle
+      service: "${dbh.test.db.service:dbhotel}"
+      instanceName: "${dbh.test.db.instanceName:dev}"
+      createSchemaAllowed: "${dbh.test.db.createSchemaAllowed:true}"
+      username: "${dbh.test.db.username:aos_api_user as sysdba}"
+      password: "${dbh.test.db.password:dbh}"
+      clientService: "${dbh.test.db.clientService:dbhotel}"
+      oracleScriptRequired: "${dbh.test.db.oracleScriptRequired:true}"
+logging:
+  level:
+    no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager: ERROR
 ---
 
 spring:

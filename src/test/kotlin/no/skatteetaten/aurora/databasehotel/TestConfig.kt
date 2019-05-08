@@ -1,12 +1,15 @@
 package no.skatteetaten.aurora.databasehotel
 
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
+import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
 import no.skatteetaten.aurora.databasehotel.service.postgres.PostgresJdbcUrlBuilder
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.stereotype.Component
 import javax.sql.DataSource
 
 @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
@@ -14,30 +17,44 @@ import javax.sql.DataSource
 @Qualifier
 annotation class TargetEngine(val value: DatabaseEngine)
 
-@Configuration
-class TestConfig2 {
-
-    @Value("\${test.datasource.postgres.host}")
+@Component
+@ConfigurationProperties("test.datasource.postgres")
+class PostgresConfig {
     lateinit var host: String
-
-    @Value("\${test.datasource.postgres.port}")
     lateinit var port: String
-
-    @Value("\${test.datasource.postgres.username:postgres}")
     lateinit var username: String
-
-    @Value("\${test.datasource.postgres.password}")
     lateinit var password: String
+}
 
+@Component
+@ConfigurationProperties("test.datasource.oracle")
+class OracleConfig {
+    lateinit var host: String
+    lateinit var port: String
+    lateinit var service: String
+    lateinit var username: String
+    lateinit var password: String
+    lateinit var clientService: String
+    lateinit var oracleScriptRequired: String
+}
+
+@Configuration
+class TestDataSources(val postgresConfig: PostgresConfig, val oracleConfig: OracleConfig) {
     @Bean
     @TargetEngine(POSTGRES)
-    fun postgresDatasource(): DataSource {
+    fun postgresDatasource(): DataSource = DataSourceUtils.createDataSource(
+        PostgresJdbcUrlBuilder().create(postgresConfig.host, postgresConfig.port.toInt(), "postgres"),
+        postgresConfig.username,
+        postgresConfig.password,
+        1
+    )
 
-        return DataSourceUtils.createDataSource(
-            PostgresJdbcUrlBuilder().create(host, port.toInt(), "postgres"),
-            username,
-            password,
-            1
-        )
-    }
+    @Bean
+    @TargetEngine(ORACLE)
+    fun oracleDatasource(): DataSource = DataSourceUtils.createDataSource(
+        OracleJdbcUrlBuilder(oracleConfig.service).create(oracleConfig.host, oracleConfig.port.toInt(), null),
+        oracleConfig.username,
+        oracleConfig.password,
+        1
+    )
 }
