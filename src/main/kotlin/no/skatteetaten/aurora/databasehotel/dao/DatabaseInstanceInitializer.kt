@@ -30,7 +30,7 @@ class DatabaseInstanceInitializer(
     @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long? = 300000L
 ) {
 
-    val schemaName: String = DEFAULT_SCHEMA_NAME
+    var schemaName: String = DEFAULT_SCHEMA_NAME
 
     fun createInitializedOracleInstance(
         instanceName: String,
@@ -57,7 +57,7 @@ class DatabaseInstanceInitializer(
         assertInitialized(databaseManager, password)
 
         val databaseHotelDs = OracleDataSourceUtils.createDataSource(
-            managementJdbcUrl, DEFAULT_SCHEMA_NAME, password, oracleScriptRequired
+            managementJdbcUrl, schemaName, password, oracleScriptRequired
         )
         migrate(databaseHotelDs)
 
@@ -95,7 +95,7 @@ class DatabaseInstanceInitializer(
 
         assertInitialized(databaseManager, password)
 
-        val database = DEFAULT_SCHEMA_NAME.toLowerCase()
+        val database = schemaName.toLowerCase()
         val jdbcUrl = urlBuilder.create(dbHost, port, database)
         val databaseHotelDs = DataSourceUtils.createDataSource(jdbcUrl, database, password)
 
@@ -119,7 +119,7 @@ class DatabaseInstanceInitializer(
         )
     }
 
-    fun assertInitialized(databaseManager: DatabaseManager, password: String) {
+    private fun assertInitialized(databaseManager: DatabaseManager, password: String) {
 
         if (!databaseManager.schemaExists(schemaName)) {
             databaseManager.createSchema(schemaName, password)
@@ -137,7 +137,7 @@ class DatabaseInstanceInitializer(
             setLocations(engine.migrationLocation)
 
             if (engine == ORACLE) {
-                this.setSchemas(schemaName)
+                this.setSchemas(dataSource.username)
                 table = "SCHEMA_VERSION"
             }
         }

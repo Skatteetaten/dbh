@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +39,6 @@ public class DatabaseInstance {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseInstance.class);
 
-    private static final int RANDOM_LENGTH = 30;
-
     private final DatabaseInstanceMetaInfo metaInfo;
 
     private final DatabaseManager databaseManager;
@@ -54,11 +51,7 @@ public class DatabaseInstance {
 
     private List<Integration> integrations = new ArrayList<>();
 
-    private SchemaNamePasswordStrategy schemaNamePasswordStrategy = () -> {
-        String schemaName = RandomStringUtils.randomAlphabetic(RANDOM_LENGTH);
-        String password = "a1" + RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH - 2);
-        return Pair.of(schemaName, password);
-    };
+    private SchemaNamePasswordStrategy schemaNamePasswordStrategy = SchemaNamePasswordStrategyKt::createSchemaNameAndPassword;
 
     private final boolean createSchemaAllowed;
 

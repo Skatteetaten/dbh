@@ -1,27 +1,27 @@
-database-config:
-  retryDelay: 60000
-  dropAllowed: true
-  schemaListingAllowed: true
-  cooldownMonths: 6
-
-  databases:
-    - host: "${dbh.test.db.host:localhost}"
-      engine: oracle
-      service: "${dbh.test.db.service:dbhotel}"
-      instanceName: "${dbh.test.db.instanceName:dev}"
-      createSchemaAllowed: "${dbh.test.db.createSchemaAllowed:true}"
-      username: "${dbh.test.db.username:aos_api_user as sysdba}"
-      password: "${dbh.test.db.password:dbh}"
-      clientService: "${dbh.test.db.clientService:dbhotel}"
-      oracleScriptRequired: "${dbh.test.db.oracleScriptRequired:true}"
-
-metrics:
-  resourceUseCollectInterval: "300000"
-
-aurora:
-  token:
-    headerValuePrefix: aurora-token
-    value: shared-secret
+#database-config:
+#  retryDelay: 60000
+#  dropAllowed: true
+#  schemaListingAllowed: true
+#  cooldownMonths: 6
+#
+#  databases:
+#    - host: "${dbh.test.db.host:localhost}"
+#      engine: oracle
+#      service: "${dbh.test.db.service:dbhotel}"
+#      instanceName: "${dbh.test.db.instanceName:dev}"
+#      createSchemaAllowed: "${dbh.test.db.createSchemaAllowed:true}"
+#      username: "${dbh.test.db.username:aos_api_user as sysdba}"
+#      password: "${dbh.test.db.password:dbh}"
+#      clientService: "${dbh.test.db.clientService:dbhotel}"
+#      oracleScriptRequired: "${dbh.test.db.oracleScriptRequired:true}"
+#
+#metrics:
+#  resourceUseCollectInterval: "300000"
+#
+#aurora:
+#  token:
+#    headerValuePrefix: aurora-token
+#    value: shared-secret
 
 spring:
   main:
@@ -45,9 +45,11 @@ test:
       password: "${dbh.test.db.password:dbh}"
       clientService: "${dbh.test.db.clientService:dbhotel}"
       oracleScriptRequired: "${dbh.test.db.oracleScriptRequired:true}"
+
 logging:
   level:
     no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager: ERROR
+
 ---
 
 spring:
