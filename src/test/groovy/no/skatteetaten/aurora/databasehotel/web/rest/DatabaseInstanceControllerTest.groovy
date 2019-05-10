@@ -7,8 +7,6 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-import static no.skatteetaten.aurora.databasehotel.DomainUtils.metaInfo
-
 import org.junit.Rule
 import org.springframework.restdocs.JUnitRestDocumentation
 import org.springframework.test.web.servlet.MockMvc

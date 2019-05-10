@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.service.internal
 
-import static no.skatteetaten.aurora.databasehotel.DomainUtils.metaInfo
-
 import no.skatteetaten.aurora.databasehotel.dao.dto.Schema
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema

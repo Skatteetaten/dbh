@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.databasehotel.service
-
+/*
 import static no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 
-import no.skatteetaten.aurora.databasehotel.DomainUtils
+import no.skatteetaten.aurora.databasehotel.domain.DomainUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import spock.lang.Specification
@@ -63,3 +63,4 @@ class DatabaseHotelServiceTest extends Specification {
     return DomainUtils.createDatabaseSchema(id)
   }
 }
+*/

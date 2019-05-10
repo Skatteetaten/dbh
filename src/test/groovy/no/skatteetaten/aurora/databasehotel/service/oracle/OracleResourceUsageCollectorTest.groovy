@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.service.oracle
 
-import static no.skatteetaten.aurora.databasehotel.DomainUtils.metaInfo
 import static no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer.DEFAULT_SCHEMA_NAME
 
 import javax.sql.DataSource

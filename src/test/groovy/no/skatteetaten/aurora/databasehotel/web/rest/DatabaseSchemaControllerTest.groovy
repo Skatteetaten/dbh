@@ -20,7 +20,6 @@ import static org.springframework.restdocs.request.RequestDocumentation.requestP
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 import static no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
-import static no.skatteetaten.aurora.databasehotel.DomainUtils.metaInfo
 
 import org.apache.commons.lang3.tuple.Pair
 import org.junit.Rule

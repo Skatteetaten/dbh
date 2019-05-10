@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.service.internal
-
-import no.skatteetaten.aurora.databasehotel.DomainUtils
+/*
+import no.skatteetaten.aurora.databasehotel.domain.DomainUtils
 import spock.lang.Specification
 
 class SchemaLabelMatcherTest extends Specification {
@@ -23,3 +23,4 @@ class SchemaLabelMatcherTest extends Specification {
       [deploymentId: "DEPID"] | [deploymentId: "DEPID", other: "SOMETHING"] | false
   }
 }
+*/
