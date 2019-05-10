@@ -16,6 +16,12 @@ plugins {
 
 }
 
+repositories {
+    flatDir {
+        dirs("libs")
+    }
+}
+
 dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-security")

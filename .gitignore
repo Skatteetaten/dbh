@@ -10,5 +10,5 @@ gradlew.bat
 
 classes
 
-libs/ojdbc7.jar
+libs/*.jar
 .attach_*
