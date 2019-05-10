@@ -56,6 +56,5 @@ class DatabaseInstanceInitializerOracleTest {
         migrations.forEach {
             assertThat(it["success"]).isEqualTo(BigDecimal.ONE)
         }
-
     }
 }
