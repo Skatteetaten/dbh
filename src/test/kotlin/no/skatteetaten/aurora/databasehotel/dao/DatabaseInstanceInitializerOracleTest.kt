@@ -21,17 +21,11 @@ import javax.sql.DataSource
 
 @DatabaseTest
 @OracleTest
-class DatabaseInstanceInitializerOracleTest {
-
-    @Autowired
-    lateinit var oracleConfig: OracleConfig
-
-    @Autowired
-    @TargetEngine(ORACLE)
-    lateinit var oracleDataSource: DataSource
-
-    @Autowired
-    lateinit var initializer: DatabaseInstanceInitializer
+class DatabaseInstanceInitializerOracleTest @Autowired constructor(
+    val oracleConfig: OracleConfig,
+    @TargetEngine(ORACLE) val oracleDataSource: DataSource,
+    val initializer: DatabaseInstanceInitializer
+) {
 
     @Test
     fun `migrate oracle database`() {

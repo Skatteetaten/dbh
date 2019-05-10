@@ -18,17 +18,11 @@ import org.springframework.jdbc.core.JdbcTemplate
 import javax.sql.DataSource
 
 @DatabaseTest
-class DatabaseInstanceInitializerPostgresTest {
-
-    @Autowired
-    lateinit var postgresConfig: PostgresConfig
-
-    @Autowired
-    @TargetEngine(POSTGRES)
-    lateinit var postgresDataSource: DataSource
-
-    @Autowired
-    lateinit var initializer: DatabaseInstanceInitializer
+class DatabaseInstanceInitializerPostgresTest @Autowired constructor(
+    val postgresConfig: PostgresConfig,
+    @TargetEngine(POSTGRES) val postgresDataSource: DataSource,
+    val initializer: DatabaseInstanceInitializer
+) {
 
     @Test
     fun `migrate postgres database`() {

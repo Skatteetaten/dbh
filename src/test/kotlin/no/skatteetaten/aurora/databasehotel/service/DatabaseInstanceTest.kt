@@ -98,17 +98,11 @@ abstract class AbstractDatabaseInstanceTest {
 }
 
 @DatabaseTest
-class PostgresDatabaseInstanceTest : AbstractDatabaseInstanceTest() {
-
-    @Autowired
-    lateinit var config: PostgresConfig
-
-    @Autowired
-    @TargetEngine(POSTGRES)
-    lateinit var dataSource: DataSource
-
-    @Autowired
-    lateinit var databaseInstanceInitializer: DatabaseInstanceInitializer
+class PostgresDatabaseInstanceTest @Autowired constructor(
+    val config: PostgresConfig,
+    @TargetEngine(POSTGRES) val dataSource: DataSource,
+    val databaseInstanceInitializer: DatabaseInstanceInitializer
+) : AbstractDatabaseInstanceTest() {
 
     @BeforeEach
     fun setup() {
@@ -138,17 +132,11 @@ class PostgresDatabaseInstanceTest : AbstractDatabaseInstanceTest() {
 
 @OracleTest
 @DatabaseTest
-class OracleDatabaseInstanceTest : AbstractDatabaseInstanceTest() {
-
-    @Autowired
-    lateinit var testConfig: OracleConfig
-
-    @Autowired
-    @TargetEngine(ORACLE)
-    lateinit var dataSource: DataSource
-
-    @Autowired
-    lateinit var databaseInstanceInitializer: DatabaseInstanceInitializer
+class OracleDatabaseInstanceTest @Autowired constructor(
+    val testConfig: OracleConfig,
+    @TargetEngine(ORACLE) val dataSource: DataSource,
+    val databaseInstanceInitializer: DatabaseInstanceInitializer
+) : AbstractDatabaseInstanceTest() {
 
     @BeforeEach
     fun setup() {
