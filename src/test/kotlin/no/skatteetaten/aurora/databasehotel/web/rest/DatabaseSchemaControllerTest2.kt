@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.web.rest
 
-import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
@@ -38,7 +38,7 @@ class DatabaseSchemaControllerTest2 {
     @ParameterizedTest
     @ArgumentsSource(Params::class)
     fun verifyLabelsParsing(labelString: String, expectedLabels: Map<String, String>) {
-        assert(parseLabelsParam(encode(labelString, "UTF-8"))).isEqualTo(expectedLabels)
+        assertThat(parseLabelsParam(encode(labelString, "UTF-8"))).isEqualTo(expectedLabels)
     }
 
     class JdbcParams : ArgumentsProvider {

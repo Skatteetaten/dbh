@@ -45,6 +45,7 @@ tasks {
         if (!jenkinsUser.isNullOrBlank()) {
             // We activate the ci profile when we build on Jenkins
             systemProperties["spring.profiles.active"] = "ci"
+            systemProperties["test.include-oracle-tests"] = "true"
         }
     }
 }

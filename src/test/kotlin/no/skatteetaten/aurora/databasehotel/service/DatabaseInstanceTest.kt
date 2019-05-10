@@ -3,10 +3,11 @@ package no.skatteetaten.aurora.databasehotel.service
 import assertk.assertions.hasClass
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
+import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleConfig
+import no.skatteetaten.aurora.databasehotel.OracleTest
 import no.skatteetaten.aurora.databasehotel.PostgresConfig
 import no.skatteetaten.aurora.databasehotel.TargetEngine
-import no.skatteetaten.aurora.databasehotel.TestDataSources
 import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
@@ -14,12 +15,8 @@ import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.json.JsonTest
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.Duration
 import javax.sql.DataSource
 
@@ -86,9 +83,7 @@ abstract class AbstractDatabaseInstanceTest {
     }
 }
 
-@ExtendWith(SpringExtension::class)
-@JsonTest
-@ContextConfiguration(classes = [PostgresConfig::class, OracleConfig::class, TestDataSources::class, DatabaseInstanceInitializer::class])
+@DatabaseTest
 class PostgresDatabaseInstanceTest : AbstractDatabaseInstanceTest() {
 
     @Autowired
@@ -127,9 +122,8 @@ class PostgresDatabaseInstanceTest : AbstractDatabaseInstanceTest() {
         )
 }
 
-@ExtendWith(SpringExtension::class)
-@JsonTest
-@ContextConfiguration(classes = [PostgresConfig::class, OracleConfig::class, TestDataSources::class, DatabaseInstanceInitializer::class])
+@OracleTest
+@DatabaseTest
 class OracleDatabaseInstanceTest : AbstractDatabaseInstanceTest() {
 
     @Autowired

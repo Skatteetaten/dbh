@@ -6,6 +6,8 @@ import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
 import no.skatteetaten.aurora.databasehotel.service.postgres.PostgresJdbcUrlBuilder
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -28,6 +30,7 @@ class PostgresConfig {
 
 @Component
 @ConfigurationProperties("test.datasource.oracle")
+@ConditionalOnProperty(name = ["test.include-oracle-tests"], havingValue = "true", matchIfMissing = false)
 class OracleConfig {
     lateinit var host: String
     lateinit var port: String
@@ -39,10 +42,10 @@ class OracleConfig {
 }
 
 @Configuration
-class TestDataSources(val postgresConfig: PostgresConfig, val oracleConfig: OracleConfig) {
+class TestDataSources {
     @Bean
     @TargetEngine(POSTGRES)
-    fun postgresDatasource(): DataSource = DataSourceUtils.createDataSource(
+    fun postgresDatasource(postgresConfig: PostgresConfig): DataSource = DataSourceUtils.createDataSource(
         PostgresJdbcUrlBuilder().create(postgresConfig.host, postgresConfig.port.toInt(), "postgres"),
         postgresConfig.username,
         postgresConfig.password,
@@ -51,7 +54,8 @@ class TestDataSources(val postgresConfig: PostgresConfig, val oracleConfig: Orac
 
     @Bean
     @TargetEngine(ORACLE)
-    fun oracleDatasource(): DataSource = DataSourceUtils.createDataSource(
+    @ConditionalOnBean(OracleConfig::class)
+    fun oracleDatasource(oracleConfig: OracleConfig): DataSource = DataSourceUtils.createDataSource(
         OracleJdbcUrlBuilder(oracleConfig.service).create(oracleConfig.host, oracleConfig.port.toInt(), null),
         oracleConfig.username,
         oracleConfig.password,

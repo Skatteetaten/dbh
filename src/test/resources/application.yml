@@ -28,6 +28,7 @@ spring:
     banner-mode: "off"
 
 test:
+  include-oracle-tests: "false"
   datasource:
     postgres:
       host: localhost

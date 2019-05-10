@@ -17,4 +17,3 @@ fun createSchemaNameAndPassword(): Pair<String, String> {
     val password = padding + RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH - padding.length)
     return Pair.of(schemaName, password)
 }
-
