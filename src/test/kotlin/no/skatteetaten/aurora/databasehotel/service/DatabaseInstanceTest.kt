@@ -38,8 +38,22 @@ abstract class AbstractDatabaseInstanceTest {
         val schema = instance.createSchema(defaultLabels)
         val user = schema.users.firstOrNull() ?: throw AssertionError("Should be able to find a user")
 
+        JdbcTemplate(DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1))
+    }
+
+    @Test
+    fun `verify schema privileges`() {
+
+        val schema = instance.createSchema(defaultLabels)
+        val user = schema.users.firstOrNull() ?: throw AssertionError("Should be able to find a user")
+
         val jdbcTemplate = JdbcTemplate(DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1))
-        jdbcTemplate.execute("create table TEST(name varchar(32))")
+        listOf(
+            "create table NAMES(name varchar(32))",
+            "insert into NAMES (name) values ('Darth')",
+            "CREATE VIEW nameview as select * from NAMES"
+        ).forEach(jdbcTemplate::execute)
+        assertThat(jdbcTemplate.queryForMap("select name from NAMES")["name"]).isEqualTo("Darth")
     }
 
     @Test
