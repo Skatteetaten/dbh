@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
+import assertk.assertThat
+import assertk.assertions.hasClass
+import assertk.assertions.isEqualTo
+import assertk.assertions.isGreaterThan
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleConfig
@@ -10,6 +14,9 @@ import no.skatteetaten.aurora.databasehotel.service.createSchemaNameAndPassword
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.jdbc.BadSqlGrammarException
+import org.springframework.jdbc.core.JdbcTemplate
+import java.math.BigDecimal
 import javax.sql.DataSource
 
 @DatabaseTest
@@ -37,6 +44,18 @@ class DatabaseInstanceInitializerOracleTest {
             OracleJdbcUrlBuilder(oracleConfig.service).create(oracleConfig.host, oracleConfig.port.toInt(), null)
 
         val dataSource = DataSourceUtils.createDataSource(jdbcUrl, schemaName, password)
+        val jdbcTemplate = JdbcTemplate(dataSource)
+
+        assertThat { jdbcTemplate.queryForList("select * from SCHEMA_VERSION") }
+            .thrownError { hasClass(BadSqlGrammarException::class) }
+
         initializer.migrate(dataSource)
+
+        val migrations = jdbcTemplate.queryForList("select * from SCHEMA_VERSION")
+        assertThat(migrations.size).isGreaterThan(0)
+        migrations.forEach {
+            assertThat(it["success"]).isEqualTo(BigDecimal.ONE)
+        }
+
     }
 }
