@@ -50,6 +50,9 @@ test:
 logging:
   level:
     no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager: ERROR
+    # Setting  error level on some flyway logging to avoid warnings during test
+    org.flywaydb.core.internal.command.DbMigrate: ERROR
+    org.flywaydb.core.internal.database.base.Database: ERROR
 
 ---
 
