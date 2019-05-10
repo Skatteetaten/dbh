@@ -131,16 +131,17 @@ class DatabaseInstanceInitializer(
 
         val engine = dataSource.jdbcUrl.toDatabaseEngineFromJdbcUrl()
 
-        val flyway = Flyway().apply {
-            this.dataSource = dataSource
-            isOutOfOrder = true
-            setLocations(engine.migrationLocation)
+        val configuration = Flyway.configure()
+            .dataSource(dataSource)
+            .outOfOrder(true)
+            .locations(engine.migrationLocation)
 
-            if (engine == ORACLE) {
-                this.setSchemas(dataSource.username)
-                table = "SCHEMA_VERSION"
-            }
+        if (engine == ORACLE) {
+            configuration
+                .schemas(dataSource.username)
+                .table("SCHEMA_VERSION")
         }
+        val flyway = configuration.load()
 
         flyway.migrate()
     }
