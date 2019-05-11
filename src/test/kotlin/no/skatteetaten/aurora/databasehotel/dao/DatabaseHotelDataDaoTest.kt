@@ -55,38 +55,31 @@ abstract class DatabaseHotelDataDaoTest {
     }
 
     @Test
-    fun a() {
-//        given:
-//        SchemaData schemaData1 = hotelDataDao.createSchemaData("SCHEMA_NAME_1")
-//        SchemaData schemaData2 = hotelDataDao.createSchemaData("SCHEMA_NAME_2")
-//        SchemaUser user1 = hotelDataDao.createUser(schemaData1.id, "SCHEMA", "SCHEMA_NAME_1", "PASS")
-//        SchemaUser user2 = hotelDataDao.createUser(schemaData1.id, "READWRITE", "SCHEMA_NAME_1_rw", "PASS")
-//        hotelDataDao.createUser(schemaData2.id, "SCHEMA", "SCHEMA_NAME_2", "PASS")
-//
-//        when:
-//        List<SchemaUser> users = hotelDataDao.findAllUsersForSchema(schemaData1.id)
-//
-//        then:
-//        users.size() == 2
-//        users*.id.containsAll(user1.id, user2.id)
+    fun `find users for schema`() {
 
+        val schemaData1 = hotelDataDao.createSchemaData("SCHEMA_NAME_1")
+        val schemaData2 = hotelDataDao.createSchemaData("SCHEMA_NAME_2")
+        val user1 = hotelDataDao.createUser(schemaData1.id, "SCHEMA", "SCHEMA_NAME_1", "PASS")
+        val user2 = hotelDataDao.createUser(schemaData1.id, "READWRITE", "SCHEMA_NAME_1_rw", "PASS")
+        hotelDataDao.createUser(schemaData2.id, "SCHEMA", "SCHEMA_NAME_2", "PASS")
+
+        val users = hotelDataDao.findAllUsersForSchema(schemaData1.id)
+        assertThat(users).hasSize(2)
+        assertThat(users).containsAll(user1, user2)
     }
 
     @Test
-    fun b() {
-//        given:
-//        SchemaData schemaData = hotelDataDao.createSchemaData("SCHEMA_NAME_1")
-//
-//        when:
-//        hotelDataDao.replaceLabels(schemaData.id, [deploymentId: "Test", otherLabel: "SomeValue"])
-//
-//        then:
-//        def labels = hotelDataDao.findAllLabels()
-//        labels.size() == 2
-//        (labels*.schemaId as Set) == [schemaData.id] as Set
-//        labels.find { it.name == "deploymentId" }.value == "Test"
-//        labels.find { it.name == "otherLabel" }.value == "SomeValue"
+    fun `replace and find all labels`() {
 
+        val schemaData = hotelDataDao.createSchemaData("SCHEMA_NAME_1")
+
+        hotelDataDao.replaceLabels(schemaData.id, mapOf("deploymentId" to "Test", "otherLabel" to "SomeValue"))
+
+        val labels = hotelDataDao.findAllLabels()
+        assertThat(labels).hasSize(2)
+        assertThat(labels.map { it.schemaId }.toSet()).isEqualTo(setOf(schemaData.id))
+        assertThat(labels.find { it.name == "deploymentId" }?.value).isEqualTo("Test")
+        assertThat(labels.find { it.name == "otherLabel" }?.value).isEqualTo("SomeValue")
     }
 }
 

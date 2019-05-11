@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager;
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label;
-import no.skatteetaten.aurora.databasehotel.dao.dto.Schema;
+import no.skatteetaten.aurora.databasehotel.dao.Schema;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo;

@@ -2,9 +2,11 @@ package no.skatteetaten.aurora.databasehotel.dao.postgres
 
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
-import no.skatteetaten.aurora.databasehotel.dao.dto.Schema
+import no.skatteetaten.aurora.databasehotel.dao.Schema
+import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.queryForObject
-import java.util.Optional
+import java.sql.ResultSet
+import java.util.*
 import javax.sql.DataSource
 
 /**
@@ -38,12 +40,12 @@ ${'$'}${'$'};""",
 
     override fun findSchemaByName(schemaName: String): Optional<Schema> {
         val query = "SELECT datname as username, now() as created, now() as lastLogin FROM pg_database WHERE datname=?"
-        return queryForOne(query, Schema::class.java, schemaName.toSafe())
+        return Optional.ofNullable(jdbcTemplate.queryForObject(query, toSchema, schemaName.toSafe()))
     }
 
     override fun findAllNonSystemSchemas(): List<Schema> {
         val query = "SELECT datname as username, now() as created, now() as lastLogin FROM pg_database WHERE datistemplate = false and datname not in ('postgres')"
-        return queryForMany(query, Schema::class.java)
+        return jdbcTemplate.query(query, toSchema)
     }
 
     override fun deleteSchema(schemaName: String) {
@@ -67,4 +69,8 @@ ${'$'}${'$'};""",
      * Converts the name of a schema to a string that is safe to use as a database name for Postgres.
      */
     private fun String.toSafe() = this.toLowerCase()
+
+    private val toSchema = RowMapper { rs, rowNum -> Schema(rs.getString("username"), rs.date("created"), Date(rs.getTimestamp("lastLogin").time)) }
+
+    private fun ResultSet.date(columnName: String) = Date(this.getTimestamp(columnName).time)
 }

@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport;
-import no.skatteetaten.aurora.databasehotel.dao.dto.Schema;
+import no.skatteetaten.aurora.databasehotel.dao.Schema;
 
 public class OracleDatabaseManager extends DatabaseSupport implements DatabaseManager {
 

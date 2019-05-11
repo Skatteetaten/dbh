@@ -1,7 +1,12 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
-import no.skatteetaten.aurora.databasehotel.dao.dto.Schema
-import java.util.Optional
+import java.util.*
+
+data class Schema @JvmOverloads constructor(
+        val username: String,
+        val created: Date,
+        val lastLogin: Date? = null
+)
 
 interface DatabaseManager {
 

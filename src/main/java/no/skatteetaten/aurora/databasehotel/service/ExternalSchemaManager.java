@@ -20,7 +20,7 @@ import com.google.common.collect.Lists;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
 import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema;
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label;
-import no.skatteetaten.aurora.databasehotel.dao.dto.Schema;
+import no.skatteetaten.aurora.databasehotel.dao.Schema;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo;
@@ -88,9 +88,7 @@ public class ExternalSchemaManager {
     private DatabaseSchema createDatabaseSchema(SchemaData schemaData, ExternalSchema externalSchema,
         List<SchemaUser> users) {
 
-        Schema schema = new Schema();
-        schema.setCreated(externalSchema.getCreatedDate());
-        schema.setUsername(schemaData.getName());
+        Schema schema = new Schema(schemaData.getName(), externalSchema.getCreatedDate());
 
         List<Label> labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.getId());
 

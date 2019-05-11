@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.service.internal
 
-import no.skatteetaten.aurora.databasehotel.dao.dto.Schema
+import no.skatteetaten.aurora.databasehotel.dao.Schema
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
