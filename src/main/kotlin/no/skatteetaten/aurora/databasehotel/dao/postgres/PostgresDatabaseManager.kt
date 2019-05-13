@@ -3,10 +3,9 @@ package no.skatteetaten.aurora.databasehotel.dao.postgres
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
 import no.skatteetaten.aurora.databasehotel.dao.Schema
-import org.springframework.jdbc.core.RowMapper
+import no.skatteetaten.aurora.databasehotel.dao.toSchema
 import org.springframework.jdbc.core.queryForObject
-import java.sql.ResultSet
-import java.util.*
+import java.util.Optional
 import javax.sql.DataSource
 
 /**
@@ -44,7 +43,8 @@ ${'$'}${'$'};""",
     }
 
     override fun findAllNonSystemSchemas(): List<Schema> {
-        val query = "SELECT datname as username, now() as created, now() as lastLogin FROM pg_database WHERE datistemplate = false and datname not in ('postgres')"
+        val query =
+            "SELECT datname as username, now() as created, now() as lastLogin FROM pg_database WHERE datistemplate = false and datname not in ('postgres')"
         return jdbcTemplate.query(query, toSchema)
     }
 
@@ -69,8 +69,4 @@ ${'$'}${'$'};""",
      * Converts the name of a schema to a string that is safe to use as a database name for Postgres.
      */
     private fun String.toSafe() = this.toLowerCase()
-
-    private val toSchema = RowMapper { rs, rowNum -> Schema(rs.getString("username"), rs.date("created"), Date(rs.getTimestamp("lastLogin").time)) }
-
-    private fun ResultSet.date(columnName: String) = Date(this.getTimestamp(columnName).time)
 }

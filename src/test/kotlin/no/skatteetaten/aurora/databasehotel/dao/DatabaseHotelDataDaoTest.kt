@@ -1,7 +1,13 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
 import assertk.assertThat
-import assertk.assertions.*
+import assertk.assertions.containsAll
+import assertk.assertions.hasClass
+import assertk.assertions.hasSize
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isNotNull
+import assertk.assertions.isTrue
 import com.zaxxer.hikari.HikariDataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
@@ -38,7 +44,7 @@ abstract class DatabaseHotelDataDaoTest {
     fun `fails to create user for nonexisting schema`() {
 
         assertThat { hotelDataDao.createUser("NOSUCHSCHEMAID", "SCHEMA", "A", "A") }
-                .thrownError { hasClass(DataAccessException::class) }
+            .thrownError { hasClass(DataAccessException::class) }
     }
 
     @Test
@@ -85,8 +91,8 @@ abstract class DatabaseHotelDataDaoTest {
 
 @DatabaseTest
 class PostgresDatabaseHotelDataDaoTest @Autowired constructor(
-        @TargetEngine(POSTGRES) val dataSource: HikariDataSource,
-        val initializer: DatabaseInstanceInitializer
+    @TargetEngine(POSTGRES) val dataSource: HikariDataSource,
+    val initializer: DatabaseInstanceInitializer
 ) : DatabaseHotelDataDaoTest() {
 
     @BeforeAll
@@ -94,7 +100,7 @@ class PostgresDatabaseHotelDataDaoTest @Autowired constructor(
         val manager = PostgresDatabaseManager(dataSource)
         val (username, password) = createSchemaNameAndPassword()
         val schemaName = manager.createSchema(username, password)
-        val jdbcUrl = dataSource.jdbcUrl.replace(Regex("/[a-z]+$"), "/${schemaName}")
+        val jdbcUrl = dataSource.jdbcUrl.replace(Regex("/[a-z]+$"), "/$schemaName")
         val dataSource = DataSourceUtils.createDataSource(jdbcUrl, schemaName, password)
         initializer.migrate(dataSource)
 
