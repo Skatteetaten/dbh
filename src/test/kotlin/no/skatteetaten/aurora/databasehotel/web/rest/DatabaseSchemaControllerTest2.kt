@@ -6,19 +6,22 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
+import no.skatteetaten.aurora.mockmvc.extensions.Path
+import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
+import no.skatteetaten.aurora.mockmvc.extensions.post
+import no.skatteetaten.aurora.mockmvc.extensions.put
+import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
+import no.skatteetaten.aurora.mockmvc.extensions.status
+import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.springframework.http.MediaType
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup
-
 import java.net.URLEncoder.encode
 import java.util.stream.Stream
 
@@ -61,11 +64,16 @@ class DatabaseSchemaControllerTest2 {
         }
         val databaseSchemaController = DatabaseSchemaController(databaseHotelService, true, true)
         val mockMvc = standaloneSetup(databaseSchemaController).build()
-        mockMvc.perform(put("/api/v1/schema/validate").content(json).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.status").value("OK"))
-            .andExpect(jsonPath("$.totalCount").value(1))
-            .andExpect(jsonPath("$.items[0]").value(true))
+        mockMvc.put(
+            path = Path("/api/v1/schema/validate"),
+            body = json,
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            statusIsOk()
+                .responseJsonPath("$.status").equalsValue("OK")
+                .responseJsonPath("$.totalCount").equalsValue(1)
+                .responseJsonPath("$.items[0]").isTrue()
+        }
     }
 
     @Test
@@ -74,12 +82,17 @@ class DatabaseSchemaControllerTest2 {
 
         val databaseSchemaController = DatabaseSchemaController(mockk(), true, true)
         val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
-        mockMvc.perform(put("/api/v1/schema/validate").content(json).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.status").value("Failed"))
-            .andExpect(jsonPath("$.totalCount").value(1))
-            .andExpect(jsonPath("$.items.length()").value(1))
-            .andExpect(jsonPath("$.items[0]").value("id or jdbcUser is required"))
+        mockMvc.put(
+            path = Path("/api/v1/schema/validate"),
+            body = json,
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            status(HttpStatus.BAD_REQUEST)
+                .responseJsonPath("$.status").equalsValue("Failed")
+                .responseJsonPath("$.totalCount").equalsValue(1)
+                .responseJsonPath("$.items.length()").equalsValue(1)
+                .responseJsonPath("$.items[0]").equalsValue("id or jdbcUser is required")
+        }
     }
 
     @Test
@@ -89,8 +102,13 @@ class DatabaseSchemaControllerTest2 {
 
         val databaseSchemaController = DatabaseSchemaController(mockk(), true, true)
         val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
-        mockMvc.perform(put("/api/v1/schema/123").content(json).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest)
+        mockMvc.put(
+            path = Path("/api/v1/schema/123"),
+            body = json,
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            status(HttpStatus.BAD_REQUEST)
+        }
     }
 
     @Test
@@ -100,7 +118,12 @@ class DatabaseSchemaControllerTest2 {
 
         val databaseSchemaController = DatabaseSchemaController(mockk(), true, true)
         val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
-        mockMvc.perform(post("/api/v1/schema/").content(json).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest)
+        mockMvc.post(
+            path = Path("/api/v1/schema/"),
+            body = json,
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            status(HttpStatus.BAD_REQUEST)
+        }
     }
 }
