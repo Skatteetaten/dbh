@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.json.JsonTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.SingleColumnRowMapper
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -26,6 +27,9 @@ class DatabaseHotelAdminServiceTest {
 
     @Value("\${test.datasource.password}")
     lateinit var testPassword: String
+
+    @MockBean
+    lateinit var adminService: DatabaseHotelAdminService
 
     @Test
     fun `postgres smoke test`() {

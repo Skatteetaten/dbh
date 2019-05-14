@@ -1,1 +1,0 @@
-grant select on SCHEMA_DATA to AOS_API_USER;
