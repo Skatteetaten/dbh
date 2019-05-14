@@ -5,6 +5,7 @@ package no.skatteetaten.aurora.databasehotel
 import no.skatteetaten.aurora.databasehotel.EnvVarMapper.mapEnvironmentVarsToSystemProperties
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelAdminService
+import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.SpringApplication
@@ -23,8 +24,10 @@ class Application(val admin: DatabaseHotelAdminService) : ApplicationRunner {
     @Transactional
     override fun run(args: ApplicationArguments?) {
 
+        Thread.sleep(20000)
         val instances = admin.findAllDatabaseInstances()
         instances.filter { it.metaInfo.engine == DatabaseEngine.ORACLE }.forEach {
+            LoggerFactory.getLogger(Application::class.java).info("Deleting obsolete migrations from ${it.metaInfo.host}")
             val jdbcTemplate = (it.databaseHotelDataDao as DatabaseSupport).jdbcTemplate
             jdbcTemplate.execute("delete from SCHEMA_VERSION where \"checksum\" in (-1854067104, 1258639134)")
         }
