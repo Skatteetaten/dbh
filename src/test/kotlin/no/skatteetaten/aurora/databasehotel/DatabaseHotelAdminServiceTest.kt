@@ -28,9 +28,6 @@ class DatabaseHotelAdminServiceTest {
     @Value("\${test.datasource.password}")
     lateinit var testPassword: String
 
-    @MockBean
-    lateinit var adminService: DatabaseHotelAdminService
-
     @Test
     fun `postgres smoke test`() {
 
