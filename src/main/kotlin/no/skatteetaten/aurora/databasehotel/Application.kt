@@ -18,8 +18,7 @@ class Application
 */
 
 @SpringBootApplication(exclude = [DataSourceAutoConfiguration::class])
-class Application(val admin: DatabaseHotelAdminService): ApplicationRunner {
-
+class Application(val admin: DatabaseHotelAdminService) : ApplicationRunner {
 
     @Transactional
     override fun run(args: ApplicationArguments?) {
