@@ -7,7 +7,7 @@ import javax.sql.DataSource
 
 abstract class DatabaseSupport(dataSource: DataSource) {
 
-    protected val jdbcTemplate: JdbcTemplate = JdbcTemplate(dataSource)
+    val jdbcTemplate: JdbcTemplate = JdbcTemplate(dataSource)
 
     fun <T> queryForMany(query: String, dtoType: Class<T>, vararg params: Any): List<T> =
         jdbcTemplate.query(query, BeanPropertyRowMapper(dtoType), *params)

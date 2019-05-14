@@ -35,9 +35,12 @@ class DbhInitializer(
                     i.remove()
                 } catch (e: Exception) {
                     val host = get<String, String>(databaseConfig, "host")
-                    LOGGER.warn(format("Unable to connect to %s - will try again later", host))
-                    LOGGER.debug(format("Unable to connect to %s - will try again later", host), e)
-                    Thread.sleep(retryDelay.toLong())
+                    LOGGER.warn("Unable to connect to $host - will try again later (${e.message})")
+                    LOGGER.debug("Unable to connect to $host - will try again later", host)
+                    try {
+                        Thread.sleep(retryDelay.toLong())
+                    } finally {
+                    }
                 }
             }
         }
@@ -60,10 +63,11 @@ class DbhInitializer(
         val password: String = databaseConfig.typedGet("password")
         when (engine) {
             "postgres" -> {
+                val port: Int = (databaseConfig.typedGet<String>("port").toInt())
                 databaseHotelAdminService.registerPostgresDatabaseInstance(
                     instanceName,
                     host,
-                    5432,
+                    port,
                     username,
                     password,
                     createSchemaAllowed,
