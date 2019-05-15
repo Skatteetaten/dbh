@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.service
 
 import assertk.assertions.hasClass
+import com.zaxxer.hikari.pool.HikariPool
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
@@ -66,10 +67,8 @@ abstract class AbstractDatabaseInstanceTest {
         assertThat(instance.findSchemaById(schema.id)).isNotPresent
 
         val user = schema.users.firstOrNull() ?: throw AssertionError("Should be able to find a user")
-        DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1)
-        // TODO: We should no longer be able to connect to the database schema
-//        assertk.assertThat { DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1) }
-//            .thrownError { hasClass(HikariPool.PoolInitializationException::class) }
+        assertk.assertThat { DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1) }
+            .thrownError { hasClass(HikariPool.PoolInitializationException::class) }
     }
 
     @Test

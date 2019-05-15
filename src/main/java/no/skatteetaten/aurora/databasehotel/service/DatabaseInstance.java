@@ -195,8 +195,7 @@ public class DatabaseInstance {
                 databaseHotelDataDao.deactivateSchemaData(schemaData.getId());
                 // We need to make sure that users can no longer connect to the schema. Let's just create a new random
                 // password for the schema so that it is different from the one we have in the SchemaData.
-                // TODO: Uncomment the next line to complete this task
-                // databaseManager.updatePassword(schemaName, createSchemaNameAndPassword().getRight());
+                databaseManager.updatePassword(schemaName, createSchemaNameAndPassword().getRight());
             });
             integrations.forEach(
                 integration -> integration.onSchemaDeleted(databaseSchema, deleteParams.getCooldownDuration()));
