@@ -59,7 +59,7 @@ class ResidentsIntegrationTest(
 
         val resident = jdbcTemplate.queryForMap("select * from RESIDENTS.RESIDENTS")
         assertThat(resident["RESIDENT_NAME"]).isEqualTo(schema.name)
-        assertThat(resident["RESIDENT_EMAIL"]).isEqualTo("k77319")
+        assertThat(resident["RESIDENT_EMAIL"]).isEqualTo("some_id")
         assertThat(resident["RESIDENT_SERVICE"]).isEqualTo("aurora/dev/dbh/db")
     }
 }
