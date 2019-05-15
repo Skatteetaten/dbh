@@ -14,7 +14,8 @@ import org.slf4j.LoggerFactory;
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport;
-import no.skatteetaten.aurora.databasehotel.dao.dto.Schema;
+import no.skatteetaten.aurora.databasehotel.dao.JdbcUtils;
+import no.skatteetaten.aurora.databasehotel.dao.Schema;
 
 public class OracleDatabaseManager extends DatabaseSupport implements DatabaseManager {
 
@@ -76,17 +77,17 @@ public class OracleDatabaseManager extends DatabaseSupport implements DatabaseMa
     @Override
     public Optional<Schema> findSchemaByName(String schemaName) {
 
-        String query = "SELECT * FROM dba_users u WHERE username=?";
-        return queryForOne(query, Schema.class, schemaName);
+        String query = "SELECT username, created, last_login as lastLogin FROM dba_users u WHERE username=?";
+        return Optional.ofNullable(getJdbcTemplate().queryForObject(query, JdbcUtils.getToSchema(), schemaName));
     }
 
     @Override
     public List<Schema> findAllNonSystemSchemas() {
 
         String currentUserName = getJdbcTemplate().queryForObject("select user from dual", String.class);
-        String query = "SELECT * FROM dba_users u WHERE default_tablespace not in ('SYSTEM', 'SYSAUX', 'USERS') "
+        String query = "SELECT username, created, last_login as lastLogin FROM dba_users u WHERE default_tablespace not in ('SYSTEM', 'SYSAUX', 'USERS') "
             + "and default_tablespace=username and username!=?";
-        return queryForMany(query, Schema.class, currentUserName);
+        return getJdbcTemplate().query(query, JdbcUtils.getToSchema(), currentUserName);
     }
 
     @Override

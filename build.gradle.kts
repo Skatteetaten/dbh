@@ -16,6 +16,12 @@ plugins {
 
 }
 
+repositories {
+    flatDir {
+        dirs("libs")
+    }
+}
+
 dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-security")
@@ -29,14 +35,14 @@ dependencies {
     implementation("org.postgresql:postgresql")
     implementation("org.flywaydb:flyway-core")
 
-    testImplementation("com.squareup.okhttp3:mockwebserver:3.13.1")
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
-    testImplementation("io.mockk:mockk:1.9.2")
+    testImplementation("io.mockk:mockk:1.9.3")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.13")
     testImplementation("com.nhaarman:mockito-kotlin:1.6.0")
+    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:0.6.5")
 }
 
 tasks {
@@ -45,6 +51,7 @@ tasks {
         if (!jenkinsUser.isNullOrBlank()) {
             // We activate the ci profile when we build on Jenkins
             systemProperties["spring.profiles.active"] = "ci"
+            systemProperties["test.include-oracle-tests"] = "true"
         }
     }
 }
