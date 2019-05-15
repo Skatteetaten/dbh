@@ -55,14 +55,14 @@ public class DatabaseInstance {
 
     private final boolean createSchemaAllowed;
 
-    private final int cooldownAfterDeleteMonths;
+    private final int cooldownDaysAfterDelete;
 
     private final int cooldownDaysForOldUnusedSchemas;
 
     public DatabaseInstance(DatabaseInstanceMetaInfo metaInfo, DatabaseManager databaseManager,
         DatabaseHotelDataDao databaseHotelDataDao,
         JdbcUrlBuilder jdbcUrlBuilder, ResourceUsageCollector resourceUsageCollector,
-        int cooldownAfterDeleteMonths, int cooldownDaysForOldUnusedSchemas) {
+        int cooldownDaysAfterDelete, int cooldownDaysForOldUnusedSchemas) {
 
         this.metaInfo = metaInfo;
         this.databaseManager = databaseManager;
@@ -71,7 +71,7 @@ public class DatabaseInstance {
         this.resourceUsageCollector =
             Assert.asNotNull(resourceUsageCollector, "%s must be set", ResourceUsageCollector.class);
         this.createSchemaAllowed = metaInfo.getCreateSchemaAllowed();
-        this.cooldownAfterDeleteMonths = cooldownAfterDeleteMonths;
+        this.cooldownDaysAfterDelete = cooldownDaysAfterDelete;
         this.cooldownDaysForOldUnusedSchemas = cooldownDaysForOldUnusedSchemas;
     }
 
@@ -207,7 +207,7 @@ public class DatabaseInstance {
     public void deleteSchema(String schemaName, @Nullable Duration cooldownDuration) {
 
         if (cooldownDuration == null) {
-            cooldownDuration = Duration.ofDays(30 * cooldownAfterDeleteMonths);
+            cooldownDuration = Duration.ofDays(cooldownDaysAfterDelete);
         }
 
         deleteSchema(schemaName, new DeleteParams(cooldownDuration));

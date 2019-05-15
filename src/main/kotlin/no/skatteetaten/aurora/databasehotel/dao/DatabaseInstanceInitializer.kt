@@ -25,7 +25,7 @@ import java.util.Optional
 
 @Component
 class DatabaseInstanceInitializer(
-    @Value("\${database-config.cooldownMonths}") private val cooldownAfterDeleteMonths: Int = 6,
+    @Value("\${database-config.cooldownDaysAfterDelete:180}") private val cooldownDaysAfterDelete: Int = 180,
     @Value("\${database-config.cooldownDaysForOldUnusedSchemas:1}") private val cooldownDaysForOldUnusedSchemas: Int = 1,
     @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long? = 300000L
 ) {
@@ -69,7 +69,7 @@ class DatabaseInstanceInitializer(
         val databaseInstance = DatabaseInstance(
             databaseInstanceMetaInfo, databaseManager,
             databaseHotelDataDao, jdbcUrlBuilder, resourceUsageCollector,
-            cooldownAfterDeleteMonths, cooldownDaysForOldUnusedSchemas
+            cooldownDaysAfterDelete, cooldownDaysForOldUnusedSchemas
         )
         val residentsIntegration = ResidentsIntegration(managementDataSource)
         databaseInstance.registerIntegration(residentsIntegration)
@@ -115,7 +115,7 @@ class DatabaseInstanceInitializer(
         return DatabaseInstance(
             databaseInstanceMetaInfo, databaseManager,
             databaseHotelDataDao, urlBuilder, resourceUsageCollector,
-            cooldownAfterDeleteMonths, cooldownDaysForOldUnusedSchemas
+            cooldownDaysAfterDelete, cooldownDaysForOldUnusedSchemas
         )
     }
 
