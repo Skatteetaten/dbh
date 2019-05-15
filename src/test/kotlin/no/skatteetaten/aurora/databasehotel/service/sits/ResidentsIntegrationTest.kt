@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.databasehotel.service.sits
 
 import assertk.assertThat
 import assertk.assertions.hasClass
+import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleTest
@@ -11,7 +12,6 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.JdbcTemplate
-import java.lang.IllegalArgumentException
 import java.util.Date
 import javax.sql.DataSource
 
@@ -58,8 +58,8 @@ class ResidentsIntegrationTest(
         residentsIntegration.onSchemaCreated(schema)
 
         val resident = jdbcTemplate.queryForMap("select * from RESIDENTS.RESIDENTS")
-        resident["RESIDENT_NAME"] == schema.name
-        resident["RESIDENT_EMAIL"] == "k77319"
-        resident["RESIDENT_SERVICE"] == "aurora/dev/dbh/db"
+        assertThat(resident["RESIDENT_NAME"]).isEqualTo(schema.name)
+        assertThat(resident["RESIDENT_EMAIL"]).isEqualTo("k77319")
+        assertThat(resident["RESIDENT_SERVICE"]).isEqualTo("aurora/dev/dbh/db")
     }
 }
