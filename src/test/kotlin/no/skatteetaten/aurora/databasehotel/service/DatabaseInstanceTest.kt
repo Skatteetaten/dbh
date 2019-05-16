@@ -1,6 +1,11 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import assertk.assertThat
 import assertk.assertions.hasClass
+import assertk.assertions.hasSize
+import assertk.assertions.isEqualTo
+import assertk.assertions.isNotNull
+import assertk.assertions.isNull
 import com.zaxxer.hikari.pool.HikariPool
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
@@ -13,13 +18,13 @@ import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import java.time.Duration
 import javax.sql.DataSource
+import org.assertj.core.api.Assertions.assertThat as jassertThat
 
 abstract class AbstractDatabaseInstanceTest {
 
@@ -61,13 +66,13 @@ abstract class AbstractDatabaseInstanceTest {
     fun `delete schema`() {
 
         val schema = instance.createSchema(defaultLabels)
-        assertThat(instance.findSchemaById(schema.id)).isNotNull
+        assertThat(instance.findSchemaById(schema.id)).isNotNull()
 
         instance.deleteSchema(schema.name, Duration.ofSeconds(1))
         assertThat(instance.findSchemaById(schema.id)).isNull()
 
         val user = schema.users.firstOrNull() ?: throw AssertionError("Should be able to find a user")
-        assertk.assertThat { DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1) }
+        assertThat { DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1) }
             .thrownError { hasClass(HikariPool.PoolInitializationException::class) }
     }
 
@@ -83,14 +88,13 @@ abstract class AbstractDatabaseInstanceTest {
         ).forEach { instance.createSchema(defaultLabels + it) }
         repeat(3) { instance.createSchema(defaultLabels) }
 
-        assertThat(instance.findAllSchemas(emptyMap()))
-            .hasSize(8)
+        assertThat(instance.findAllSchemas(emptyMap())).hasSize(8)
 
-        assertThat(instance.findAllSchemas(mapOf("environment" to "test")))
+        jassertThat(instance.findAllSchemas(mapOf("environment" to "test")))
             .allMatch { it.labels["environment"] == "test" }
             .hasSize(3)
 
-        assertThat(instance.findAllSchemas(mapOf("affiliation" to "aurora", "environment" to "test")))
+        jassertThat(instance.findAllSchemas(mapOf("affiliation" to "aurora", "environment" to "test")))
             .allMatch { it.labels["affiliation"] == "aurora" && it.labels["environment"] == "test" }
             .hasSize(2)
     }
