@@ -91,7 +91,7 @@ open class DatabaseInstance(
         }
 
         val schemaNameValid = databaseManager.createSchema(schemaName, password)
-        val schemaData     = databaseHotelDataDao.createSchemaData(schemaNameValid)
+        val schemaData = databaseHotelDataDao.createSchemaData(schemaNameValid)
         databaseHotelDataDao.createUser(schemaData.id, UserType.SCHEMA.toString(), schemaData.name, password)
 
         val databaseSchema = findSchemaByName(schemaNameValid)

@@ -61,6 +61,6 @@ public final class DataSourceUtils {
             return StringUtils.repeat("*", nullToEmpty(password).length());
         }
         return password.substring(0, 2) + StringUtils.repeat("*", password.length() - 4) + password
-            .substring(password.length() - 2, password.length());
+            .substring(password.length() - 2);
     }
 }

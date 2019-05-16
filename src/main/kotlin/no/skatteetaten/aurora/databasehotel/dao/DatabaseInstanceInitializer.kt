@@ -76,6 +76,7 @@ class DatabaseInstanceInitializer(
 
         return databaseInstance
     }
+
     fun createInitializedPostgresInstance(
         instanceName: String,
         dbHost: String,

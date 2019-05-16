@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.databasehotel.dao
 
 import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.JdbcTemplate
-import java.util.Optional
 import javax.sql.DataSource
 
 abstract class DatabaseSupport(dataSource: DataSource) {

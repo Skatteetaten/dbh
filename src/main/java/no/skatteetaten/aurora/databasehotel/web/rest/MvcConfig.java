@@ -11,7 +11,7 @@ public class MvcConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
-          .addResourceHandler("/docs/**")
-          .addResourceLocations("classpath:/static/docs/", "file:build/asciidoc/html5/");
+            .addResourceHandler("/docs/**")
+            .addResourceLocations("classpath:/static/docs/", "file:build/asciidoc/html5/");
     }
 }

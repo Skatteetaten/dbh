@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.databasehotel.service;
 import static java.lang.String.format;
 
 import static no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE;
+import static no.skatteetaten.aurora.databasehotel.dao.SchemaTypes.SCHEMA_TYPE_EXTERNAL;
 import static no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.EXTERNAL;
 import static no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA;
 
@@ -17,10 +18,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
-import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes;
+import no.skatteetaten.aurora.databasehotel.dao.Schema;
 import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema;
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label;
-import no.skatteetaten.aurora.databasehotel.dao.Schema;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo;
@@ -39,7 +39,7 @@ public class ExternalSchemaManager {
     public Optional<DatabaseSchema> findSchemaById(String schemaId) {
 
         Optional<SchemaData> maybeSchemaData = Optional.ofNullable(databaseHotelDataDao.findSchemaDataById(schemaId))
-            .filter(schemaData -> SchemaTypes.SCHEMA_TYPE_EXTERNAL.equals(schemaData.getSchemaType()));
+            .filter(schemaData -> SCHEMA_TYPE_EXTERNAL.equals(schemaData.getSchemaType()));
         return maybeSchemaData.map(schemaData -> {
             ExternalSchema externalSchema = databaseHotelDataDao.findExternalSchemaById(schemaId)
                 .orElseThrow(() -> new DatabaseServiceException(format("Could not find ExternalSchema data for "
@@ -51,8 +51,7 @@ public class ExternalSchemaManager {
 
     public Set<DatabaseSchema> findAllSchemas() {
 
-        List<SchemaData> externalSchemas = databaseHotelDataDao.findAllSchemaDataBySchemaType(
-            SchemaTypes.SCHEMA_TYPE_EXTERNAL);
+        List<SchemaData> externalSchemas = databaseHotelDataDao.findAllSchemaDataBySchemaType(SCHEMA_TYPE_EXTERNAL);
         // TODO: Iterating like this may (will) become a performance bottleneck at some point.
         return externalSchemas.stream().map(schemaData -> {
             String id = schemaData.getId();
@@ -68,7 +67,7 @@ public class ExternalSchemaManager {
         Map<String, String> labelMap) {
 
         SchemaData schemaData =
-            databaseHotelDataDao.createSchemaData(username, SchemaTypes.SCHEMA_TYPE_EXTERNAL);
+            databaseHotelDataDao.createSchemaData(username, SCHEMA_TYPE_EXTERNAL);
         ExternalSchema externalSchema = databaseHotelDataDao.registerExternalSchema(schemaData.getId(), jdbcUrl);
         databaseHotelDataDao.replaceLabels(schemaData.getId(), labelMap);
         SchemaUser user = databaseHotelDataDao.createUser(schemaData.getId(), SCHEMA.toString(), username, password);
@@ -92,7 +91,8 @@ public class ExternalSchemaManager {
 
         List<Label> labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.getId());
 
-        DatabaseInstanceMetaInfo metaInfo = new DatabaseInstanceMetaInfo(ORACLE, "external", "-", 0, false, new HashMap<>());
+        DatabaseInstanceMetaInfo metaInfo =
+            new DatabaseInstanceMetaInfo(ORACLE, "external", "-", 0, false, new HashMap<>());
         JdbcUrlBuilder jdbcUrlBuilder = (host, port, database) -> externalSchema.getJdbcUrl();
 
         return new DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder).createOne(schemaData, schema, users,

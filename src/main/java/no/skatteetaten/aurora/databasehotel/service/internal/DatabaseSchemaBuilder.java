@@ -9,8 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import no.skatteetaten.aurora.databasehotel.dao.dto.Label;
 import no.skatteetaten.aurora.databasehotel.dao.Schema;
+import no.skatteetaten.aurora.databasehotel.dao.dto.Label;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo;
@@ -18,9 +18,9 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData;
 import no.skatteetaten.aurora.databasehotel.domain.User;
 import no.skatteetaten.aurora.databasehotel.service.JdbcUrlBuilder;
-import no.skatteetaten.aurora.databasehotel.utils.MapUtils;
 import no.skatteetaten.aurora.databasehotel.service.ResourceUsageCollector;
 import no.skatteetaten.aurora.databasehotel.service.ResourceUsageCollector.SchemaSize;
+import no.skatteetaten.aurora.databasehotel.utils.MapUtils;
 
 public class DatabaseSchemaBuilder {
 

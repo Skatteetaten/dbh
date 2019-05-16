@@ -12,6 +12,6 @@ public class CollectionUtils {
         if (objects == null) {
             throw new IllegalArgumentException("Cannot create list from null");
         }
-        return objects.stream().map(mapper).collect(Collectors.<T>toList());
+        return objects.stream().map(mapper).collect(Collectors.toList());
     }
 }

@@ -2,6 +2,8 @@ package no.skatteetaten.aurora.databasehotel.dao.oracle;
 
 import static com.google.common.collect.Lists.newArrayList;
 
+import static no.skatteetaten.aurora.databasehotel.dao.SchemaTypes.SCHEMA_TYPE_MANAGED;
+
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -19,7 +21,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport;
-import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes;
 import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema;
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData;
@@ -40,7 +41,7 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     @Override
     public SchemaData createSchemaData(String name) {
 
-        return createSchemaData(name, SchemaTypes.SCHEMA_TYPE_MANAGED);
+        return createSchemaData(name, SCHEMA_TYPE_MANAGED);
     }
 
     @Override
@@ -49,11 +50,8 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
         String id = generateId();
         getJdbcTemplate()
             .update("insert into SCHEMA_DATA (id, name, schema_type) values (?, ?, ?)", id, name, schemaType);
-        SchemaData schemaData = findSchemaDataById(id);
-        if (schemaData == null) {
-            throw new DataAccessException("Unable to create schema data");
-        }
-        return schemaData;
+        return Optional.ofNullable(findSchemaDataById(id))
+            .orElseThrow(() -> new DataAccessException("Unable to create schema data"));
     }
 
     @Override
@@ -66,7 +64,8 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     @Override
     public SchemaData findSchemaDataByName(String name) {
 
-        return queryForOne("select id, name, schema_type from SCHEMA_DATA where name=? and active=1", SchemaData.class, name);
+        return queryForOne("select id, name, schema_type from SCHEMA_DATA where name=? and active=1", SchemaData.class,
+            name);
     }
 
     @Override
@@ -84,7 +83,7 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     @Override
     public List<SchemaData> findAllManagedSchemaData() {
 
-        return findAllSchemaDataBySchemaType(SchemaTypes.SCHEMA_TYPE_MANAGED);
+        return findAllSchemaDataBySchemaType(SCHEMA_TYPE_MANAGED);
     }
 
     @Override
@@ -112,7 +111,7 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
             .collect(Collectors.joining(","));
         parameters.addValue("names", labelNames);
         parameters.addValue("values", labelValues);
-        parameters.addValue("type", SchemaTypes.SCHEMA_TYPE_MANAGED);
+        parameters.addValue("type", SCHEMA_TYPE_MANAGED);
 
         return namedParameterJdbcTemplate.query(
             "select id, name, schema_type from SCHEMA_DATA where id in (\n"
@@ -129,10 +128,9 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     @Override
     public SchemaUser createUser(String schemaId, String userType, String username, String password) {
 
-        SchemaData schemaData = findSchemaDataById(schemaId);
-        if (schemaData == null) {
-            throw new DataAccessException(String.format("Cannot create user for nonexisting schema [%s]", username));
-        }
+        Optional.ofNullable(findSchemaDataById(schemaId))
+            .orElseThrow(() -> new DataAccessException(
+                String.format("Cannot create user for nonexisting schema [%s]", username)));
 
         String id = generateId();
         getJdbcTemplate().update("insert into USERS (id, schema_id, type, username, password) values (?, ?, ?, ?, ?)",
@@ -145,8 +143,9 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     @Override
     public Optional<SchemaUser> findUserById(String id) {
 
-        return Optional.ofNullable(queryForOne("select id, schema_id, type, username, password from USERS where ID=?", SchemaUser.class,
-            id));
+        return Optional.ofNullable(
+            queryForOne("select id, schema_id, type, username, password from USERS where ID=?", SchemaUser.class,
+                id));
     }
 
     @Override
@@ -209,8 +208,9 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     @Override
     public ExternalSchema registerExternalSchema(String schemaId, String jdbcUrl) {
 
-        getJdbcTemplate().update("insert into EXTERNAL_SCHEMA (id, created_date, schema_id, jdbc_url) values (?, ?, ?, ?)",
-            generateId(), new Date(), schemaId, jdbcUrl);
+        getJdbcTemplate()
+            .update("insert into EXTERNAL_SCHEMA (id, created_date, schema_id, jdbc_url) values (?, ?, ?, ?)",
+                generateId(), new Date(), schemaId, jdbcUrl);
         return new ExternalSchema(new Date(), jdbcUrl);
     }
 

@@ -25,7 +25,7 @@ class DbhInitializer(
         // Iterate over all the database configurations, removing them one by one as we manage to register them
         // (in practice being able to connect to them). For each pass of the configurations, sleep for a while before
         // reiterating the ones we did not manage to connect to in the last pass.
-        while (!databasesConfig.isEmpty()) {
+        while (databasesConfig.isNotEmpty()) {
             val i = databasesConfig.iterator()
             while (i.hasNext()) {
                 val databaseConfig = i.next()
@@ -33,7 +33,7 @@ class DbhInitializer(
                     registerDatabase(databaseConfig)
                     i.remove()
                 } catch (e: Exception) {
-                    val host = get<String, String>(databaseConfig, "host")
+                    val host: String = get(databaseConfig, "host")
                     LOGGER.warn("Unable to connect to $host - will try again later (${e.message})")
                     LOGGER.debug("Unable to connect to $host - will try again later", host)
                     try {
