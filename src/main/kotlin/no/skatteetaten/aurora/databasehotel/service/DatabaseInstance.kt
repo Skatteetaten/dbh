@@ -77,9 +77,7 @@ open class DatabaseInstance(
     @Transactional
     open fun createSchema(schemaName: String, labels: Map<String, String?>): DatabaseSchema {
 
-        val schemaNameAndPassword = createSchemaNameAndPassword()
-        val password = schemaNameAndPassword.right
-
+        val (_, password) = createSchemaNameAndPassword()
         return createSchema(schemaName, password, labels)
     }
 
@@ -123,7 +121,7 @@ open class DatabaseInstance(
             databaseHotelDataDao.deactivateSchemaData(it.id)
             // We need to make sure that users can no longer connect to the schema. Let's just create a new random
             // password for the schema so that it is different from the one we have in the SchemaData.
-            databaseManager.updatePassword(schemaName, createSchemaNameAndPassword().right)
+            databaseManager.updatePassword(schemaName, createSchemaNameAndPassword().second)
         }
 
         integrations.forEach { it.onSchemaDeleted(schema, deleteParams.cooldownDuration) }
