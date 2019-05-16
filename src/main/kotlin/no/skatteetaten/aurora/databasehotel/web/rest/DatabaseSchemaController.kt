@@ -79,9 +79,8 @@ class DatabaseSchemaController(
     @Timed
     fun findById(@PathVariable id: String): ResponseEntity<ApiResponse<*>> {
 
-        val databaseSchema = databaseHotelService.findSchemaById(id)
-            .map { it.left }
-            .orElseThrow { IllegalArgumentException(format("No such schema %s", id)) }
+        val databaseSchema = databaseHotelService.findSchemaById(id)?.first
+            ?: throw IllegalArgumentException(format("No such schema %s", id))
         return Responses.okResponse(databaseSchema.toResource())
     }
 

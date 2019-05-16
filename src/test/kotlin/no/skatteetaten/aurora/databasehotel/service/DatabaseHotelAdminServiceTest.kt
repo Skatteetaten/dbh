@@ -120,13 +120,13 @@ class DatabaseHotelAdminServiceTest {
 
 private fun createMockInstance(
     name: String,
-    isCreateSchemaAllowed: Boolean = true,
+    createSchemaAllowed: Boolean = true,
     engine: DatabaseEngine = POSTGRES,
     labels: Map<String, String> = emptyMap()
 ): DatabaseInstance {
     return mockk {
-        every { metaInfo } returns metaInfo(name, "$name-host", 1521, isCreateSchemaAllowed, engine, labels)
+        every { metaInfo } returns metaInfo(name, "$name-host", 1521, createSchemaAllowed, engine, labels)
         every { instanceName } returns name
-        every { isCreateSchemaAllowed() } returns isCreateSchemaAllowed
+        every { isCreateSchemaAllowed } returns createSchemaAllowed
     }
 }

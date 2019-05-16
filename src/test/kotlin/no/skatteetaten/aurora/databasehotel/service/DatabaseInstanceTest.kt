@@ -61,10 +61,10 @@ abstract class AbstractDatabaseInstanceTest {
     fun `delete schema`() {
 
         val schema = instance.createSchema(defaultLabels)
-        assertThat(instance.findSchemaById(schema.id)).isPresent
+        assertThat(instance.findSchemaById(schema.id)).isNotNull
 
         instance.deleteSchema(schema.name, Duration.ofSeconds(1))
-        assertThat(instance.findSchemaById(schema.id)).isNotPresent
+        assertThat(instance.findSchemaById(schema.id)).isNull()
 
         val user = schema.users.firstOrNull() ?: throw AssertionError("Should be able to find a user")
         assertk.assertThat { DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1) }

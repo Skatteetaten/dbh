@@ -75,10 +75,10 @@ public class OracleDatabaseManager extends DatabaseSupport implements DatabaseMa
     }
 
     @Override
-    public Optional<Schema> findSchemaByName(String schemaName) {
+    public Schema findSchemaByName(String schemaName) {
 
         String query = "SELECT username, created, last_login as lastLogin FROM dba_users u WHERE username=?";
-        return Optional.ofNullable(getJdbcTemplate().queryForObject(query, JdbcUtils.getToSchema(), schemaName));
+        return getJdbcTemplate().queryForObject(query, JdbcUtils.getToSchema(), schemaName);
     }
 
     @Override

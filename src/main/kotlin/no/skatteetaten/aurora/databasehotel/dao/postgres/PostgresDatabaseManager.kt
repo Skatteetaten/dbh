@@ -5,7 +5,6 @@ import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
 import no.skatteetaten.aurora.databasehotel.dao.Schema
 import no.skatteetaten.aurora.databasehotel.dao.toSchema
 import org.springframework.jdbc.core.queryForObject
-import java.util.Optional
 import javax.sql.DataSource
 
 /**
@@ -37,9 +36,9 @@ ${'$'}${'$'};""",
         executeStatements("ALTER USER ${schemaName.toSafe()} WITH PASSWORD '$password'")
     }
 
-    override fun findSchemaByName(schemaName: String): Optional<Schema> {
+    override fun findSchemaByName(schemaName: String): Schema? {
         val query = "SELECT datname as username, now() as created, now() as lastLogin FROM pg_database WHERE datname=?"
-        return Optional.ofNullable(jdbcTemplate.queryForObject(query, toSchema, schemaName.toSafe()))
+        return jdbcTemplate.queryForObject(query, toSchema, schemaName.toSafe())
     }
 
     override fun findAllNonSystemSchemas(): List<Schema> {

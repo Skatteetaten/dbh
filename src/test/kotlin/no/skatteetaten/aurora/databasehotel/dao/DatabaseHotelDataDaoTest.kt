@@ -7,6 +7,7 @@ import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNotNull
+import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import com.zaxxer.hikari.HikariDataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
@@ -27,17 +28,17 @@ abstract class DatabaseHotelDataDaoTest {
     fun `finds created schema data`() {
 
         val schema = hotelDataDao.createSchemaData("TEST")
-        assertThat(hotelDataDao.findSchemaDataById(schema.id).get().name).isEqualTo("TEST")
+        assertThat(hotelDataDao.findSchemaDataById(schema.id)?.name).isEqualTo("TEST")
     }
 
     @Test
     fun `delete schema data`() {
 
         val schema = hotelDataDao.createSchemaData("TO_DELETE")
-        assertThat(hotelDataDao.findSchemaDataById(schema.id).isPresent).isTrue()
+        assertThat(hotelDataDao.findSchemaDataById(schema.id)).isNotNull()
 
         hotelDataDao.deactivateSchemaData(schema.id)
-        assertThat(hotelDataDao.findSchemaDataById(schema.id).isPresent()).isFalse()
+        assertThat(hotelDataDao.findSchemaDataById(schema.id)).isNull()
     }
 
     @Test

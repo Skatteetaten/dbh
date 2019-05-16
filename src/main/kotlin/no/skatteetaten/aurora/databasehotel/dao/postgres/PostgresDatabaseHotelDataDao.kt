@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.dao.postgres
 
-import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
+import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao
 import org.springframework.jdbc.core.BeanPropertyRowMapper
@@ -9,7 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import javax.sql.DataSource
 
 class PostgresDatabaseHotelDataDao(dataSource: DataSource) : OracleDatabaseHotelDataDao(dataSource) {
-    override fun findAllManagedSchemaDataByLabels(labels: MutableMap<String, String>): MutableList<SchemaData> {
+    override fun findAllManagedSchemaDataByLabels(labels: Map<String, String?>): MutableList<SchemaData> {
 
         val labelNames = labels.keys.toList().sorted()
         val labelValues = labelNames.joinToString(",") { labels[it]!! }
@@ -17,7 +17,7 @@ class PostgresDatabaseHotelDataDao(dataSource: DataSource) : OracleDatabaseHotel
         val parameters = MapSqlParameterSource().apply {
             addValue("names", labelNames)
             addValue("values", labelValues)
-            addValue("type", DatabaseHotelDataDao.SCHEMA_TYPE_MANAGED)
+            addValue("type", SchemaTypes.SCHEMA_TYPE_MANAGED)
         }
 
         return NamedParameterJdbcTemplate(jdbcTemplate).query(
