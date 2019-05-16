@@ -66,7 +66,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
 
     fun createSchema(
         requirements: DatabaseInstanceRequirements,
-        labels: Map<String, String> = emptyMap()
+        labels: Map<String, String?> = emptyMap()
     ): DatabaseSchema {
 
         val databaseInstance = databaseHotelAdminService.findDatabaseInstanceOrFail(requirements)
@@ -103,7 +103,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
     @JvmOverloads
     fun updateSchema(
         id: String,
-        labels: Map<String, String>,
+        labels: Map<String, String?>,
         username: String? = null,
         jdbcUrl: String? = null,
         password: String? = null
@@ -132,7 +132,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         username: String,
         password: String,
         jdbcUrl: String,
-        labels: Map<String, String>
+        labels: Map<String, String?>
     ): DatabaseSchema {
         val externalSchemaManager = databaseHotelAdminService.externalSchemaManager
             ?: throw DatabaseServiceException("External Schema Manager has not been registered")

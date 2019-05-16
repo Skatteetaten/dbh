@@ -64,10 +64,9 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     }
 
     @Override
-    public Optional<SchemaData> findSchemaDataByName(String name) {
+    public SchemaData findSchemaDataByName(String name) {
 
-        return Optional.ofNullable(queryForOne("select id, name, schema_type from SCHEMA_DATA where name=? and active=1", SchemaData.class,
-            name));
+        return queryForOne("select id, name, schema_type from SCHEMA_DATA where name=? and active=1", SchemaData.class, name);
     }
 
     @Override

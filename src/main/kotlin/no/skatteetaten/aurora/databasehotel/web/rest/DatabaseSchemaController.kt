@@ -36,7 +36,7 @@ data class DatabaseSchemaResource(
     val lastUsedDate: Date?,
     val databaseInstance: DatabaseInstanceResource,
     val users: List<UserResource>,
-    val labels: Map<String, String>,
+    val labels: Map<String, String?>,
     val metadata: SchemaMetadataResource
 )
 
@@ -45,7 +45,7 @@ data class SchemaCreationRequest(
     val instanceName: String? = null,
     val instanceLabels: Map<String, String> = emptyMap(),
     val instanceFallback: Boolean? = null,
-    val labels: Map<String, String>? = null,
+    val labels: Map<String, String?>? = null,
     val schema: Schema? = null
 ) {
     val fallback: Boolean

@@ -15,7 +15,7 @@ interface DatabaseHotelDataDao {
 
     fun findSchemaDataById(id: String): SchemaData?
 
-    fun findSchemaDataByName(name: String): Optional<SchemaData>
+    fun findSchemaDataByName(name: String): SchemaData?
 
     fun deleteSchemaData(id: String)
 
@@ -43,7 +43,7 @@ interface DatabaseHotelDataDao {
 
     fun findAllLabelsForSchema(schemaId: String): List<Label>
 
-    fun replaceLabels(schemaId: String, labels: Map<String, String>)
+    fun replaceLabels(schemaId: String, labels: Map<String, String?>)
 
     fun deleteLabelsForSchema(schemaId: String)
 

@@ -31,12 +31,12 @@ open class DatabaseInstance(
     fun findSchemaById(id: String): DatabaseSchema? =
         databaseHotelDataDao.findSchemaDataById(id)?.let(this::getDatabaseSchemaFromSchemaData)
 
-    fun findSchemaByName(name: String): Optional<DatabaseSchema> {
+    fun findSchemaByName(name: String): DatabaseSchema? {
 
-        return databaseHotelDataDao.findSchemaDataByName(name).map(this::getDatabaseSchemaFromSchemaData)
+        return databaseHotelDataDao.findSchemaDataByName(name)?.let(this::getDatabaseSchemaFromSchemaData)
     }
 
-    fun findAllSchemas(labelsToMatch: Map<String, String?>?): Set<DatabaseSchema> {
+    fun findAllSchemas(labelsToMatch: Map<String, String?>? = null): Set<DatabaseSchema> {
 
         return if (labelsToMatch.isNullOrEmpty()) findAllSchemasUnfiltered()
         else findAllSchemasWithLabels(labelsToMatch)
@@ -68,47 +68,36 @@ open class DatabaseInstance(
     }
 
     @Transactional
-    open fun createSchema(labelsOption: Map<String, String>): DatabaseSchema {
+    open fun createSchema(labels: Map<String, String?>): DatabaseSchema {
 
-        val schemaNameAndPassword = createSchemaNameAndPassword()
-        val schemaName = schemaNameAndPassword.left
-        val password = schemaNameAndPassword.right
-
-        return createSchema(schemaName, password, labelsOption)
+        val (schemaName, password) = createSchemaNameAndPassword()
+        return createSchema(schemaName, password, labels)
     }
 
     @Transactional
-    open fun createSchema(schemaName: String, labelsOption: Map<String, String>): DatabaseSchema {
+    open fun createSchema(schemaName: String, labels: Map<String, String?>): DatabaseSchema {
 
         val schemaNameAndPassword = createSchemaNameAndPassword()
         val password = schemaNameAndPassword.right
 
-        return createSchema(schemaName, password, labelsOption)
+        return createSchema(schemaName, password, labels)
     }
 
     @Transactional
-    open fun createSchema(schemaName: String, password: String, labelsOption: Map<String, String>): DatabaseSchema {
+    open fun createSchema(schemaName: String, password: String, labels: Map<String, String?>): DatabaseSchema {
 
         if (!isCreateSchemaAllowed) {
-            throw DatabaseServiceException(
-                String.format(
-                    "Schema creation has been disabled for this instance=%s",
-                    instanceName
-                )
-            )
+            throw DatabaseServiceException("Schema creation has been disabled for this instance=$instanceName")
         }
 
         val schemaNameValid = databaseManager.createSchema(schemaName, password)
-        val (id, name) = databaseHotelDataDao.createSchemaData(schemaNameValid)
-        databaseHotelDataDao.createUser(id, UserType.SCHEMA.toString(), name, password)
+        val schemaData     = databaseHotelDataDao.createSchemaData(schemaNameValid)
+        databaseHotelDataDao.createUser(schemaData.id, UserType.SCHEMA.toString(), schemaData.name, password)
 
-        val databaseSchema = findSchemaByName(schemaNameValid).orElseThrow {
-            DatabaseServiceException(
-                String.format("Expected schema [%s] to be created, but it was not", schemaNameValid)
-            )
-        }
+        val databaseSchema = findSchemaByName(schemaNameValid)
+            ?: throw DatabaseServiceException("Expected schema [$schemaNameValid] to be created, but it was not")
 
-        Optional.ofNullable(labelsOption).ifPresent { labels -> replaceLabels(databaseSchema, labels) }
+        replaceLabels(databaseSchema, labels)
 
         integrations.forEach { integration -> integration.onSchemaCreated(databaseSchema) }
 
@@ -118,44 +107,33 @@ open class DatabaseInstance(
     @Transactional
     open fun deleteSchema(schemaName: String, deleteParams: DeleteParams) {
 
-        val optionalSchema = findSchemaByName(schemaName)
-        if (deleteParams.isAssertExists) {
-            optionalSchema
-                .orElseThrow { DatabaseServiceException(String.format("No schema named [%s]", schemaName)) }
+        val schema = findSchemaByName(schemaName)
+
+        if (schema == null) {
+            if (deleteParams.isAssertExists) throw DatabaseServiceException("No schema named [$schemaName]")
+            else return
         }
 
-        optionalSchema.ifPresent { databaseSchema ->
-            databaseHotelDataDao.findSchemaDataByName(schemaName).ifPresent { (id, name) ->
-                val lastUsedDate = databaseSchema.lastUsedDate
-                val lastUsedString = lastUsedDate?.toInstant()?.toString() ?: "Never"
-                LOGGER.info(
-                    "Deleting schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}. Setting cooldown={}h",
-                    id, lastUsedString, databaseSchema.sizeMb, name,
-                    databaseSchema.labels, deleteParams.cooldownDuration.toHours()
-                )
-                databaseHotelDataDao.deactivateSchemaData(id)
-                // We need to make sure that users can no longer connect to the schema. Let's just create a new random
-                // password for the schema so that it is different from the one we have in the SchemaData.
-                databaseManager.updatePassword(schemaName, createSchemaNameAndPassword().right)
-            }
-            integrations.forEach { integration ->
-                integration.onSchemaDeleted(
-                    databaseSchema,
-                    deleteParams.cooldownDuration
-                )
-            }
+        databaseHotelDataDao.findSchemaDataByName(schemaName)?.let {
+            LOGGER.info(
+                "Deleting schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}. Setting cooldown={}h",
+                it.id, schema.lastUsedDateString, schema.sizeMb, it.name, schema.labels,
+                deleteParams.cooldownDuration.toHours()
+            )
+            databaseHotelDataDao.deactivateSchemaData(it.id)
+            // We need to make sure that users can no longer connect to the schema. Let's just create a new random
+            // password for the schema so that it is different from the one we have in the SchemaData.
+            databaseManager.updatePassword(schemaName, createSchemaNameAndPassword().right)
         }
+
+        integrations.forEach { it.onSchemaDeleted(schema, deleteParams.cooldownDuration) }
     }
 
     @Transactional
     open fun deleteSchema(schemaName: String, cooldownDuration: Duration?) {
-        var cooldownDuration = cooldownDuration
 
-        if (cooldownDuration == null) {
-            cooldownDuration = Duration.ofDays(cooldownDaysAfterDelete.toLong())
-        }
-
-        deleteSchema(schemaName, DeleteParams(cooldownDuration))
+        val duration = cooldownDuration ?: Duration.ofDays(cooldownDaysAfterDelete.toLong())
+        deleteSchema(schemaName, DeleteParams(duration))
     }
 
     @Transactional
@@ -165,34 +143,31 @@ open class DatabaseInstance(
 
         val schemas = findAllSchemasForDeletion()
         LOGGER.info("Found {} old and unused schemas", schemas.size)
-        schemas.parallelStream().forEach { (_, _, _, name) ->
-            deleteSchema(
-                name,
-                Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong())
-            )
+        schemas.parallelStream().forEach {
+            deleteSchema(it.name, Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong()))
         }
     }
 
     fun findAllSchemasForDeletion(): Set<DatabaseSchema> {
 
-        val daysAgo = Calendar.getInstance().let {
-            it.add(Calendar.DAY_OF_MONTH, DAYS_BACK)
-            it.time
+        val daysAgo = Calendar.getInstance().run {
+            add(Calendar.DAY_OF_MONTH, DAYS_BACK)
+            time
         }
 
         fun DatabaseSchema.isSystemTestSchema() = this.labels["userId"]?.endsWith(":jenkins-builder") ?: false
-        return findAllSchemas(null)
+        return findAllSchemas()
             .filter { it.isUnused || it.isSystemTestSchema() }
             .filter { s -> s.lastUsedOrCreatedDate.before(daysAgo) }
             .toSet()
     }
 
     @Transactional
-    open fun replaceLabels(schema: DatabaseSchema, labels: Map<String, String>) {
+    open fun replaceLabels(schema: DatabaseSchema, labels: Map<String, String?>) {
 
         schema.labels = labels
         databaseHotelDataDao.replaceLabels(schema.id, schema.labels)
-        integrations.forEach { integration -> integration.onSchemaUpdated(schema) }
+        integrations.forEach { it.onSchemaUpdated(schema) }
     }
 
     fun registerIntegration(integration: Integration) {
@@ -203,18 +178,15 @@ open class DatabaseInstance(
     private fun getDatabaseSchemaFromSchemaData(schemaData: SchemaData): DatabaseSchema? {
 
         if (schemaData.schemaType != SchemaTypes.SCHEMA_TYPE_MANAGED) return null
+        val schema = databaseManager.findSchemaByName(schemaData.name) ?: return null
 
-        return databaseManager.findSchemaByName(schemaData.name).let { schema ->
-            val users = databaseHotelDataDao.findAllUsersForSchema(schemaData.id)
-            val labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.id)
+        val users = databaseHotelDataDao.findAllUsersForSchema(schemaData.id)
+        val labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.id)
 
-            val schemaSize = resourceUsageCollector.getSchemaSize(schemaData.name)
+        val schemaSize = resourceUsageCollector.getSchemaSize(schemaData.name)
 
-            DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder).createOne(
-                schemaData, schema, users,
-                Optional.ofNullable(labels), schemaSize
-            )
-        }
+        return DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder)
+            .createOne(schemaData, schema, users, Optional.ofNullable(labels), schemaSize)
     }
 
     enum class UserType {
@@ -225,8 +197,10 @@ open class DatabaseInstance(
 
     companion object {
 
-        val DAYS_BACK = -7
+        const val DAYS_BACK = -7
 
         private val LOGGER = LoggerFactory.getLogger(DatabaseInstance::class.java)
     }
 }
+
+private val DatabaseSchema.lastUsedDateString get() = this.lastUsedDate?.toInstant()?.toString() ?: "Never"
