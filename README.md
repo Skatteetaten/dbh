@@ -30,7 +30,13 @@ handled.
           repositories repos
          }
      }
-     
+
+We use a local repository for distributionUrl in our gradle-wrapper.properties, you need to change it to a public repo in order to use the gradlew command. `../gradle/wrapper/gradle-wrapper.properties`
+
+    <...>
+    distributionUrl=https\://services.gradle.org/distributions/gradle-<version>-bin.zip
+    <...>
+
 ### Running postgres locally
 
     docker-compose up
