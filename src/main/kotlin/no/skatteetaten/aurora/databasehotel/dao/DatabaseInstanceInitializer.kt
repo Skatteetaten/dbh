@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance
 import no.skatteetaten.aurora.databasehotel.service.ResourceUsageCollector
+import no.skatteetaten.aurora.databasehotel.service.SchemaSize
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector
 import no.skatteetaten.aurora.databasehotel.service.postgres.PostgresJdbcUrlBuilder
@@ -105,12 +106,11 @@ class DatabaseInstanceInitializer(
         val databaseHotelDataDao = PostgresDatabaseHotelDataDao(databaseHotelDs)
 
         val resourceUsageCollector = object : ResourceUsageCollector {
-            override fun getSchemaSizes(): List<ResourceUsageCollector.SchemaSize> {
-                return emptyList()
-            }
+            override val schemaSizes: List<SchemaSize>
+                get() = emptyList()
 
-            override fun getSchemaSize(schemaName: String): Optional<ResourceUsageCollector.SchemaSize> {
-                return Optional.of(ResourceUsageCollector.SchemaSize(schemaName, BigDecimal.ZERO))
+            override fun getSchemaSize(schemaName: String): SchemaSize? {
+                return SchemaSize(schemaName, BigDecimal.ZERO)
             }
         }
         return DatabaseInstance(

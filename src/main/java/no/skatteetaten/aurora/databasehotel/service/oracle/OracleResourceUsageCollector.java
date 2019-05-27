@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.databasehotel.service.oracle;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.jdbc.core.RowMapper;
 
 import com.google.common.cache.CacheBuilder;
@@ -16,6 +16,7 @@ import com.google.common.cache.LoadingCache;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport;
 import no.skatteetaten.aurora.databasehotel.service.DatabaseServiceException;
 import no.skatteetaten.aurora.databasehotel.service.ResourceUsageCollector;
+import no.skatteetaten.aurora.databasehotel.service.SchemaSize;
 
 public class OracleResourceUsageCollector extends DatabaseSupport implements ResourceUsageCollector {
 
@@ -24,7 +25,7 @@ public class OracleResourceUsageCollector extends DatabaseSupport implements Res
 
     private static final String KEYS_ARE_NOT_USED = "ANY";
 
-    final private LoadingCache<Object, List<SchemaSize>> cache;
+    private final LoadingCache<Object, List<SchemaSize>> cache;
 
     public OracleResourceUsageCollector(DataSource dataSource, Long resourceUseCollectInterval) {
         super(dataSource);
@@ -36,13 +37,13 @@ public class OracleResourceUsageCollector extends DatabaseSupport implements Res
                     List<SchemaSize> schemaSizes =
                         getJdbcTemplate().query("SELECT owner, sum(bytes)/1024/1024 schema_size_mb "
                             + "FROM dba_segments "
-                            + "where owner in (select name from DATABASEHOTEL_INSTANCE_DATA.SCHEMA_DATA) "
                             + "group BY owner", SCHEMA_SIZE_ROWMAPPER);
                     return schemaSizes;
                 }
             });
     }
 
+    @NotNull
     @Override
     public List<SchemaSize> getSchemaSizes() {
 
@@ -54,9 +55,11 @@ public class OracleResourceUsageCollector extends DatabaseSupport implements Res
     }
 
     @Override
-    public Optional<SchemaSize> getSchemaSize(String schemaName) {
+    public SchemaSize getSchemaSize(@NotNull String schemaName) {
 
-        return getSchemaSizes().stream().filter(schemaSize -> schemaSize.getOwner().equals(schemaName)).findFirst();
+        return getSchemaSizes().stream()
+            .filter(schemaSize -> schemaSize.getOwner().equals(schemaName))
+            .findFirst().orElse(null);
     }
 
     public void invalidateCache() {

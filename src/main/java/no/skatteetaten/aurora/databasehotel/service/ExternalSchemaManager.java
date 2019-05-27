@@ -97,7 +97,7 @@ public class ExternalSchemaManager {
 
         return new DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder).createOne(schemaData, schema, users,
             Optional.ofNullable(labels),
-            Optional.of(new ResourceUsageCollector.SchemaSize(schemaData.getName(), BigDecimal.ZERO)),
+            new SchemaSize(schemaData.getName(), BigDecimal.ZERO),
             EXTERNAL);
     }
 

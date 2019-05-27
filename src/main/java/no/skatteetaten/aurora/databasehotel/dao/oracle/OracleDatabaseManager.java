@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.sql.DataSource;
 
@@ -85,7 +84,8 @@ public class OracleDatabaseManager extends DatabaseSupport implements DatabaseMa
     public List<Schema> findAllNonSystemSchemas() {
 
         String currentUserName = getJdbcTemplate().queryForObject("select user from dual", String.class);
-        String query = "SELECT username, created, last_login as lastLogin FROM dba_users u WHERE default_tablespace not in ('SYSTEM', 'SYSAUX', 'USERS') "
+        String query = "SELECT username, created, last_login as lastLogin FROM dba_users u WHERE "
+            + "default_tablespace not in ('SYSTEM', 'SYSAUX', 'USERS', 'MAPTEST', 'AOS_API_USER', 'RESIDENTS') "
             + "and default_tablespace=username and username!=?";
         return getJdbcTemplate().query(query, JdbcUtils.getToSchema(), currentUserName);
     }

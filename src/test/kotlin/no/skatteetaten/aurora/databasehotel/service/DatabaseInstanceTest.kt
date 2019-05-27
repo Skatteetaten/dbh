@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
+import no.skatteetaten.aurora.databasehotel.deleteNonSystemSchemas
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -109,7 +110,7 @@ class PostgresDatabaseInstanceTest @Autowired constructor(
 
     @BeforeEach
     fun setup() {
-        PostgresDatabaseManager(dataSource).apply { findAllNonSystemSchemas().forEach { deleteSchema(it.username) } }
+        PostgresDatabaseManager(dataSource).deleteNonSystemSchemas()
         instance = createInitializedPostgresInstance(true)
     }
 
@@ -143,11 +144,7 @@ class OracleDatabaseInstanceTest @Autowired constructor(
 
     @BeforeEach
     fun setup() {
-        OracleDatabaseManager(dataSource).apply {
-            findAllNonSystemSchemas()
-                .filter { !listOf("MAPTEST", "AOS_API_USER", "RESIDENTS").contains(it.username) }
-                .forEach { deleteSchema(it.username) }
-        }
+        OracleDatabaseManager(dataSource).deleteNonSystemSchemas()
 
         instance = databaseInstanceInitializer.createInitializedOracleInstance(
             "dev",
