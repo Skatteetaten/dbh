@@ -1,20 +1,16 @@
 package no.skatteetaten.aurora.databasehotel.dao.oracle;
 
-import static java.lang.String.format;
+import no.skatteetaten.aurora.databasehotel.dao.*;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.EmptyResultDataAccessException;
 
+import javax.sql.DataSource;
 import java.util.List;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import no.skatteetaten.aurora.databasehotel.dao.DataAccessException;
-import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager;
-import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport;
-import no.skatteetaten.aurora.databasehotel.dao.JdbcUtils;
-import no.skatteetaten.aurora.databasehotel.dao.Schema;
+import static java.lang.String.format;
 
 public class OracleDatabaseManager extends DatabaseSupport implements DatabaseManager {
 
@@ -74,10 +70,14 @@ public class OracleDatabaseManager extends DatabaseSupport implements DatabaseMa
     }
 
     @Override
-    public Schema findSchemaByName(String schemaName) {
+    public Schema findSchemaByName(@NotNull String schemaName) {
 
         String query = "SELECT username, created, last_login as lastLogin FROM dba_users u WHERE username=?";
-        return getJdbcTemplate().queryForObject(query, JdbcUtils.getToSchema(), schemaName);
+        try {
+            return getJdbcTemplate().queryForObject(query, JdbcUtils.getToSchema(), schemaName);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
 
     @Override
