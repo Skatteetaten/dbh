@@ -54,7 +54,7 @@ database-config:
     password: "${dbh.dev.db.postgres.password:postgres}"
     labels:
         affiliation: aurora
-        type: prod
+        type: dev
 
 aurora:
   authenticationEnabled: false

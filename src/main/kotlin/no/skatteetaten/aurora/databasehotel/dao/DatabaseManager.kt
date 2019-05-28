@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
 import java.util.Date
-import java.util.Optional
 
 data class Schema @JvmOverloads constructor(
     val username: String,
@@ -17,7 +16,7 @@ interface DatabaseManager {
 
     fun updatePassword(schemaName: String, password: String)
 
-    fun findSchemaByName(schemaName: String): Optional<Schema>
+    fun findSchemaByName(schemaName: String): Schema?
 
     fun findAllNonSystemSchemas(): List<Schema>
 

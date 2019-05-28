@@ -36,7 +36,7 @@ data class DatabaseSchemaResource(
     val lastUsedDate: Date?,
     val databaseInstance: DatabaseInstanceResource,
     val users: List<UserResource>,
-    val labels: Map<String, String>,
+    val labels: Map<String, String?>,
     val metadata: SchemaMetadataResource
 )
 
@@ -45,7 +45,7 @@ data class SchemaCreationRequest(
     val instanceName: String? = null,
     val instanceLabels: Map<String, String> = emptyMap(),
     val instanceFallback: Boolean? = null,
-    val labels: Map<String, String>? = null,
+    val labels: Map<String, String?>? = null,
     val schema: Schema? = null
 ) {
     val fallback: Boolean
@@ -79,9 +79,8 @@ class DatabaseSchemaController(
     @Timed
     fun findById(@PathVariable id: String): ResponseEntity<ApiResponse<*>> {
 
-        val databaseSchema = databaseHotelService.findSchemaById(id)
-            .map { it.left }
-            .orElseThrow { IllegalArgumentException(format("No such schema %s", id)) }
+        val databaseSchema = databaseHotelService.findSchemaById(id)?.first
+            ?: throw IllegalArgumentException(format("No such schema %s", id))
         return Responses.okResponse(databaseSchema.toResource())
     }
 

@@ -17,7 +17,6 @@ import com.zaxxer.hikari.HikariDataSource
 import groovy.json.JsonOutput
 import groovy.sql.Sql
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
-import no.skatteetaten.aurora.databasehotel.dao.oracle.Datasources
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
 import spock.lang.Specification
 
@@ -29,7 +28,7 @@ abstract class AbstractControllerTest extends Specification {
 
   def setupSpec() {
 
-    HikariDataSource ds = Datasources.createTestDs()
+    HikariDataSource ds = null// = Datasources.createTestDs()
     def databaseManager = new OracleDatabaseManager(ds)
     databaseManager.deleteSchema(DatabaseInstanceInitializer.DEFAULT_SCHEMA_NAME)
     def sql = new Sql(ds)

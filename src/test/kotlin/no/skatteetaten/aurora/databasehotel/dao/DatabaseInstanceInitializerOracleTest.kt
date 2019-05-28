@@ -34,8 +34,8 @@ class DatabaseInstanceInitializerOracleTest @Autowired constructor(
         val (username, password) = createSchemaNameAndPassword()
 
         val schemaName = manager.createSchema(username, password)
-        val jdbcUrl =
-            OracleJdbcUrlBuilder(oracleConfig.service).create(oracleConfig.host, oracleConfig.port.toInt(), null)
+        val jdbcUrl = OracleJdbcUrlBuilder(oracleConfig.service)
+            .create(oracleConfig.host, oracleConfig.port.toInt(), null)
 
         val dataSource = DataSourceUtils.createDataSource(jdbcUrl, schemaName, password)
         val jdbcTemplate = JdbcTemplate(dataSource)

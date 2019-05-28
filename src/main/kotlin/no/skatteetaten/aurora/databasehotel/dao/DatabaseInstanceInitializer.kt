@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance
 import no.skatteetaten.aurora.databasehotel.service.ResourceUsageCollector
+import no.skatteetaten.aurora.databasehotel.service.SchemaSize
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector
 import no.skatteetaten.aurora.databasehotel.service.postgres.PostgresJdbcUrlBuilder
@@ -21,13 +22,12 @@ import org.flywaydb.core.Flyway
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
-import java.util.Optional
 
 @Component
 class DatabaseInstanceInitializer(
-    @Value("\${database-config.cooldownMonths}") private val cooldownAfterDeleteMonths: Int = 6,
+    @Value("\${database-config.cooldownDaysAfterDelete:180}") private val cooldownDaysAfterDelete: Int = 180,
     @Value("\${database-config.cooldownDaysForOldUnusedSchemas:1}") private val cooldownDaysForOldUnusedSchemas: Int = 1,
-    @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long? = 300000L
+    @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long = 300000L
 ) {
 
     var schemaName: String = DEFAULT_SCHEMA_NAME
@@ -69,13 +69,14 @@ class DatabaseInstanceInitializer(
         val databaseInstance = DatabaseInstance(
             databaseInstanceMetaInfo, databaseManager,
             databaseHotelDataDao, jdbcUrlBuilder, resourceUsageCollector,
-            cooldownAfterDeleteMonths, cooldownDaysForOldUnusedSchemas
+            cooldownDaysAfterDelete, cooldownDaysForOldUnusedSchemas
         )
         val residentsIntegration = ResidentsIntegration(managementDataSource)
         databaseInstance.registerIntegration(residentsIntegration)
 
         return databaseInstance
     }
+
     fun createInitializedPostgresInstance(
         instanceName: String,
         dbHost: String,
@@ -104,18 +105,17 @@ class DatabaseInstanceInitializer(
         val databaseHotelDataDao = PostgresDatabaseHotelDataDao(databaseHotelDs)
 
         val resourceUsageCollector = object : ResourceUsageCollector {
-            override fun getSchemaSizes(): List<ResourceUsageCollector.SchemaSize> {
-                return emptyList()
-            }
+            override val schemaSizes: List<SchemaSize>
+                get() = emptyList()
 
-            override fun getSchemaSize(schemaName: String): Optional<ResourceUsageCollector.SchemaSize> {
-                return Optional.of(ResourceUsageCollector.SchemaSize(schemaName, BigDecimal.ZERO))
+            override fun getSchemaSize(schemaName: String): SchemaSize? {
+                return SchemaSize(schemaName, BigDecimal.ZERO)
             }
         }
         return DatabaseInstance(
             databaseInstanceMetaInfo, databaseManager,
             databaseHotelDataDao, urlBuilder, resourceUsageCollector,
-            cooldownAfterDeleteMonths, cooldownDaysForOldUnusedSchemas
+            cooldownDaysAfterDelete, cooldownDaysForOldUnusedSchemas
         )
     }
 

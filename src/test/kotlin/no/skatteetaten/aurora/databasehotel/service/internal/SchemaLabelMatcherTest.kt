@@ -27,7 +27,11 @@ class SchemaLabelMatcherTest {
 
     @ParameterizedTest
     @ArgumentsSource(Params::class)
-    fun `verify label matching`(schemaLabels: Map<String, String>, searchLabels: Map<String, String>, expectedMatch: Boolean) {
+    fun `verify label matching`(
+        schemaLabels: Map<String, String>,
+        searchLabels: Map<String, String>,
+        expectedMatch: Boolean
+    ) {
 
         databaseSchema.labels = schemaLabels
         assertThat(SchemaLabelMatcher.matchesAll(databaseSchema, searchLabels)).isEqualTo(expectedMatch)

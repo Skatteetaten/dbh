@@ -2,7 +2,6 @@
 #  retryDelay: 60000
 #  dropAllowed: true
 #  schemaListingAllowed: true
-#  cooldownMonths: 6
 #
 #  databases:
 #    - host: "${dbh.test.db.host:localhost}"
