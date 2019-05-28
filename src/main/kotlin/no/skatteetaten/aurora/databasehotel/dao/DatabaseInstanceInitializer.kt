@@ -28,7 +28,7 @@ import java.util.Optional
 class DatabaseInstanceInitializer(
     @Value("\${database-config.cooldownDaysAfterDelete:180}") private val cooldownDaysAfterDelete: Int = 180,
     @Value("\${database-config.cooldownDaysForOldUnusedSchemas:1}") private val cooldownDaysForOldUnusedSchemas: Int = 1,
-    @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long? = 300000L
+    @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long = 300000L
 ) {
 
     var schemaName: String = DEFAULT_SCHEMA_NAME
