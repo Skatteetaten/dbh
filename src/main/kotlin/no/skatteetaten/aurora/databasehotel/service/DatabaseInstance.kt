@@ -18,8 +18,10 @@ open class DatabaseInstance(
     val metaInfo: DatabaseInstanceMetaInfo,
     private val databaseManager: DatabaseManager,
     val databaseHotelDataDao: DatabaseHotelDataDao,
-    private val jdbcUrlBuilder: JdbcUrlBuilder, private val resourceUsageCollector: ResourceUsageCollector,
-    private val cooldownDaysAfterDelete: Int, private val cooldownDaysForOldUnusedSchemas: Int
+    private val jdbcUrlBuilder: JdbcUrlBuilder,
+    private val resourceUsageCollector: ResourceUsageCollector,
+    private val cooldownDaysAfterDelete: Int,
+    private val cooldownDaysForOldUnusedSchemas: Int
 ) {
 
     private val integrations = ArrayList<Integration>()

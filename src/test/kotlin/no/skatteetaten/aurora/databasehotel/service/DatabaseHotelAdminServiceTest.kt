@@ -11,8 +11,8 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
-import no.skatteetaten.aurora.databasehotel.domain.DomainUtils.metaInfo
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
+import no.skatteetaten.aurora.databasehotel.domain.DomainUtils.metaInfo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 

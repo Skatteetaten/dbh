@@ -22,7 +22,6 @@ import org.flywaydb.core.Flyway
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
-import java.util.Optional
 
 @Component
 class DatabaseInstanceInitializer(
