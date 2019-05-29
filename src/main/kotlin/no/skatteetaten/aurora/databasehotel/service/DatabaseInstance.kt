@@ -33,10 +33,8 @@ open class DatabaseInstance(
     fun findSchemaById(id: String): DatabaseSchema? =
         databaseHotelDataDao.findSchemaDataById(id)?.let(this::getDatabaseSchemaFromSchemaData)
 
-    fun findSchemaByName(name: String): DatabaseSchema? {
-
-        return databaseHotelDataDao.findSchemaDataByName(name)?.let(this::getDatabaseSchemaFromSchemaData)
-    }
+    fun findSchemaByName(name: String): DatabaseSchema? =
+        databaseHotelDataDao.findSchemaDataByName(name)?.let(this::getDatabaseSchemaFromSchemaData)
 
     fun findAllSchemas(labelsToMatch: Map<String, String?>? = null): Set<DatabaseSchema> {
 
@@ -114,16 +112,15 @@ open class DatabaseInstance(
             else return
         }
 
-        databaseHotelDataDao.findSchemaDataByName(schemaName)?.let {
+        schema.apply {
             LOGGER.info(
                 "Deleting schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}. Setting cooldown={}h",
-                it.id, schema.lastUsedDateString, schema.sizeMb, it.name, schema.labels,
-                deleteParams.cooldownDuration.toHours()
+                id, lastUsedDateString, sizeMb, name, labels, deleteParams.cooldownDuration.toHours()
             )
-            databaseHotelDataDao.deactivateSchemaData(it.id)
+            databaseHotelDataDao.deactivateSchemaData(id)
             // We need to make sure that users can no longer connect to the schema. Let's just create a new random
             // password for the schema so that it is different from the one we have in the SchemaData.
-            databaseManager.updatePassword(schemaName, createSchemaNameAndPassword().second)
+            databaseManager.updatePassword(name, createSchemaNameAndPassword().second)
         }
 
         integrations.forEach { it.onSchemaDeleted(schema, deleteParams.cooldownDuration) }
