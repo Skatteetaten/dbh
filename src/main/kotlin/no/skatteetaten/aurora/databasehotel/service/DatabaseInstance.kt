@@ -103,19 +103,16 @@ open class DatabaseInstance(
     }
 
     @Transactional
-    open fun deleteSchema(schemaName: String, deleteParams: DeleteParams) {
+    open fun deleteSchema(schemaName: String, optionalCooldownDuration: Duration?) {
 
-        val schema = findSchemaByName(schemaName)
+        val cooldownDuration = optionalCooldownDuration ?: Duration.ofDays(cooldownDaysAfterDelete.toLong())
 
-        if (schema == null) {
-            if (deleteParams.isAssertExists) throw DatabaseServiceException("No schema named [$schemaName]")
-            else return
-        }
+        val schema = findSchemaByName(schemaName) ?: throw DatabaseServiceException("No schema named [$schemaName]")
 
         schema.apply {
             LOGGER.info(
                 "Deleting schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}. Setting cooldown={}h",
-                id, lastUsedDateString, sizeMb, name, labels, deleteParams.cooldownDuration.toHours()
+                id, lastUsedDateString, sizeMb, name, labels, cooldownDuration.toHours()
             )
             databaseHotelDataDao.deactivateSchemaData(id)
             // We need to make sure that users can no longer connect to the schema. Let's just create a new random
@@ -123,18 +120,11 @@ open class DatabaseInstance(
             databaseManager.updatePassword(name, createSchemaNameAndPassword().second)
         }
 
-        integrations.forEach { it.onSchemaDeleted(schema, deleteParams.cooldownDuration) }
+        integrations.forEach { it.onSchemaDeleted(schema, cooldownDuration) }
     }
 
     @Transactional
-    open fun deleteSchema(schemaName: String, cooldownDuration: Duration?) {
-
-        val duration = cooldownDuration ?: Duration.ofDays(cooldownDaysAfterDelete.toLong())
-        deleteSchema(schemaName, DeleteParams(duration))
-    }
-
-    @Transactional
-    open fun deleteUnusedSchemas() {
+    open fun pruneSchemasForDeletion() {
 
         LOGGER.info("Deleting schemas old unused schemas for server {}", metaInfo.instanceName)
 
@@ -153,8 +143,9 @@ open class DatabaseInstance(
         }
 
         fun DatabaseSchema.isSystemTestSchema() = this.labels["userId"]?.endsWith(":jenkins-builder") ?: false
+        fun DatabaseSchema.isCandidateForDeletion() = this.isUnused || this.isSystemTestSchema()
         return findAllSchemas()
-            .filter { it.isUnused || it.isSystemTestSchema() }
+            .filter(DatabaseSchema::isCandidateForDeletion)
             .filter { s -> s.lastUsedOrCreatedDate.before(daysAgo) }
             .toSet()
     }

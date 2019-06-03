@@ -20,6 +20,6 @@ class Janitor(
 
         LOG.info("Periodic deletion of old unused schemas")
         databaseHotelAdminService.findAllDatabaseInstances()
-            .forEach { it.deleteUnusedSchemas() }
+            .forEach { it.pruneSchemasForDeletion() }
     }
 }

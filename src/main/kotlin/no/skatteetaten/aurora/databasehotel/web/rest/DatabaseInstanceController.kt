@@ -37,7 +37,7 @@ class DatabaseInstanceController(private val databaseHotelAdminService: Database
     @Timed
     fun deleteUnused(@PathVariable host: String): ResponseEntity<ApiResponse<*>> {
 
-        databaseHotelAdminService.findDatabaseInstanceByHost(host)?.deleteUnusedSchemas()
+        databaseHotelAdminService.findDatabaseInstanceByHost(host)?.pruneSchemasForDeletion()
         return Responses.okResponse()
     }
 }
