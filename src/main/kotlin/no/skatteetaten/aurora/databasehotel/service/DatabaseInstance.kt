@@ -115,6 +115,7 @@ open class DatabaseInstance(
                 id, lastUsedDateString, sizeMb, name, labels, cooldownDuration.toHours()
             )
             databaseHotelDataDao.deactivateSchemaData(id)
+            databaseManager.deleteSchema(name)
             // We need to make sure that users can no longer connect to the schema. Let's just create a new random
             // password for the schema so that it is different from the one we have in the SchemaData.
             databaseManager.updatePassword(name, createSchemaNameAndPassword().second)

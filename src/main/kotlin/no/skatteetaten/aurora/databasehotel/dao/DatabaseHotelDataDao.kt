@@ -48,11 +48,11 @@ interface DatabaseHotelDataDao {
 
     fun registerExternalSchema(id: String, jdbcUrl: String): ExternalSchema
 
-    fun findExternalSchemaById(id: String): Optional<ExternalSchema>
+    fun findExternalSchemaById(id: String): ExternalSchema?
 
     fun deleteExternalSchema(schemaId: String)
 
-    fun updateExternalSchema(schemaId: String, username: String, jdbcUrl: String, password: String)
+    fun updateExternalSchema(schemaId: String, username: String?, jdbcUrl: String?, password: String?)
 }
 
 object SchemaTypes {

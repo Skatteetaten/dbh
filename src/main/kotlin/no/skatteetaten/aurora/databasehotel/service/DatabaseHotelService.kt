@@ -31,9 +31,9 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
             schemaAndInstance?.let { candidates.add(it) }
         }
 
-        val schema = databaseHotelAdminService.externalSchemaManager?.findSchemaById(id)?.orElse(null)
+        val schema = databaseHotelAdminService.externalSchemaManager?.findSchemaById(id)
         schema
-            ?.let { Pair(it, null) }
+            ?.let { it to null }
             ?.let { candidates.add(it) }
 
         verifyOnlyOneCandidate(id, candidates)
@@ -123,7 +123,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
             externalSchemaManager.run {
                 replaceLabels(schema, labels)
                 updateConnectionInfo(schema.id, username, jdbcUrl, password)
-                findSchemaById(id).orElse(null)
+                findSchemaById(id)!!
             }
         }
     }

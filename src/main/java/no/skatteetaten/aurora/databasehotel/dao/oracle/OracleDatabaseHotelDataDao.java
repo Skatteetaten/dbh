@@ -1,23 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.dao.oracle;
 
-import static com.google.common.collect.Lists.newArrayList;
-
-import static no.skatteetaten.aurora.databasehotel.dao.SchemaTypes.SCHEMA_TYPE_MANAGED;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import javax.sql.DataSource;
-
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao;
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport;
@@ -25,6 +7,18 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema;
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+
+import javax.sql.DataSource;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.google.common.collect.Lists.newArrayList;
+import static no.skatteetaten.aurora.databasehotel.dao.SchemaTypes.SCHEMA_TYPE_MANAGED;
 
 public class OracleDatabaseHotelDataDao extends DatabaseSupport implements DatabaseHotelDataDao {
 
@@ -55,7 +49,8 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     }
 
     @Override
-    public SchemaData findSchemaDataById(String id) {
+    @Nullable
+    public SchemaData findSchemaDataById(@NotNull String id) {
 
         return queryForOne("select id, name, schema_type from SCHEMA_DATA where id=? and active=1", SchemaData.class,
             id);
@@ -215,10 +210,10 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     }
 
     @Override
-    public Optional<ExternalSchema> findExternalSchemaById(String id) {
+    public ExternalSchema findExternalSchemaById(@NotNull String id) {
 
-        return Optional.ofNullable(queryForOne("select created_date, jdbc_url from EXTERNAL_SCHEMA where schema_id=?",
-            ExternalSchema.class, id));
+        return queryForOne("select created_date, jdbc_url from EXTERNAL_SCHEMA where schema_id=?",
+            ExternalSchema.class, id);
     }
 
     @Override
@@ -228,7 +223,7 @@ public class OracleDatabaseHotelDataDao extends DatabaseSupport implements Datab
     }
 
     @Override
-    public void updateExternalSchema(String schemaId, String username, String jdbcUrl, String password) {
+    public void updateExternalSchema(@NotNull String schemaId, String username, String jdbcUrl, String password) {
 
         if (username != null) {
             getJdbcTemplate().update("update SCHEMA_DATA set name=? where id=?", username, schemaId);
