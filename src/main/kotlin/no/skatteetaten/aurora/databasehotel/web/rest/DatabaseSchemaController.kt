@@ -196,7 +196,7 @@ fun DatabaseSchema.toResource() = DatabaseSchemaResource(
     metadata = SchemaMetadataResource(metadata?.sizeInMb)
 )
 
-internal fun parseLabelsParam(labelsParam: String): Map<String, String?> {
+fun parseLabelsParam(labelsParam: String): Map<String, String?> {
 
     val labelsDecoded: String = try {
         URLDecoder.decode(labelsParam, "UTF-8")
@@ -218,9 +218,9 @@ internal fun parseLabelsParam(labelsParam: String): Map<String, String?> {
         }.toMap()
 }
 
-fun String.splitRemoveEmpties(delimiter: String) =
+private fun String.splitRemoveEmpties(delimiter: String) =
     split(delimiter)
         .dropLastWhile { it.isEmpty() }
         .map { it.trim() }
 
-fun String.emptyToNull(): String? = if (isEmpty()) null else this
+private fun String.emptyToNull(): String? = if (isEmpty()) null else this
