@@ -5,7 +5,6 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher.findAllMatchingSchemas
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.lang.String.format
 import java.sql.DriverManager
 import java.sql.SQLException
 import java.time.Duration
@@ -112,7 +111,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         log.info("Updating labels for schema with id={} to labels={}", id, labels)
 
         val (schema, databaseInstance) = findSchemaById(id)
-            ?: throw DatabaseServiceException(format("No such schema %s", id))
+            ?: throw DatabaseServiceException("No such schema $id")
 
         return if (databaseInstance != null) {
             databaseInstance.replaceLabels(schema, labels)

@@ -6,7 +6,7 @@ import org.springframework.jdbc.core.RowMapper
 import java.sql.ResultSet
 import java.util.Date
 
-var toSchema: RowMapper<Schema> = RowMapper { rs, rowNum ->
+var toSchema: RowMapper<Schema> = RowMapper { rs, _ ->
     Schema(
         rs.getString("username"),
         rs.date("created"),

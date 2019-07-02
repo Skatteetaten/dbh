@@ -154,7 +154,6 @@ class DatabaseInstanceInitializer(
 
     companion object {
 
-        @JvmField
-        val DEFAULT_SCHEMA_NAME: String = "DATABASEHOTEL_INSTANCE_DATA"
+        const val DEFAULT_SCHEMA_NAME: String = "DATABASEHOTEL_INSTANCE_DATA"
     }
 }

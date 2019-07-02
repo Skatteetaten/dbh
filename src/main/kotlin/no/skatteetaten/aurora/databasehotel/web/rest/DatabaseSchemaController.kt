@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.databasehotel.web.rest
 import io.micrometer.core.annotation.Timed
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
-import no.skatteetaten.aurora.databasehotel.domain.User
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstanceRequirements
 import no.skatteetaten.aurora.databasehotel.toDatabaseEngine
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.io.UnsupportedEncodingException
-import java.lang.String.format
 import java.net.URLDecoder
 import java.time.Duration
 import java.util.Date
@@ -80,7 +78,7 @@ class DatabaseSchemaController(
     fun findById(@PathVariable id: String): ResponseEntity<ApiResponse<*>> {
 
         val databaseSchema = databaseHotelService.findSchemaById(id)?.first
-            ?: throw IllegalArgumentException(format("No such schema %s", id))
+            ?: throw IllegalArgumentException("No such schema $id")
         return Responses.okResponse(databaseSchema.toResource())
     }
 
@@ -153,18 +151,23 @@ class DatabaseSchemaController(
 
         val labels = schemaCreationRequest.labels ?: emptyMap()
         val schema = schemaCreationRequest.schema
-        val databaseSchema = if (schema == null) {
-            val instanceRequirements = DatabaseInstanceRequirements(
-                databaseEngine = schemaCreationRequest.engine,
-                instanceName = schemaCreationRequest.instanceName,
-                instanceLabels = schemaCreationRequest.instanceLabels,
-                instanceFallback = schemaCreationRequest.fallback
+        val databaseSchema = when {
+            schema == null -> {
+                val instanceRequirements = DatabaseInstanceRequirements(
+                    databaseEngine = schemaCreationRequest.engine,
+                    instanceName = schemaCreationRequest.instanceName,
+                    instanceLabels = schemaCreationRequest.instanceLabels,
+                    instanceFallback = schemaCreationRequest.fallback
+                )
+                databaseHotelService.createSchema(instanceRequirements, labels)
+            }
+            schema.isValid -> databaseHotelService.registerExternalSchema(
+                schema.username,
+                schema.password,
+                schema.jdbcUrl,
+                labels
             )
-            databaseHotelService.createSchema(instanceRequirements, labels)
-        } else if (schema.isValid) {
-            databaseHotelService.registerExternalSchema(schema.username, schema.password, schema.jdbcUrl, labels)
-        } else {
-            throw IllegalArgumentException("Missing JDBC input")
+            else -> throw IllegalArgumentException("Missing JDBC input")
         }
         return Responses.okResponse(databaseSchema.toResource())
     }
@@ -188,7 +191,7 @@ fun DatabaseSchema.toResource() = DatabaseSchemaResource(
     createdDate = createdDate,
     lastUsedDate = lastUsedDate,
     databaseInstance = databaseInstanceMetaInfo.toResource(),
-    users = users.map(User::toResource),
+    users = users.map { it.toResource() },
     labels = labels,
     metadata = SchemaMetadataResource(metadata?.sizeInMb)
 )
@@ -205,12 +208,14 @@ internal fun parseLabelsParam(labelsParam: String): Map<String, String?> {
 
     val labelsUnparsed = labelsDecoded.splitRemoveEmpties(",")
 
-    return labelsUnparsed.mapNotNull {
-        val nameAndValue = it.splitRemoveEmpties("=")
-        val name = nameAndValue.firstOrNull()?.emptyToNull() ?: return@mapNotNull null
-        val value = nameAndValue.takeIf { it.size > 1 }?.get(1)
-        Pair(name, value)
-    }.toMap()
+    return labelsUnparsed
+        .map { it.splitRemoveEmpties("=") }
+        .filter { it.firstOrNull()?.emptyToNull() != null }
+        .map {
+            val name = it.first()
+            val value = it.takeIf { it.size > 1 }?.get(1)
+            Pair(name, value)
+        }.toMap()
 }
 
 fun String.splitRemoveEmpties(delimiter: String) =
