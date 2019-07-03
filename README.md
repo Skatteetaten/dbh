@@ -21,14 +21,17 @@ handled.
  In order to use this project you must set repositories in your `~/.gradle/init.gradle` file
  
      allprojects {
-         ext.repos= {
-             mavenCentral()
-             jcenter()
+       ext {
+         springBootDevtools = true
+         repos = {
+           maven { url "http://aurora/nexus/content/groups/public" }
+           mavenCentral()
          }
+       }
+       repositories repos
+       buildscript {
          repositories repos
-         buildscript {
-          repositories repos
-         }
+       }
      }
 
 We use a local repository for distributionUrl in our gradle-wrapper.properties, you need to change it to a public repo in order to use the gradlew command. `../gradle/wrapper/gradle-wrapper.properties`
