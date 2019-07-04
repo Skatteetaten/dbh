@@ -118,7 +118,7 @@ class DatabaseSchemaController(
 
         val resources = schemas
             .sortedBy { it.lastUsedOrCreatedDate }
-            .map(DatabaseSchema::toResource)
+            .map { it.toResource() }
         return Responses.okResponse(resources)
     }
 
