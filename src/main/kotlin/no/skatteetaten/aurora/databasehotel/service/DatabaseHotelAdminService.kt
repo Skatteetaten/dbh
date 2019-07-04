@@ -129,7 +129,7 @@ class DatabaseHotelAdminService(
             return databaseInstances.entries.stream().findFirst().get().value
         }
         if (Strings.isNullOrEmpty(defaultInstanceName)) {
-            throw DatabaseServiceException("More than one database instance registered but " + "database-config.defaultInstanceName has not been specified.")
+            throw DatabaseServiceException("More than one database instance registered but database-config.defaultInstanceName has not been specified.")
         }
         return findDatabaseInstanceByInstanceName(defaultInstanceName)
             ?: throw DatabaseServiceException("Unable to find database instance $defaultInstanceName among registered instances ${databaseInstances.keys}")
