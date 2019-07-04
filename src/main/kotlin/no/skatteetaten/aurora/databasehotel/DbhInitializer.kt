@@ -1,13 +1,15 @@
 package no.skatteetaten.aurora.databasehotel
 
 import com.google.common.collect.Lists
+import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelAdminService
 import no.skatteetaten.aurora.databasehotel.service.ExternalSchemaManager
 import no.skatteetaten.aurora.databasehotel.utils.MapUtils.get
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+
+private val logger = KotlinLogging.logger {}
 
 @Component
 class DbhInitializer(
@@ -34,8 +36,7 @@ class DbhInitializer(
                     i.remove()
                 } catch (e: Exception) {
                     val host: String = get(databaseConfig, "host")
-                    LOGGER.warn("Unable to connect to $host - will try again later (${e.message})")
-                    LOGGER.debug("Unable to connect to $host - will try again later", host)
+                    logger.warn("Unable to connect to $host - will try again later (${e.message})")
                     Thread.sleep(retryDelay.toLong())
                 }
             }
@@ -44,7 +45,7 @@ class DbhInitializer(
         val databaseHotelDataDao = defaultDatabaseInstance.databaseHotelDataDao
         val externalSchemaManager = ExternalSchemaManager(databaseHotelDataDao)
         databaseHotelAdminService.externalSchemaManager = externalSchemaManager
-        LOGGER.info("Registered ExternalSchemaManager")
+        logger.info("Registered ExternalSchemaManager")
     }
 
     private fun registerDatabase(databaseConfig: Map<String, Any>) {
@@ -88,14 +89,9 @@ class DbhInitializer(
                 )
             }
         }
-        LOGGER.info("Registered host [{}]", host)
+        logger.info("Registered host [{}]", host)
     }
 
     private inline fun <reified T> Map<String, *>.typedGet(key: String, default: T? = null): T =
         this.getOrDefault(key, default) as T
-
-    companion object {
-
-        private val LOGGER = LoggerFactory.getLogger(DbhInitializer::class.java)
-    }
 }

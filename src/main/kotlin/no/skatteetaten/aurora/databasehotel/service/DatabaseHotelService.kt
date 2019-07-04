@@ -1,13 +1,15 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher.findAllMatchingSchemas
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.sql.DriverManager
 import java.sql.SQLException
 import java.time.Duration
+
+private val logger = KotlinLogging.logger {}
 
 data class DatabaseInstanceRequirements(
     val databaseEngine: DatabaseEngine = DatabaseEngine.ORACLE,
@@ -71,7 +73,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         val databaseInstance = databaseHotelAdminService.findDatabaseInstanceOrFail(requirements)
         val schema = databaseInstance.createSchema(labels)
 
-        log.info("Created schema name={}, id={} with labels={}", schema.name, schema.id, schema.labels.toString())
+        logger.info("Created schema name={}, id={} with labels={}", schema.name, schema.id, schema.labels.toString())
         return schema
     }
 
@@ -108,7 +110,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         password: String? = null
     ): DatabaseSchema {
 
-        log.info("Updating labels for schema with id={} to labels={}", id, labels)
+        logger.info("Updating labels for schema with id={} to labels={}", id, labels)
 
         val (schema, databaseInstance) = findSchemaById(id)
             ?: throw DatabaseServiceException("No such schema $id")
@@ -139,8 +141,6 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
     }
 
     companion object {
-
-        private val log = LoggerFactory.getLogger(DatabaseHotelService::class.java)
 
         private fun verifyOnlyOneCandidate(
             id: String,
