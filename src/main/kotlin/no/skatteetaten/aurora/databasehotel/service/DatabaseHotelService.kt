@@ -152,7 +152,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
                 val host = instance?.metaInfo?.host
                 "[schemaName=${schema.name}, jdbcUrl=${schema.jdbcUrl}, hostName=$host]"
             }
-                .takeIf(String::isNotEmpty)
+                .takeIf { it.isNotEmpty() }
                 ?.run { throw IllegalStateException("More than one schema from different database servers matched the specified id [$id]: $this") }
         }
     }

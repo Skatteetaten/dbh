@@ -82,8 +82,7 @@ class DatabaseHotelAdminService(
     fun findDatabaseInstanceOrFail(requirements: DatabaseInstanceRequirements = DatabaseInstanceRequirements()): DatabaseInstance {
 
         val availableInstances = findAllDatabaseInstances()
-            .filter(DatabaseInstance::isCreateSchemaAllowed)
-            .filter { it.metaInfo.engine == requirements.databaseEngine }
+            .filter { it.isCreateSchemaAllowed && it.metaInfo.engine == requirements.databaseEngine }
             .takeIf { it.isNotEmpty() }
             ?: throw DatabaseServiceException("Schema creation has been disabled for all instances with the required engine=${requirements.databaseEngine}")
 
