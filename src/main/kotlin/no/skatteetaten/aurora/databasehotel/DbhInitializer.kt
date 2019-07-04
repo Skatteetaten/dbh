@@ -36,10 +36,7 @@ class DbhInitializer(
                     val host: String = get(databaseConfig, "host")
                     LOGGER.warn("Unable to connect to $host - will try again later (${e.message})")
                     LOGGER.debug("Unable to connect to $host - will try again later", host)
-                    try {
-                        Thread.sleep(retryDelay.toLong())
-                    } finally {
-                    }
+                    Thread.sleep(retryDelay.toLong())
                 }
             }
         }
