@@ -23,7 +23,7 @@ class SchemaLabelMatcherTest {
         )
     }
 
-    val databaseSchema = DomainUtils.createDatabaseSchema()
+    private val databaseSchema = DomainUtils.createDatabaseSchema()
 
     @ParameterizedTest
     @ArgumentsSource(Params::class)

@@ -7,9 +7,6 @@ import no.skatteetaten.aurora.databasehotel.dao.toSchema
 import org.springframework.jdbc.core.queryForObject
 import javax.sql.DataSource
 
-/**
- *
- */
 class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSource), DatabaseManager {
 
     override fun createSchema(schemaName: String, password: String): String {
@@ -17,12 +14,12 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
         val safeName = schemaName.toSafe()
         executeStatements(
             """DO ${'$'}${'$'}
-BEGIN
-  CREATE ROLE app_user WITH NOLOGIN;
-  EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'not creating role app_user -- it already exists';
-END
-${'$'}${'$'};""",
+                BEGIN
+                  CREATE ROLE app_user WITH NOLOGIN;
+                  EXCEPTION WHEN OTHERS THEN
+                  RAISE NOTICE 'not creating role app_user -- it already exists';
+                END
+                ${'$'}${'$'};""".trimIndent(),
             "create user $safeName with password '$password'",
             "create database $safeName",
             "GRANT CREATE ON DATABASE $safeName TO $safeName",

@@ -22,13 +22,13 @@ class PostgresDatabaseHotelDataDao(dataSource: DataSource) : OracleDatabaseHotel
 
         return NamedParameterJdbcTemplate(jdbcTemplate).query(
             """select id, name, schema_type from SCHEMA_DATA where id in (
-select schema_id
-from labels
-where name in (:names)
-group by schema_id
-having string_agg(value, ',' order by name) like (:values)
-) and active=1 and schema_type=(:type)
-""",
+                    select schema_id
+                    from labels
+                    where name in (:names)
+                    group by schema_id
+                    having string_agg(value, ',' order by name) like (:values)
+                ) and active=1 and schema_type=(:type)
+                """.trimIndent(),
             parameters,
             BeanPropertyRowMapper(SchemaData::class.java)
         )
