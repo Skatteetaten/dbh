@@ -90,7 +90,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         val parameters = MapSqlParameterSource()
         val labelNames = newArrayList(labels.keys)
         Collections.sort(labelNames)
-        val labelValues = labelNames.map { labels[it] }.joinToString()
+        val labelValues = labelNames.map { labels[it] }.joinToString(",")
         parameters.addValue("names", labelNames)
         parameters.addValue("values", labelValues)
         parameters.addValue("type", SCHEMA_TYPE_MANAGED)
