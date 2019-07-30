@@ -1,10 +1,12 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.containsAll
 import assertk.assertions.hasClass
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import com.zaxxer.hikari.HikariDataSource
@@ -43,7 +45,7 @@ abstract class DatabaseHotelDataDaoTest {
     fun `fails to create user for nonexisting schema`() {
 
         assertThat { hotelDataDao.createUser("NOSUCHSCHEMAID", "SCHEMA", "A", "A") }
-            .thrownError { hasClass(DataAccessException::class) }
+            .isFailure().hasClass(DataAccessException::class)
     }
 
     @Test

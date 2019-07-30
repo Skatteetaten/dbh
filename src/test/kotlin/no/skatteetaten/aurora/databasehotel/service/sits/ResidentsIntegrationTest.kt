@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.databasehotel.service.sits
 import assertk.assertThat
 import assertk.assertions.hasClass
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleTest
@@ -39,7 +40,7 @@ class ResidentsIntegrationTest(
     fun `fails when required labels not specified`() {
 
         assertThat { residentsIntegration.onSchemaCreated(schema) }
-            .thrownError { hasClass(IllegalArgumentException::class) }
+            .isFailure().hasClass(IllegalArgumentException::class)
     }
 
     @Test
