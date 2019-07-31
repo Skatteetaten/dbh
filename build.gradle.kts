@@ -1,3 +1,5 @@
+import com.adarshr.gradle.testlogger.theme.ThemeType
+
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.3.40"
     id("org.jetbrains.kotlin.plugin.spring") version "1.3.40"
@@ -11,6 +13,7 @@ plugins {
     id("com.gorylenko.gradle-git-properties") version "2.0.0"
     id("com.github.ben-manes.versions") version "0.21.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.9"
+    id("com.adarshr.test-logger") version "1.7.0"
 
     id("no.skatteetaten.gradle.aurora") version "2.3.1"
 }
@@ -50,6 +53,10 @@ dependencies {
         // Required to compile test code
         testImplementation(devtools)
     }
+}
+
+testlogger {
+    theme = ThemeType.PLAIN
 }
 
 tasks {
