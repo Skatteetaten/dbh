@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.service
 
-import assertk.all
 import assertk.assertThat
 import assertk.assertions.hasClass
 import assertk.assertions.hasSize
