@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.service
 
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
+import no.skatteetaten.aurora.databasehotel.DbhConfig
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -21,54 +22,30 @@ class DatabaseHotelAdminService(
             .filter { databaseEngine == null || it.metaInfo.engine == databaseEngine }
             .toSet()
 
-    fun registerOracleDatabaseInstance(
-        instanceName: String,
-        dbHost: String,
-        port: Int,
-        service: String,
-        username: String,
-        password: String,
-        clientService: String,
-        createSchemaAllowed: Boolean,
-        oracleScriptRequired: Boolean,
-        instanceLabels: Map<String, String>
-    ): DatabaseInstance {
-
-        val databaseInstance = databaseInstanceInitializer.createInitializedOracleInstance(
-            instanceName,
-            dbHost,
-            port,
-            service,
-            username,
-            password,
-            clientService,
-            createSchemaAllowed,
-            oracleScriptRequired,
-            instanceLabels
-        )
-        return registerDatabaseInstance(databaseInstance)
-    }
-
-    fun registerPostgresDatabaseInstance(
-        instanceName: String,
-        dbHost: String,
-        port: Int,
-        username: String,
-        password: String,
-        createSchemaAllowed: Boolean,
-        instanceLabels: Map<String, String>
-    ): DatabaseInstance {
-
-        val databaseInstance = databaseInstanceInitializer.createInitializedPostgresInstance(
-            instanceName,
-            dbHost,
-            port,
-            username,
-            password,
-            createSchemaAllowed,
-            instanceLabels
-        )
-        return registerDatabaseInstance(databaseInstance)
+    fun registerDatabaseInstance(dbh: DbhConfig) {
+        when (dbh.engine) {
+            "postgres" -> databaseInstanceInitializer.createInitializedPostgresInstance(
+                instanceName = dbh.instanceName,
+                dbHost = dbh.host,
+                port = dbh.port,
+                username = dbh.username,
+                password = dbh.password,
+                createSchemaAllowed = dbh.createSchemaAllowed,
+                instanceLabels = dbh.instanceLabels
+            )
+            "oracle" -> databaseInstanceInitializer.createInitializedOracleInstance(
+                instanceName = dbh.instanceName,
+                dbHost = dbh.host,
+                port = 1521,
+                service = dbh.service,
+                username = dbh.username,
+                password = dbh.password,
+                clientService = dbh.clientService,
+                createSchemaAllowed = dbh.createSchemaAllowed,
+                oracleScriptRequired = dbh.oracleScriptRequired,
+                instanceLabels = dbh.instanceLabels
+            )
+        }
     }
 
     fun registerDatabaseInstance(databaseInstance: DatabaseInstance): DatabaseInstance {

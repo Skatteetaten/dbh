@@ -29,68 +29,18 @@ class DbhInitializer(
         while (databasesConfig.isNotEmpty()) {
             val i = databasesConfig.iterator()
             while (i.hasNext()) {
-                val databaseConfig = i.next()
+                val dbhConfig = DbhConfig(i.next())
                 try {
-                    registerDatabase(databaseConfig)
+                    databaseHotelAdminService.registerDatabaseInstance(dbhConfig)
                     i.remove()
                 } catch (e: Exception) {
-                    val host: String = get(databaseConfig, "host")
-                    logger.warn("Unable to connect to $host - will try again later (${e.message})")
+                    logger.warn("Unable to connect to ${dbhConfig.host} - will try again later (${e.message})")
                     Thread.sleep(retryDelay.toLong())
                 }
             }
         }
-        val defaultDatabaseInstance = databaseHotelAdminService.findDefaultDatabaseInstance()
-        val databaseHotelDataDao = defaultDatabaseInstance.databaseHotelDataDao
-        val externalSchemaManager = ExternalSchemaManager(databaseHotelDataDao)
-        databaseHotelAdminService.externalSchemaManager = externalSchemaManager
+        val databaseHotelDataDao = databaseHotelAdminService.findDefaultDatabaseInstance().databaseHotelDataDao
+        databaseHotelAdminService.externalSchemaManager = ExternalSchemaManager(databaseHotelDataDao)
         logger.info("Registered ExternalSchemaManager")
     }
-
-    private fun registerDatabase(databaseConfig: Map<String, Any>) {
-
-        val engine: String = databaseConfig.typedGet("engine")
-
-        val instanceLabels: Map<String, String> = databaseConfig.typedGet("labels", emptyMap())
-        val host: String = databaseConfig.typedGet("host")
-        val createSchemaAllowed = databaseConfig.typedGet("createSchemaAllowed", "true").toBoolean()
-        val instanceName: String = databaseConfig.typedGet("instanceName")
-        val username: String = databaseConfig.typedGet("username")
-        val password: String = databaseConfig.typedGet("password")
-        when (engine) {
-            "postgres" -> {
-                val port: Int = (databaseConfig.typedGet<String>("port").toInt())
-                databaseHotelAdminService.registerPostgresDatabaseInstance(
-                    instanceName,
-                    host,
-                    port,
-                    username,
-                    password,
-                    createSchemaAllowed,
-                    instanceLabels
-                )
-            }
-            "oracle" -> {
-                val oracleScriptRequired: Boolean = databaseConfig.typedGet("oracleScriptRequired", "false").toBoolean()
-                val service: String = databaseConfig.typedGet("service")
-                val clientService: String = databaseConfig.typedGet("clientService")
-                databaseHotelAdminService.registerOracleDatabaseInstance(
-                    instanceName,
-                    host,
-                    1521,
-                    service,
-                    username,
-                    password,
-                    clientService,
-                    createSchemaAllowed,
-                    oracleScriptRequired,
-                    instanceLabels
-                )
-            }
-        }
-        logger.info("Registered host [{}]", host)
-    }
-
-    private inline fun <reified T> Map<String, *>.typedGet(key: String, default: T? = null): T =
-        this.getOrDefault(key, default) as T
 }
