@@ -9,16 +9,12 @@ import java.sql.ResultSet
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
-private val rowMapper = { rs: ResultSet, _: Int ->
-    SchemaSize(rs.getString("owner"), rs.getBigDecimal("schema_size_mb"))
-}
-
 class OracleResourceUsageCollector(dataSource: DataSource, resourceUseCollectInterval: Long) :
     DatabaseSupport(dataSource), ResourceUsageCollector {
 
     private val cache: Cache<Any, List<SchemaSize>> = Caffeine.newBuilder()
         .expireAfterWrite(resourceUseCollectInterval, TimeUnit.MILLISECONDS)
-        .build { jdbcTemplate.query(QUERY, rowMapper) }
+        .build { jdbcTemplate.query(QUERY, MAPPER) }
 
     override val schemaSizes: List<SchemaSize>
         get() = cache.getIfPresent("_")!! // This will actually never be null. The cache will always return the same value regardless of key.
@@ -30,6 +26,11 @@ class OracleResourceUsageCollector(dataSource: DataSource, resourceUseCollectInt
     }
 
     companion object {
-        const val QUERY = "SELECT owner, sum(bytes)/1024/1024 schema_size_mb FROM dba_segments group BY owner"
+        private const val QUERY = "SELECT owner, sum(bytes)/1024/1024 schema_size_mb FROM dba_segments group BY owner"
+
+        private val MAPPER = { rs: ResultSet, _: Int ->
+            SchemaSize(rs.getString("owner"), rs.getBigDecimal("schema_size_mb"))
+        }
     }
 }
+
