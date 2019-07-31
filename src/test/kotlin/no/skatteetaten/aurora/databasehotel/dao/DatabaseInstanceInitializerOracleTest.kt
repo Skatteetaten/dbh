@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.databasehotel.dao
 import assertk.assertThat
 import assertk.assertions.hasClass
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isGreaterThan
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
@@ -41,7 +42,7 @@ class DatabaseInstanceInitializerOracleTest @Autowired constructor(
         val jdbcTemplate = JdbcTemplate(dataSource)
 
         assertThat { jdbcTemplate.queryForList("select * from SCHEMA_VERSION") }
-            .thrownError { hasClass(BadSqlGrammarException::class) }
+            .isFailure().hasClass(BadSqlGrammarException::class)
 
         initializer.migrate(dataSource)
 

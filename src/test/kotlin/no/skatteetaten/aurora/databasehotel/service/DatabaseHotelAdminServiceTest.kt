@@ -5,6 +5,7 @@ import assertk.assertions.hasClass
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isNull
 import io.mockk.every
 import io.mockk.mockk
@@ -106,7 +107,7 @@ class DatabaseHotelAdminServiceTest {
 
         val requirements = DatabaseInstanceRequirements(POSTGRES, instanceLabels = mapOf("type" to "prod"))
         assertThat { adminService.findDatabaseInstanceOrFail(requirements) }
-            .thrownError { hasClass(DatabaseServiceException::class) }
+            .isFailure().hasClass(DatabaseServiceException::class)
     }
 
     private fun register(instance: DatabaseInstance) {

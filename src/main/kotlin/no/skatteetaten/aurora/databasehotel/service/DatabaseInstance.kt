@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes
@@ -7,12 +8,13 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuilder
-import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.util.ArrayList
 import java.util.Calendar
 import java.util.Optional
+
+private val logger = KotlinLogging.logger {}
 
 open class DatabaseInstance(
     val metaInfo: DatabaseInstanceMetaInfo,
@@ -110,7 +112,7 @@ open class DatabaseInstance(
         val schema = findSchemaByName(schemaName) ?: throw DatabaseServiceException("No schema named [$schemaName]")
 
         schema.apply {
-            LOGGER.info(
+            logger.info(
                 "Deleting schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}. Setting cooldown={}h",
                 id, lastUsedDateString, sizeMb, name, labels, cooldownDuration.toHours()
             )
@@ -127,10 +129,10 @@ open class DatabaseInstance(
     @Transactional
     open fun pruneSchemasForDeletion() {
 
-        LOGGER.info("Deleting schemas old unused schemas for server {}", metaInfo.instanceName)
+        logger.info("Deleting schemas old unused schemas for server {}", metaInfo.instanceName)
 
         val schemas = findAllSchemasForDeletion()
-        LOGGER.info("Found {} old and unused schemas", schemas.size)
+        logger.info("Found {} old and unused schemas", schemas.size)
         schemas.parallelStream().forEach {
             deleteSchema(it.name, Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong()))
         }
@@ -185,10 +187,7 @@ open class DatabaseInstance(
     }
 
     companion object {
-
         const val DAYS_BACK = -7
-
-        private val LOGGER = LoggerFactory.getLogger(DatabaseInstance::class.java)
     }
 }
 

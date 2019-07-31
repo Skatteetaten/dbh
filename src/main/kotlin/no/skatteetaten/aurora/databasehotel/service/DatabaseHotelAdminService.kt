@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.service
 
-import com.google.common.base.Strings
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import org.springframework.beans.factory.annotation.Value
@@ -82,8 +81,7 @@ class DatabaseHotelAdminService(
     fun findDatabaseInstanceOrFail(requirements: DatabaseInstanceRequirements = DatabaseInstanceRequirements()): DatabaseInstance {
 
         val availableInstances = findAllDatabaseInstances()
-            .filter(DatabaseInstance::isCreateSchemaAllowed)
-            .filter { it.metaInfo.engine == requirements.databaseEngine }
+            .filter { it.isCreateSchemaAllowed && it.metaInfo.engine == requirements.databaseEngine }
             .takeIf { it.isNotEmpty() }
             ?: throw DatabaseServiceException("Schema creation has been disabled for all instances with the required engine=${requirements.databaseEngine}")
 
@@ -129,8 +127,8 @@ class DatabaseHotelAdminService(
         if (databaseInstances.size == 1) {
             return databaseInstances.entries.stream().findFirst().get().value
         }
-        if (Strings.isNullOrEmpty(defaultInstanceName)) {
-            throw DatabaseServiceException("More than one database instance registered but " + "database-config.defaultInstanceName has not been specified.")
+        if (defaultInstanceName.isEmpty()) {
+            throw DatabaseServiceException("More than one database instance registered but database-config.defaultInstanceName has not been specified.")
         }
         return findDatabaseInstanceByInstanceName(defaultInstanceName)
             ?: throw DatabaseServiceException("Unable to find database instance $defaultInstanceName among registered instances ${databaseInstances.keys}")

@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.hasClass
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import com.zaxxer.hikari.pool.HikariPool
@@ -74,7 +75,7 @@ abstract class AbstractDatabaseInstanceTest {
 
         val user = schema.users.firstOrNull() ?: throw AssertionError("Should be able to find a user")
         assertThat { DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1) }
-            .thrownError { hasClass(HikariPool.PoolInitializationException::class) }
+            .isFailure().hasClass(HikariPool.PoolInitializationException::class)
     }
 
     @Test
@@ -118,8 +119,8 @@ class PostgresDatabaseInstanceTest @Autowired constructor(
     fun `create schema when deletion is disabled fails`() {
 
         val instance = createInitializedPostgresInstance(false)
-        assertk.assertThat { instance.createSchema(emptyMap()) }
-            .thrownError { hasClass(DatabaseServiceException::class) }
+        assertThat { instance.createSchema(emptyMap()) }
+            .isFailure().hasClass(DatabaseServiceException::class)
     }
 
     private fun createInitializedPostgresInstance(createSchemaAllowed: Boolean) =
