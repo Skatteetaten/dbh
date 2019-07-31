@@ -12,9 +12,7 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
 import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import java.util.Collections
 import java.util.Date
-import java.util.Optional
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -35,8 +33,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         val id = generateId()
         jdbcTemplate
             .update("insert into SCHEMA_DATA (id, name, schema_type) values (?, ?, ?)", id, name, schemaType)
-        return Optional.ofNullable(findSchemaDataById(id))
-            .orElseThrow { DataAccessException("Unable to create schema data") }
+        return findSchemaDataById(id) ?: throw DataAccessException("Unable to create schema data")
     }
 
     override fun findSchemaDataById(id: String): SchemaData? {
@@ -89,7 +86,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         val namedParameterJdbcTemplate = NamedParameterJdbcTemplate(jdbcTemplate)
         val parameters = MapSqlParameterSource()
         val labelNames = newArrayList(labels.keys)
-        Collections.sort(labelNames)
+        labelNames.sort()
         val labelValues = labelNames.map { labels[it] }.joinToString(",")
         parameters.addValue("names", labelNames)
         parameters.addValue("values", labelValues)
@@ -109,12 +106,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
 
     override fun createUser(schemaId: String, userType: String, username: String, password: String): SchemaUser {
 
-        Optional.ofNullable(findSchemaDataById(schemaId))
-            .orElseThrow {
-                DataAccessException(
-                    String.format("Cannot create user for nonexisting schema [%s]", username)
-                )
-            }
+        findSchemaDataById(schemaId) ?: throw DataAccessException("Cannot create user for nonexisting schema [$username]")
 
         val id = generateId()
         jdbcTemplate.update(
@@ -122,18 +114,14 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
             id, schemaId, userType, username, password
         )
 
-        return findUserById(id)
-            .orElseThrow { DataAccessException("Expected user to be created but it was not") }
+        return findUserById(id) ?: throw DataAccessException("Expected user to be created but it was not")
     }
 
-    override fun findUserById(id: String): Optional<SchemaUser> {
-
-        return Optional.ofNullable(
-            queryForOne(
+    override fun findUserById(id: String): SchemaUser? {
+        return queryForOne(
                 "select id, schema_id, type, username, password from USERS where ID=?", SchemaUser::class.java,
                 id
             )
-        )
     }
 
     override fun findAllUsers(): List<SchemaUser> {
@@ -202,14 +190,12 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         return ExternalSchema(Date(), jdbcUrl)
     }
 
-    override fun findExternalSchemaById(id: String): Optional<ExternalSchema> {
+    override fun findExternalSchemaById(id: String): ExternalSchema? {
 
-        return Optional.ofNullable(
-            queryForOne(
+        return queryForOne(
                 "select created_date, jdbc_url from EXTERNAL_SCHEMA where schema_id=?",
                 ExternalSchema::class.java, id
             )
-        )
     }
 
     override fun deleteExternalSchema(schemaId: String) {
@@ -217,7 +203,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         jdbcTemplate.update("delete from EXTERNAL_SCHEMA where schema_id=?", schemaId)
     }
 
-    override fun updateExternalSchema(schemaId: String, username: String, jdbcUrl: String, password: String) {
+    override fun updateExternalSchema(schemaId: String, username: String?, jdbcUrl: String?, password: String?) {
 
         if (username != null) {
             jdbcTemplate.update("update SCHEMA_DATA set name=? where id=?", username, schemaId)

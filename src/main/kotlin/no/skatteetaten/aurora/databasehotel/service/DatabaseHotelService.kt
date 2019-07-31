@@ -32,8 +32,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
             schemaAndInstance?.let { candidates.add(it) }
         }
 
-        val schema = databaseHotelAdminService.externalSchemaManager?.findSchemaById(id)?.orElse(null)
-        schema
+        databaseHotelAdminService.externalSchemaManager?.findSchemaById(id)
             ?.let { Pair(it, null) }
             ?.let { candidates.add(it) }
 
@@ -108,7 +107,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         username: String? = null,
         jdbcUrl: String? = null,
         password: String? = null
-    ): DatabaseSchema {
+    ): DatabaseSchema? {
 
         logger.info("Updating labels for schema with id={} to labels={}", id, labels)
 
@@ -124,7 +123,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
             externalSchemaManager.run {
                 replaceLabels(schema, labels)
                 updateConnectionInfo(schema.id, username, jdbcUrl, password)
-                findSchemaById(id).orElse(null)
+                findSchemaById(id)
             }
         }
     }

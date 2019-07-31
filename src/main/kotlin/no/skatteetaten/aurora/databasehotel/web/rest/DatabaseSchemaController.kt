@@ -142,7 +142,7 @@ class DatabaseSchemaController(
             )
             else -> throw IllegalArgumentException("Missing JDBC input")
         }
-        return Responses.okResponse(databaseSchema.toResource())
+        return Responses.okResponse(databaseSchema?.toResource())
     }
 
     @PostMapping("/")
