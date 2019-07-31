@@ -5,6 +5,7 @@ import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
+import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
@@ -80,7 +81,11 @@ class DatabaseSchemaControllerTest2 {
     fun `validate connection given null values`() {
         val json = jacksonObjectMapper().writeValueAsString(ConnectionVerificationRequest())
 
-        val databaseSchemaController = DatabaseSchemaController(mockk(), true, true)
+        val databaseSchemaController = DatabaseSchemaController(
+            databaseHotelService = mockk(),
+            schemaListingAllowed = true,
+            dropAllowed = true
+        )
         val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
         mockMvc.put(
             path = Path("/api/v1/schema/validate"),
@@ -113,10 +118,13 @@ class DatabaseSchemaControllerTest2 {
 
     @Test
     fun `validate jdbc input for create database schema`() {
-        val input = SchemaCreationRequest(schema = Schema("", "", ""))
-        val json = jacksonObjectMapper().writeValueAsString(input)
+        val json = jacksonObjectMapper().writeValueAsString(SchemaCreationRequest(schema = Schema("", "", "")))
 
-        val databaseSchemaController = DatabaseSchemaController(mockk(), true, true)
+        val databaseSchemaController = DatabaseSchemaController(
+            databaseHotelService = mockk(),
+            schemaListingAllowed = true,
+            dropAllowed = true
+        )
         val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
         mockMvc.post(
             path = Path("/api/v1/schema/"),
@@ -124,6 +132,32 @@ class DatabaseSchemaControllerTest2 {
             headers = HttpHeaders().contentTypeJson()
         ) {
             status(HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    @Test
+    fun `create schema throws exception`() {
+        val json = jacksonObjectMapper().writeValueAsString(SchemaCreationRequest())
+        val dbErrorMessage = "ORA-00059: maximum number of DB_FILES exceeded"
+        val databaseHotelService = mockk<DatabaseHotelService>().apply {
+            every { createSchema(any(), any()) } throws DataAccessException(dbErrorMessage)
+        }
+
+        val databaseSchemaController = DatabaseSchemaController(
+            databaseHotelService = databaseHotelService,
+            schemaListingAllowed = true,
+            dropAllowed = true
+        )
+        val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
+        mockMvc.post(
+            path = Path("/api/v1/schema/"),
+            body = json,
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            status(HttpStatus.INTERNAL_SERVER_ERROR)
+            responseJsonPath("$.status").equalsValue("Failed")
+            responseJsonPath("$.totalCount").equalsValue(1)
+            responseJsonPath("$.items[0]").equalsValue(dbErrorMessage)
         }
     }
 }

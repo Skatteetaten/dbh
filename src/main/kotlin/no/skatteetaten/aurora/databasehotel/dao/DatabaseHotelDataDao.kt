@@ -4,7 +4,6 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
-import java.util.Optional
 
 interface DatabaseHotelDataDao {
 
@@ -28,7 +27,7 @@ interface DatabaseHotelDataDao {
 
     fun createUser(schemaId: String, userType: String, username: String, password: String): SchemaUser
 
-    fun findUserById(id: String): Optional<SchemaUser>
+    fun findUserById(id: String): SchemaUser?
 
     fun findAllUsers(): List<SchemaUser>
 

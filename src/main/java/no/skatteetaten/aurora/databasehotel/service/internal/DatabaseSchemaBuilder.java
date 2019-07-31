@@ -68,6 +68,11 @@ public class DatabaseSchemaBuilder {
     }
 
     public DatabaseSchema createOne(SchemaData schemaData, Schema schema, List<SchemaUser> users,
+        List<Label> labelsOption, SchemaSize schemaSize, DatabaseSchema.Type type) {
+        return createOne(schemaData, schema, users, Optional.ofNullable(labelsOption), schemaSize, type);
+    }
+
+    public DatabaseSchema createOne(SchemaData schemaData, Schema schema, List<SchemaUser> users,
         Optional<List<Label>> labelsOption, SchemaSize schemaSize, DatabaseSchema.Type type) {
 
         String jdbcUrl = jdbcUrlBuilder.create(metaInfo.getHost(), metaInfo.getPort(), schema.getUsername());
