@@ -29,6 +29,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.apache.commons:commons-lang3")
     implementation("com.google.guava:guava:28.0-jre")
+    implementation("com.github.ben-manes.caffeine:caffeine:2.7.0")
     implementation("com.oracle:ojdbc8:12.2.0.1")
     implementation("org.postgresql:postgresql")
     implementation("org.flywaydb:flyway-core")
