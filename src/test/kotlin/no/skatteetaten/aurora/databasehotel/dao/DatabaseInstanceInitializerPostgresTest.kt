@@ -1,8 +1,10 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.hasClass
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isGreaterThan
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
@@ -37,7 +39,7 @@ class DatabaseInstanceInitializerPostgresTest @Autowired constructor(
         val jdbcTemplate = JdbcTemplate(dataSource)
 
         assertThat { jdbcTemplate.queryForList("select * from FLYWAY_SCHEMA_HISTORY") }
-            .thrownError { hasClass(BadSqlGrammarException::class) }
+            .isFailure().hasClass(BadSqlGrammarException::class)
 
         initializer.migrate(dataSource)
 

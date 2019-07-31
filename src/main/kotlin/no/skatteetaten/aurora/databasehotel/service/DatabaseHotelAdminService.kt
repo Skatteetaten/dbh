@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.service
 
-import com.google.common.base.Strings
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import org.springframework.beans.factory.annotation.Value
@@ -128,7 +127,7 @@ class DatabaseHotelAdminService(
         if (databaseInstances.size == 1) {
             return databaseInstances.entries.stream().findFirst().get().value
         }
-        if (Strings.isNullOrEmpty(defaultInstanceName)) {
+        if (defaultInstanceName.isEmpty()) {
             throw DatabaseServiceException("More than one database instance registered but database-config.defaultInstanceName has not been specified.")
         }
         return findDatabaseInstanceByInstanceName(defaultInstanceName)

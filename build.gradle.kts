@@ -38,7 +38,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     testImplementation("io.mockk:mockk:1.9.3")
-    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.17")
+    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.19")
     testImplementation("com.nhaarman:mockito-kotlin:1.6.0")
     testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:0.6.5")
 
