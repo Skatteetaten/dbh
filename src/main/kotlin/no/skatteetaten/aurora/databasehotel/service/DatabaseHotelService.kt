@@ -107,7 +107,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         username: String? = null,
         jdbcUrl: String? = null,
         password: String? = null
-    ): DatabaseSchema? {
+    ): DatabaseSchema {
 
         logger.info("Updating labels for schema with id={} to labels={}", id, labels)
 
@@ -118,13 +118,8 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
             databaseInstance.replaceLabels(schema, labels)
             schema
         } else {
-            val externalSchemaManager = databaseHotelAdminService.externalSchemaManager
+            databaseHotelAdminService.externalSchemaManager?.updateSchema(schema, labels, username, password)
                 ?: throw IllegalStateException("Unable to update schema $id - no ExternalSchemaManager registered")
-            externalSchemaManager.run {
-                replaceLabels(schema, labels)
-                updateConnectionInfo(schema.id, username, jdbcUrl, password)
-                findSchemaById(id)
-            }
         }
     }
 

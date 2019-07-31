@@ -21,7 +21,8 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
     fun findSchemaById(schemaId: String): DatabaseSchema? {
 
         return databaseHotelDataDao.findSchemaDataById(schemaId)
-            .takeIf { it?.schemaType == SCHEMA_TYPE_EXTERNAL }?.let {
+            .takeIf { it?.schemaType == SCHEMA_TYPE_EXTERNAL }
+            ?.let {
                 val externalSchema = databaseHotelDataDao.findExternalSchemaById(schemaId)
                     ?: throw DatabaseServiceException("Could not find ExternalSchema data for schema with id $schemaId")
                 val users = databaseHotelDataDao.findAllUsersForSchema(schemaId)
@@ -99,5 +100,16 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
     fun updateConnectionInfo(schemaId: String, username: String?, jdbcUrl: String?, password: String?) {
 
         databaseHotelDataDao.updateExternalSchema(schemaId, username, jdbcUrl, password)
+    }
+
+    fun updateSchema(
+        schema: DatabaseSchema,
+        labels: Map<String, String?>,
+        username: String?,
+        password: String?
+    ): DatabaseSchema {
+        replaceLabels(schema, labels)
+        updateConnectionInfo(schema.id, username, schema.jdbcUrl, password)
+        return findSchemaById(schema.id) ?: throw IllegalStateException("Unable to find schema ${schema.id}")
     }
 }
