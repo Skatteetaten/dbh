@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.service.oracle
 
-import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
 import no.skatteetaten.aurora.databasehotel.service.ResourceUsageCollector
 import no.skatteetaten.aurora.databasehotel.service.SchemaSize
@@ -12,12 +12,12 @@ import javax.sql.DataSource
 class OracleResourceUsageCollector(dataSource: DataSource, resourceUseCollectInterval: Long) :
     DatabaseSupport(dataSource), ResourceUsageCollector {
 
-    private val cache: Cache<Any, List<SchemaSize>> = Caffeine.newBuilder()
+    val cache: LoadingCache<Any, List<SchemaSize>> = Caffeine.newBuilder()
         .expireAfterWrite(resourceUseCollectInterval, TimeUnit.MILLISECONDS)
         .build { jdbcTemplate.query(QUERY, MAPPER) }
 
     override val schemaSizes: List<SchemaSize>
-        get() = cache.getIfPresent("_")!! // This will actually never be null. The cache will always return the same value regardless of key.
+        get() = cache.get("_")!! // This will actually never be null. The cache will always return the same value regardless of key.
 
     override fun getSchemaSize(schemaName: String) = schemaSizes.firstOrNull { it.owner == schemaName }
 
