@@ -70,7 +70,7 @@ abstract class AbstractDatabaseInstanceTest {
         val schema = instance.createSchema(defaultLabels)
         assertThat(instance.findSchemaById(schema.id)).isNotNull()
 
-        instance.deleteSchema(schema.name, Duration.ofSeconds(1))
+        instance.deleteSchemaByCooldown(schema.name, Duration.ofSeconds(1))
         assertThat(instance.findSchemaById(schema.id)).isNull()
 
         val user = schema.users.firstOrNull() ?: throw AssertionError("Should be able to find a user")

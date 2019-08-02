@@ -105,7 +105,7 @@ open class DatabaseInstance(
     }
 
     @Transactional
-    open fun deleteSchema(schemaName: String, optionalCooldownDuration: Duration?) {
+    open fun deleteSchemaByCooldown(schemaName: String, optionalCooldownDuration: Duration?) {
 
         val cooldownDuration = optionalCooldownDuration ?: Duration.ofDays(cooldownDaysAfterDelete.toLong())
 
@@ -117,7 +117,6 @@ open class DatabaseInstance(
                 id, lastUsedDateString, sizeMb, name, labels, cooldownDuration.toHours()
             )
             databaseHotelDataDao.deactivateSchemaData(id)
-            databaseManager.deleteSchema(name)
             // We need to make sure that users can no longer connect to the schema. Let's just create a new random
             // password for the schema so that it is different from the one we have in the SchemaData.
             databaseManager.updatePassword(name, createSchemaNameAndPassword().second)
@@ -134,7 +133,7 @@ open class DatabaseInstance(
         val schemas = findAllSchemasForDeletion()
         logger.info("Found {} old and unused schemas", schemas.size)
         schemas.parallelStream().forEach {
-            deleteSchema(it.name, Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong()))
+            deleteSchemaByCooldown(it.name, Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong()))
         }
     }
 

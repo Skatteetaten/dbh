@@ -81,8 +81,9 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         findSchemaById(id)?.let { (schema, databaseInstance) ->
 
             when (databaseInstance) {
+                // TODO: Should ExternalSchemaManager put schemas into cooldown?
                 null -> databaseHotelAdminService.externalSchemaManager?.deleteSchema(id)
-                else -> databaseInstance.deleteSchema(schema.name, cooldownDuration)
+                else -> databaseInstance.deleteSchemaByCooldown(schema.name, cooldownDuration)
             }
         }
     }
