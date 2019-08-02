@@ -76,7 +76,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return schema
     }
 
-    fun deleteSchemaById(id: String, cooldownDuration: Duration?) {
+    fun deleteSchemaByCooldown(id: String, cooldownDuration: Duration?) {
 
         findSchemaById(id)?.let { (schema, databaseInstance) ->
 

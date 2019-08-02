@@ -94,7 +94,7 @@ class DatabaseSchemaController(
         }
 
         val cooldownDuration = cooldownDurationHours?.let { Duration.ofHours(it) }
-        databaseHotelService.deleteSchemaById(id, cooldownDuration)
+        databaseHotelService.deleteSchemaByCooldown(id, cooldownDuration)
         return Responses.okResponse()
     }
 
