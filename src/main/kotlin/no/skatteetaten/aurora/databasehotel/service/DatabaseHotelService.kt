@@ -57,9 +57,9 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return schemas + matchingExternalSchemas
     }
 
-    fun findAllDatabaseSchemasForDeletion(): Set<DatabaseSchema> =
+    fun findAllStaleDatabaseSchemas(): Set<DatabaseSchema> =
         databaseHotelAdminService.findAllDatabaseInstances()
-            .flatMap { it.findAllSchemasForDeletion() }.toSet()
+            .flatMap { it.findAllStaleSchemas() }.toSet()
 
     fun createSchema(requirements: DatabaseInstanceRequirements = DatabaseInstanceRequirements()): DatabaseSchema =
         createSchema(requirements)

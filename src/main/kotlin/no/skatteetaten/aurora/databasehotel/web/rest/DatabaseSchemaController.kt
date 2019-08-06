@@ -111,7 +111,7 @@ class DatabaseSchemaController(
         }
         val engine = engineName?.toDatabaseEngine()
         val schemas: Set<DatabaseSchema> = when {
-            q == "for-deletion" -> databaseHotelService.findAllDatabaseSchemasForDeletion()
+            q == "stale" -> databaseHotelService.findAllStaleDatabaseSchemas()
             labels.isBlank() -> databaseHotelService.findAllDatabaseSchemas(engine)
             else -> databaseHotelService.findAllDatabaseSchemasByLabels(engine, parseLabelsParam(labels))
         }

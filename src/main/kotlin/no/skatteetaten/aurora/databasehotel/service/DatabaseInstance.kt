@@ -113,7 +113,7 @@ open class DatabaseInstance(
 
         schema.apply {
             logger.info(
-                "Deleting schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}. Setting cooldown={}h",
+                "Deactivating schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}. Setting cooldown={}h",
                 id, lastUsedDateString, sizeMb, name, labels, cooldownDuration.toHours()
             )
             databaseHotelDataDao.deactivateSchemaData(id)
@@ -126,18 +126,18 @@ open class DatabaseInstance(
     }
 
     @Transactional
-    open fun pruneSchemasForDeletion() {
+    open fun deleteStaleSchemasByCooldown() {
 
-        logger.info("Deleting schemas old unused schemas for server {}", metaInfo.instanceName)
+        logger.info("Deleting stale schemas for server {} by cooldown", metaInfo.instanceName)
 
-        val schemas = findAllSchemasForDeletion()
-        logger.info("Found {} old and unused schemas", schemas.size)
+        val schemas = findAllStaleSchemas()
+        logger.info("Found {} stale schemas", schemas.size)
         schemas.parallelStream().forEach {
             deleteSchemaByCooldown(it.name, Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong()))
         }
     }
 
-    fun findAllSchemasForDeletion(): Set<DatabaseSchema> {
+    fun findAllStaleSchemas(): Set<DatabaseSchema> {
 
         val daysAgo = Calendar.getInstance().run {
             add(Calendar.DAY_OF_MONTH, DAYS_BACK)

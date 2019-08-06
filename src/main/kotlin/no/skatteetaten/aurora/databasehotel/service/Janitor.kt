@@ -14,12 +14,12 @@ class Janitor(
 ) {
 
     @Scheduled(fixedDelay = (3600 * 1000).toLong(), initialDelay = (60 * 1000).toLong())
-    fun deleteOldUnusedSchemas() {
+    fun deleteStaleSchemasByCooldown() {
 
         if (!dropAllowed) return
 
-        logger.info("Periodic deletion of old unused schemas")
+        logger.info("Periodic check for stale database schemas")
         databaseHotelAdminService.findAllDatabaseInstances()
-            .forEach { it.pruneSchemasForDeletion() }
+            .forEach { it.deleteStaleSchemasByCooldown() }
     }
 }
