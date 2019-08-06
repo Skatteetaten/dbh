@@ -4,6 +4,8 @@ import assertk.assertThat
 import assertk.assertions.hasClass
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
+import java.util.Date
+import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleTest
@@ -13,8 +15,6 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.JdbcTemplate
-import java.util.Date
-import javax.sql.DataSource
 
 @DatabaseTest
 @OracleTest

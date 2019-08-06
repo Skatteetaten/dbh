@@ -5,6 +5,7 @@ import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
+import java.util.Date
 import no.skatteetaten.aurora.databasehotel.dao.Schema
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
@@ -14,7 +15,6 @@ import no.skatteetaten.aurora.databasehotel.domain.DomainUtils.metaInfo
 import no.skatteetaten.aurora.databasehotel.service.SchemaSize
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
 import org.junit.jupiter.api.Test
-import java.util.Date
 
 class DatabaseSchemaBuilderTest {
 

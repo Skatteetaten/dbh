@@ -8,6 +8,8 @@ import assertk.assertions.isFailure
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import com.zaxxer.hikari.pool.HikariPool
+import java.time.Duration
+import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
@@ -20,13 +22,11 @@ import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import no.skatteetaten.aurora.databasehotel.deleteNonSystemSchemas
+import org.assertj.core.api.Assertions.assertThat as jassertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
-import java.time.Duration
-import javax.sql.DataSource
-import org.assertj.core.api.Assertions.assertThat as jassertThat
 
 abstract class AbstractDatabaseInstanceTest {
 

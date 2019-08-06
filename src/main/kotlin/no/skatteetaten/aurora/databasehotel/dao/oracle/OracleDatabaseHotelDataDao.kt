@@ -1,6 +1,9 @@
 package no.skatteetaten.aurora.databasehotel.dao.oracle
 
 import com.google.common.collect.Lists.newArrayList
+import java.util.Date
+import java.util.UUID
+import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
@@ -12,9 +15,6 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
 import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import java.util.Date
-import java.util.UUID
-import javax.sql.DataSource
 
 open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(dataSource), DatabaseHotelDataDao {
 

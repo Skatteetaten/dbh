@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.databasehotel.dao.postgres
 
+import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao
 import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import javax.sql.DataSource
 
 class PostgresDatabaseHotelDataDao(dataSource: DataSource) : OracleDatabaseHotelDataDao(dataSource) {
     override fun findAllManagedSchemaDataByLabels(labels: Map<String, String?>): MutableList<SchemaData> {

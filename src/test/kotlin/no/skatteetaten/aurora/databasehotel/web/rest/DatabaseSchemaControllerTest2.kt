@@ -5,6 +5,8 @@ import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
+import java.net.URLEncoder.encode
+import java.util.stream.Stream
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
@@ -23,8 +25,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup
-import java.net.URLEncoder.encode
-import java.util.stream.Stream
 
 class DatabaseSchemaControllerTest2 {
 

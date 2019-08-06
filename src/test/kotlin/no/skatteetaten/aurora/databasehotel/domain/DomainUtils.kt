@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.databasehotel.domain
 
-import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import java.util.Date
 import java.util.HashMap
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 
 object DomainUtils {
 

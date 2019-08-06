@@ -2,8 +2,8 @@ package no.skatteetaten.aurora.databasehotel.dao.oracle
 
 import assertk.assertThat
 import assertk.assertions.contains
-import org.junit.jupiter.api.Test
 import java.sql.SQLException
+import org.junit.jupiter.api.Test
 
 class OracleDatabaseManagerTest {
 

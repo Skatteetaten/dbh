@@ -5,6 +5,7 @@ import assertk.assertions.hasClass
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isGreaterThan
+import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.PostgresConfig
@@ -16,7 +17,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.BadSqlGrammarException
 import org.springframework.jdbc.core.JdbcTemplate
-import javax.sql.DataSource
 
 @DatabaseTest
 class DatabaseInstanceInitializerPostgresTest @Autowired constructor(

@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import java.time.Duration
+import java.util.ArrayList
+import java.util.Calendar
+import java.util.Optional
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
@@ -9,10 +13,6 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuilder
 import org.springframework.transaction.annotation.Transactional
-import java.time.Duration
-import java.util.ArrayList
-import java.util.Calendar
-import java.util.Optional
 
 private val logger = KotlinLogging.logger {}
 
