@@ -1,9 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.dao.oracle
 
 import com.google.common.collect.Lists.newArrayList
-import java.util.Date
-import java.util.UUID
-import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
@@ -15,6 +12,12 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
 import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.time.Duration
+import java.time.Instant
+import java.util.*
+import javax.sql.DataSource
 
 open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(dataSource), DatabaseHotelDataDao {
 
@@ -36,18 +39,16 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         return findSchemaDataById(id) ?: throw DataAccessException("Unable to create schema data")
     }
 
-    override fun findSchemaDataById(id: String): SchemaData? {
+    override fun findSchemaDataByIdIgnoreActive(id: String): SchemaData? =
+            queryForOne("select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where id=? and active=0", SchemaData::class.java, id)
 
-        return queryForOne(
-            "select id, name, schema_type from SCHEMA_DATA where id=? and active=1", SchemaData::class.java,
-            id
-        )
-    }
+    override fun findSchemaDataById(id: String): SchemaData? =
+            queryForOne("select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where id=? and active=1", SchemaData::class.java, id)
 
     override fun findSchemaDataByName(name: String): SchemaData? {
 
         return queryForOne(
-            "select id, name, schema_type from SCHEMA_DATA where name=? and active=1", SchemaData::class.java,
+            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where name=? and active=1", SchemaData::class.java,
             name
         )
     }
@@ -57,9 +58,14 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         jdbcTemplate.update("delete from SCHEMA_DATA where id=?", id)
     }
 
-    override fun deactivateSchemaData(id: String) {
+    @Transactional(readOnly = false)
+    override fun deactivateSchemaData(id: String, cooldownDuration: Duration) {
 
-        jdbcTemplate.update("update SCHEMA_DATA set active=0 where id=?", id)
+        val ts = Timestamp::from
+        val now = Instant.now()
+        val deleteAfter = now.plus(cooldownDuration)
+        jdbcTemplate.update("update SCHEMA_DATA set active=0, set_to_cooldown_at=?, delete_after=? where id=?",
+                ts(now), ts(deleteAfter), id)
     }
 
     override fun findAllManagedSchemaData(): List<SchemaData> {
@@ -70,7 +76,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
     override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> {
 
         return queryForMany(
-            "select id, name, schema_type from SCHEMA_DATA where active=1 and schema_type=?",
+            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where active=1 and schema_type=?",
             SchemaData::class.java, schemaType
         )
     }
@@ -93,7 +99,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         parameters.addValue("type", SCHEMA_TYPE_MANAGED)
 
         return namedParameterJdbcTemplate.query(
-            """select id, name, schema_type from SCHEMA_DATA where id in (
+            """select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where id in (
                 select schema_id
                 from LABELS where name in (:names)
                 group by schema_id
@@ -164,9 +170,6 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
     override fun replaceLabels(schemaId: String, labels: Map<String, String?>) {
 
         deleteLabelsForSchema(schemaId)
-        if (labels == null) {
-            return
-        }
         labels.entries.forEach { label ->
             jdbcTemplate.update(
                 "insert into LABELS (id, schema_id, name, value) values (?, ?, ?, ?)",

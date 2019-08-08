@@ -1,13 +1,9 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
+import assertk.Assert
 import assertk.assertThat
-import assertk.assertions.containsAll
-import assertk.assertions.hasClass
-import assertk.assertions.hasSize
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFailure
-import assertk.assertions.isNotNull
-import assertk.assertions.isNull
+import assertk.assertions.*
+import assertk.assertions.support.fail
 import com.zaxxer.hikari.HikariDataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
@@ -18,6 +14,8 @@ import no.skatteetaten.aurora.databasehotel.service.createSchemaNameAndPassword
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.Duration
+import java.util.*
 
 abstract class DatabaseHotelDataDaoTest {
 
@@ -36,15 +34,26 @@ abstract class DatabaseHotelDataDaoTest {
         val schema = hotelDataDao.createSchemaData("TO_DELETE")
         assertThat(hotelDataDao.findSchemaDataById(schema.id)).isNotNull()
 
-        hotelDataDao.deactivateSchemaData(schema.id)
+        val cooldownDuration = Duration.ofDays(7)
+
+        hotelDataDao.deactivateSchemaData(schema.id, cooldownDuration)
         assertThat(hotelDataDao.findSchemaDataById(schema.id)).isNull()
+
+        val schemaData = hotelDataDao.findSchemaDataByIdIgnoreActive(schema.id)
+        assertThat(schemaData).isNotNull()
+
+        val now = Date()
+        val deleteAfter = Date.from(now.toInstant().plus(cooldownDuration))
+        assertThat(schemaData!!::active).isFalse()
+        assertThat(schemaData::setToCooldownAt).isAboutEqualTo(now)
+        assertThat(schemaData::deleteAfter).isAboutEqualTo(deleteAfter)
     }
 
     @Test
     fun `fails to create user for nonexisting schema`() {
 
         assertThat { hotelDataDao.createUser("NOSUCHSCHEMAID", "SCHEMA", "A", "A") }
-            .isFailure().hasClass(DataAccessException::class)
+                .isFailure().hasClass(DataAccessException::class)
     }
 
     @Test
@@ -91,8 +100,8 @@ abstract class DatabaseHotelDataDaoTest {
 
 @DatabaseTest
 class PostgresDatabaseHotelDataDaoTest @Autowired constructor(
-    @TargetEngine(POSTGRES) val dataSource: HikariDataSource,
-    val initializer: DatabaseInstanceInitializer
+        @TargetEngine(POSTGRES) val dataSource: HikariDataSource,
+        val initializer: DatabaseInstanceInitializer
 ) : DatabaseHotelDataDaoTest() {
 
     @BeforeAll
@@ -106,4 +115,12 @@ class PostgresDatabaseHotelDataDaoTest @Autowired constructor(
 
         hotelDataDao = PostgresDatabaseHotelDataDao(dataSource)
     }
+}
+
+
+fun Assert<Date?>.isAboutEqualTo(expected: Date) = given { actual ->
+    val actualInstant = actual!!.toInstant()
+    val expectedInstant = expected.toInstant()
+    if (expectedInstant.plusSeconds(1).isAfter(actualInstant) && expectedInstant.plusSeconds(-1).isBefore(actualInstant)) return
+    fail(expected, actual)
 }

@@ -34,7 +34,7 @@ class DatabaseSchemaBuilderTest {
     fun `combines data correctly`() {
 
         val schemas = builder.createMany(
-            listOf(SchemaData("A", "SCHEMA_NAME")),
+            listOf(SchemaData("A", name="SCHEMA_NAME")),
             listOf(Schema("SCHEMA_NAME", Date(), Date()))
         )
 
@@ -50,7 +50,7 @@ class DatabaseSchemaBuilderTest {
     fun `skips schemas with missing schema data`() {
 
         val schemas = builder.createMany(
-            listOf(SchemaData("A", "SCHEMA_NAME")),
+            listOf(SchemaData("A", name="SCHEMA_NAME")),
             listOf(
                 Schema("SCHEMA_NAME", Date(), Date()),
                 Schema("SCHEMA_NAME_WITH_NO_MATCH", Date(), Date())

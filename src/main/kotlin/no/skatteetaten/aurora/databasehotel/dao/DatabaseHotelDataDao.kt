@@ -4,6 +4,7 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
+import java.time.Duration
 
 interface DatabaseHotelDataDao {
 
@@ -11,13 +12,15 @@ interface DatabaseHotelDataDao {
 
     fun createSchemaData(name: String, schemaType: String): SchemaData
 
+    fun findSchemaDataByIdIgnoreActive(id: String): SchemaData?
+
     fun findSchemaDataById(id: String): SchemaData?
 
     fun findSchemaDataByName(name: String): SchemaData?
 
     fun deleteSchemaData(id: String)
 
-    fun deactivateSchemaData(id: String)
+    fun deactivateSchemaData(id: String, cooldownDuration: Duration)
 
     fun findAllManagedSchemaData(): List<SchemaData>
 
