@@ -2,20 +2,30 @@ package no.skatteetaten.aurora.databasehotel.dao
 
 import assertk.Assert
 import assertk.assertThat
-import assertk.assertions.*
+import assertk.assertions.containsAll
+import assertk.assertions.hasClass
+import assertk.assertions.hasSize
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
+import assertk.assertions.isFalse
+import assertk.assertions.isNotNull
+import assertk.assertions.isNull
 import assertk.assertions.support.fail
 import com.zaxxer.hikari.HikariDataSource
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
+import no.skatteetaten.aurora.databasehotel.OracleTest
 import no.skatteetaten.aurora.databasehotel.TargetEngine
+import no.skatteetaten.aurora.databasehotel.createOracleSchema
+import no.skatteetaten.aurora.databasehotel.createPostgresSchema
+import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseHotelDataDao
-import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
-import no.skatteetaten.aurora.databasehotel.service.createSchemaNameAndPassword
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.Duration
-import java.util.*
+import java.util.Date
 
 abstract class DatabaseHotelDataDaoTest {
 
@@ -53,7 +63,7 @@ abstract class DatabaseHotelDataDaoTest {
     fun `fails to create user for nonexisting schema`() {
 
         assertThat { hotelDataDao.createUser("NOSUCHSCHEMAID", "SCHEMA", "A", "A") }
-                .isFailure().hasClass(DataAccessException::class)
+            .isFailure().hasClass(DataAccessException::class)
     }
 
     @Test
@@ -100,23 +110,33 @@ abstract class DatabaseHotelDataDaoTest {
 
 @DatabaseTest
 class PostgresDatabaseHotelDataDaoTest @Autowired constructor(
-        @TargetEngine(POSTGRES) val dataSource: HikariDataSource,
-        val initializer: DatabaseInstanceInitializer
+    @TargetEngine(POSTGRES) val dataSource: HikariDataSource,
+    val initializer: DatabaseInstanceInitializer
 ) : DatabaseHotelDataDaoTest() {
 
     @BeforeAll
     fun setup() {
-        val manager = PostgresDatabaseManager(dataSource)
-        val (username, password) = createSchemaNameAndPassword()
-        val schemaName = manager.createSchema(username, password)
-        val jdbcUrl = dataSource.jdbcUrl.replace(Regex("/[a-z]+$"), "/$schemaName")
-        val dataSource = DataSourceUtils.createDataSource(jdbcUrl, schemaName, password)
+        val dataSource = createPostgresSchema(dataSource)
         initializer.migrate(dataSource)
-
         hotelDataDao = PostgresDatabaseHotelDataDao(dataSource)
     }
 }
 
+@DatabaseTest
+@OracleTest
+class OracleDatabaseHotelDataDaoTest @Autowired constructor(
+    @TargetEngine(ORACLE) val dataSource: HikariDataSource,
+    val initializer: DatabaseInstanceInitializer
+) : DatabaseHotelDataDaoTest() {
+
+    @BeforeAll
+    fun setup() {
+        val dataSource = createOracleSchema(dataSource)
+        initializer.migrate(dataSource)
+
+        hotelDataDao = OracleDatabaseHotelDataDao(dataSource)
+    }
+}
 
 fun Assert<Date?>.isAboutEqualTo(expected: Date) = given { actual ->
     val actualInstant = actual!!.toInstant()

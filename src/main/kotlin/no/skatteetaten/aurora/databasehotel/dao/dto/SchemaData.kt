@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.dao.dto
 
-import java.util.*
+import java.util.Date
 
 data class SchemaData(
     var id: String = "",
