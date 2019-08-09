@@ -41,15 +41,24 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
     }
 
     override fun findSchemaDataByIdIgnoreActive(id: String): SchemaData? =
-            queryForOne("select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where id=? and active=0", SchemaData::class.java, id)
+        queryForOne(
+            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where id=? and active=0",
+            SchemaData::class.java,
+            id
+        )
 
     override fun findSchemaDataById(id: String): SchemaData? =
-            queryForOne("select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where id=? and active=1", SchemaData::class.java, id)
+        queryForOne(
+            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where id=? and active=1",
+            SchemaData::class.java,
+            id
+        )
 
     override fun findSchemaDataByName(name: String): SchemaData? {
 
         return queryForOne(
-            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where name=? and active=1", SchemaData::class.java,
+            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where name=? and active=1",
+            SchemaData::class.java,
             name
         )
     }
@@ -65,22 +74,23 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         val ts = Timestamp::from
         val now = Instant.now()
         val deleteAfter = now.plus(cooldownDuration)
-        jdbcTemplate.update("update SCHEMA_DATA set active=0, set_to_cooldown_at=?, delete_after=? where id=?",
-                ts(now), ts(deleteAfter), id)
-    }
-
-    override fun findAllManagedSchemaData(): List<SchemaData> {
-
-        return findAllSchemaDataBySchemaType(SCHEMA_TYPE_MANAGED)
-    }
-
-    override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> {
-
-        return queryForMany(
-            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where active=1 and schema_type=?",
-            SchemaData::class.java, schemaType
+        jdbcTemplate.update(
+            "update SCHEMA_DATA set active=0, set_to_cooldown_at=?, delete_after=? where id=?",
+            ts(now), ts(deleteAfter), id
         )
     }
+
+    override fun findAllManagedSchemaData(): List<SchemaData> = findAllSchemaDataBySchemaType(SCHEMA_TYPE_MANAGED)
+
+    override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> = queryForMany(
+        "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where active=1 and schema_type=?",
+        SchemaData::class.java, schemaType
+    )
+
+    override fun findAllManagedSchemaDataByDeleteAfterDate(deleteAfter: Date): List<SchemaData> = queryForMany(
+        "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where schema_type=? and delete_after<?",
+        SchemaData::class.java, SCHEMA_TYPE_MANAGED, deleteAfter
+    )
 
     /** Example query:
      * select schema_id
@@ -113,7 +123,8 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
 
     override fun createUser(schemaId: String, userType: String, username: String, password: String): SchemaUser {
 
-        findSchemaDataById(schemaId) ?: throw DataAccessException("Cannot create user for nonexisting schema [$username]")
+        findSchemaDataById(schemaId)
+            ?: throw DataAccessException("Cannot create user for nonexisting schema [$username]")
 
         val id = generateId()
         jdbcTemplate.update(
@@ -126,9 +137,9 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
 
     override fun findUserById(id: String): SchemaUser? {
         return queryForOne(
-                "select id, schema_id, type, username, password from USERS where ID=?", SchemaUser::class.java,
-                id
-            )
+            "select id, schema_id, type, username, password from USERS where ID=?", SchemaUser::class.java,
+            id
+        )
     }
 
     override fun findAllUsers(): List<SchemaUser> {
@@ -197,9 +208,9 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
     override fun findExternalSchemaById(id: String): ExternalSchema? {
 
         return queryForOne(
-                "select created_date, jdbc_url from EXTERNAL_SCHEMA where schema_id=?",
-                ExternalSchema::class.java, id
-            )
+            "select created_date, jdbc_url from EXTERNAL_SCHEMA where schema_id=?",
+            ExternalSchema::class.java, id
+        )
     }
 
     override fun deleteExternalSchema(schemaId: String) {

@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
 import java.time.Duration
+import java.util.Date
 
 interface DatabaseHotelDataDao {
 
@@ -27,6 +28,8 @@ interface DatabaseHotelDataDao {
     fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData>
 
     fun findAllManagedSchemaDataByLabels(labels: Map<String, String?>): List<SchemaData>
+
+    fun findAllManagedSchemaDataByDeleteAfterDate(deleteAfter: Date): List<SchemaData>
 
     fun createUser(schemaId: String, userType: String, username: String, password: String): SchemaUser
 

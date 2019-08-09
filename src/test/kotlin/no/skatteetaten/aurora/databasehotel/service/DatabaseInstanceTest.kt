@@ -1,8 +1,11 @@
 package no.skatteetaten.aurora.databasehotel.service
 
 import assertk.assertThat
+import assertk.assertions.containsAll
+import assertk.assertions.containsNone
 import assertk.assertions.hasClass
 import assertk.assertions.hasSize
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isNotNull
@@ -99,6 +102,28 @@ abstract class AbstractDatabaseInstanceTest {
         jassertThat(instance.findAllSchemas(mapOf("affiliation" to "aurora", "environment" to "test")))
             .allMatch { it.labels["affiliation"] == "aurora" && it.labels["environment"] == "test" }
             .hasSize(2)
+    }
+
+    @Test
+    fun `find all schemas with expired cooldowns`() {
+
+        val deleteAfter = Duration.ofSeconds(1)
+
+        val s1 = instance.createSchema()
+        val s2 = instance.createSchema()
+        val s3 = instance.createSchema()
+        instance.deleteSchemaByCooldown(s1.name, deleteAfter)
+        instance.deleteSchemaByCooldown(s2.name, deleteAfter)
+
+        val schemasBeforeExpiry = instance.findAllSchemasWithExpiredCooldowns()
+        assertThat(schemasBeforeExpiry).isEmpty()
+
+        Thread.sleep(deleteAfter.toMillis())
+
+        val schemasAfterExpiry = instance.findAllSchemasWithExpiredCooldowns()
+
+        assertThat(schemasAfterExpiry.map { it.id }).containsAll(s1.id, s2.id)
+        assertThat(schemasAfterExpiry.map { it.id }).containsNone(s3.id)
     }
 }
 

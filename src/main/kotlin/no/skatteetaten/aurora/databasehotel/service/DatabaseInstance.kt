@@ -1,9 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.service
 
-import java.time.Duration
-import java.util.ArrayList
-import java.util.Calendar
-import java.util.Optional
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
@@ -13,6 +9,11 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuilder
 import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
+import java.util.ArrayList
+import java.util.Calendar
+import java.util.Date
+import java.util.Optional
 
 private val logger = KotlinLogging.logger {}
 
@@ -70,7 +71,7 @@ open class DatabaseInstance(
     }
 
     @Transactional
-    open fun createSchema(labels: Map<String, String?>): DatabaseSchema {
+    open fun createSchema(labels: Map<String, String?> = emptyMap()): DatabaseSchema {
 
         val (schemaName, password) = createSchemaNameAndPassword()
         return createSchema(schemaName, password, labels)
@@ -150,6 +151,18 @@ open class DatabaseInstance(
             .filter(DatabaseSchema::isCandidateForDeletion)
             .filter { s -> s.lastUsedOrCreatedDate.before(daysAgo) }
             .toSet()
+    }
+
+    fun findAllSchemasWithExpiredCooldowns(): Set<DatabaseSchema> {
+
+        val schemaData = databaseHotelDataDao.findAllManagedSchemaDataByDeleteAfterDate(Date())
+        val users = databaseHotelDataDao.findAllUsers()
+        val schemas = databaseManager.findAllNonSystemSchemas()
+        val labels = databaseHotelDataDao.findAllLabels()
+        val schemaSizes = resourceUsageCollector.schemaSizes
+
+        return DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder)
+            .createMany(schemaData, schemas, users, labels, schemaSizes)
     }
 
     @Transactional
