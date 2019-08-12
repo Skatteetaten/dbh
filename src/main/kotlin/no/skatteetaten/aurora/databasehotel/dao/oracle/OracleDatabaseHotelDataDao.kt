@@ -21,7 +21,6 @@ import java.util.UUID
 import javax.sql.DataSource
 
 open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(dataSource), DatabaseHotelDataDao {
-
     private fun generateId(): String {
 
         return UUID.randomUUID().toString()
@@ -63,6 +62,16 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         )
     }
 
+    override fun findSchemaDataByNameIgnoreActive(name: String): SchemaData? {
+
+        //language=SQL
+        return queryForOne(
+             "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where name=?",
+            SchemaData::class.java,
+            name
+        )
+    }
+
     override fun deleteSchemaData(id: String) {
 
         jdbcTemplate.update("delete from SCHEMA_DATA where id=?", id)
@@ -81,6 +90,11 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
     }
 
     override fun findAllManagedSchemaData(): List<SchemaData> = findAllSchemaDataBySchemaType(SCHEMA_TYPE_MANAGED)
+
+    override fun findAllManagedSchemaDataIgnoreActive(): List<SchemaData> = queryForMany(
+            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where schema_type=?",
+            SchemaData::class.java, SCHEMA_TYPE_MANAGED
+    )
 
     override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> = queryForMany(
         "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where active=1 and schema_type=?",

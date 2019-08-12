@@ -30,6 +30,6 @@ class Janitor(
 
         logger.info("Permanently deleting schemas with expired cooldowns")
         databaseHotelAdminService.findAllDatabaseInstances()
-            .forEach { it.deleteStaleSchemasByCooldown() }
+            .forEach { it.deleteSchemasWithExpiredCooldowns() }
     }
 }

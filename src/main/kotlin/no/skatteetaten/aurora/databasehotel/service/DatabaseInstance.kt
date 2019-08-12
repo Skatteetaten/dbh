@@ -45,6 +45,9 @@ open class DatabaseInstance(
         else findAllSchemasWithLabels(labelsToMatch)
     }
 
+    fun findAllSchemasIgnoreActive(): Set<DatabaseSchema> = databaseHotelDataDao.findAllManagedSchemaDataIgnoreActive()
+            .mapNotNull(this::getDatabaseSchemaFromSchemaData).toSet()
+
     private fun findAllSchemasUnfiltered(): Set<DatabaseSchema> {
 
         val schemaData = databaseHotelDataDao.findAllManagedSchemaData()
@@ -127,6 +130,19 @@ open class DatabaseInstance(
     }
 
     @Transactional
+    open fun permanentlyDeleteSchema(schemaName: String) {
+
+        val schema = databaseHotelDataDao.findSchemaDataByNameIgnoreActive(schemaName) ?: throw DatabaseServiceException("No schema named [$schemaName]")
+
+        logger.info("Permanently deleting schema {} (id={})", schemaName, schema.id)
+
+        schema.apply {
+            databaseHotelDataDao.deleteSchemaData(id)
+            databaseManager.deleteSchema(name)
+        }
+    }
+
+    @Transactional
     open fun deleteStaleSchemasByCooldown() {
 
         logger.info("Deleting stale schemas for server {} by cooldown", metaInfo.instanceName)
@@ -136,6 +152,15 @@ open class DatabaseInstance(
         schemas.parallelStream().forEach {
             deleteSchemaByCooldown(it.name, Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong()))
         }
+    }
+
+    @Transactional
+    open fun deleteSchemasWithExpiredCooldowns() {
+
+        logger.info("Permanently deleting schemas with expired cooldowns for server {}", metaInfo.instanceName)
+
+        val schemas = findAllSchemasWithExpiredCooldowns()
+        schemas.map { it.name }.parallelStream().forEach(::permanentlyDeleteSchema)
     }
 
     fun findAllStaleSchemas(): Set<DatabaseSchema> {

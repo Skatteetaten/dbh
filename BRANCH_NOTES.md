@@ -5,9 +5,9 @@
 
 * Janitor should have two modes
 v    * Determine which schemas should be put into cooldown based on heuristics (unused, old, etc)
-    * Determine which schemas in cooldown should be permanently deleted
-    * pruneSchemasForDeletion needs to be renamed. This method should probably only put schemas into cooldown.
-    * Create a scheduled task that will permanently delete schemas.
+v    * Determine which schemas in cooldown should be permanently deleted
+v    * pruneSchemasForDeletion needs to be renamed. This method should probably only put schemas into cooldown.
+v    * Create a scheduled task that will permanently delete schemas.
 
 v * Permanent deletion
 v    * Oracle schemas should not be deleted by us. They are deleted by the database team.

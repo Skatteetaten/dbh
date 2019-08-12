@@ -148,6 +148,35 @@ class PostgresDatabaseInstanceTest @Autowired constructor(
             .isFailure().hasClass(DatabaseServiceException::class)
     }
 
+    @Test
+    fun `permanently delete schemas with expired cooldowns`() {
+
+        val deleteAfter = Duration.ofSeconds(1)
+
+        assertThat(instance.findAllSchemas()).isEmpty()
+
+        val s1 = instance.createSchema()
+        val s2 = instance.createSchema()
+        val s3 = instance.createSchema()
+
+        assertThat(instance.findAllSchemas()).hasSize(3)
+        instance.findAllSchemas().map { it.name }.forEach(::println)
+
+        instance.deleteSchemaByCooldown(s1.name, deleteAfter)
+        instance.deleteSchemaByCooldown(s2.name, deleteAfter)
+
+        assertThat(instance.findAllSchemas()).hasSize(1)
+        assertThat(instance.findAllSchemasIgnoreActive()).hasSize(3)
+
+        Thread.sleep(deleteAfter.toMillis())
+
+        instance.deleteSchemasWithExpiredCooldowns()
+
+        val schemasAfterDeletion = instance.findAllSchemasIgnoreActive()
+        assertThat(schemasAfterDeletion).hasSize(1)
+        assertThat(schemasAfterDeletion.map { it.id }).containsAll(s3.id)
+    }
+
     private fun createInitializedPostgresInstance(createSchemaAllowed: Boolean) =
         databaseInstanceInitializer.createInitializedPostgresInstance(
             "dev",
