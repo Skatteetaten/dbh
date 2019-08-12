@@ -19,7 +19,7 @@ private val logger = KotlinLogging.logger {}
 
 open class DatabaseInstance(
     val metaInfo: DatabaseInstanceMetaInfo,
-    private val databaseManager: DatabaseManager,
+    val databaseManager: DatabaseManager,
     val databaseHotelDataDao: DatabaseHotelDataDao,
     private val jdbcUrlBuilder: JdbcUrlBuilder,
     private val resourceUsageCollector: ResourceUsageCollector,
