@@ -18,18 +18,10 @@ class Janitor(
 
         if (!dropAllowed) return
 
-        logger.info("Periodic check for stale database schemas")
-        databaseHotelAdminService.findAllDatabaseInstances()
-            .forEach { it.deleteStaleSchemasByCooldown() }
-    }
-
-    @Scheduled(fixedDelay = 3600L * 1000, initialDelay = 60L * 1000)
-    fun permanentlyDeleteSchemasWithExpiredCooldowns() {
-
-        if (!dropAllowed) return
-
-        logger.info("Permanently deleting schemas with expired cooldowns")
-        databaseHotelAdminService.findAllDatabaseInstances()
-            .forEach { it.deleteSchemasWithExpiredCooldowns() }
+        logger.info("Periodic run of janitor")
+        databaseHotelAdminService.findAllDatabaseInstances().forEach {
+            it.deleteStaleSchemasByCooldown()
+            it.deleteSchemasWithExpiredCooldowns()
+        }
     }
 }
