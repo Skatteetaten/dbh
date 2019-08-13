@@ -1,6 +1,12 @@
 package no.skatteetaten.aurora.databasehotel.dao.oracle
 
 import com.google.common.collect.Lists.newArrayList
+import java.sql.Timestamp
+import java.time.Duration
+import java.time.Instant
+import java.util.Date
+import java.util.UUID
+import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
@@ -13,12 +19,6 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.transaction.annotation.Transactional
-import java.sql.Timestamp
-import java.time.Duration
-import java.time.Instant
-import java.util.Date
-import java.util.UUID
-import javax.sql.DataSource
 
 open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(dataSource), DatabaseHotelDataDao {
     private fun generateId(): String {
@@ -66,7 +66,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
 
         //language=SQL
         return queryForOne(
-             "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where name=?",
+            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where name=?",
             SchemaData::class.java,
             name
         )

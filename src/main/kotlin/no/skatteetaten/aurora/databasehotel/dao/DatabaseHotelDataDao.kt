@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
+import java.time.Duration
+import java.util.Date
 import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
-import java.time.Duration
-import java.util.Date
 
 interface DatabaseHotelDataDao {
 

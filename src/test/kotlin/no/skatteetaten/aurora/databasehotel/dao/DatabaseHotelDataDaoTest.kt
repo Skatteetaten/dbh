@@ -12,6 +12,8 @@ import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.assertions.support.fail
 import com.zaxxer.hikari.HikariDataSource
+import java.time.Duration
+import java.util.Date
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
@@ -24,8 +26,6 @@ import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseHotelDa
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.Duration
-import java.util.Date
 
 abstract class DatabaseHotelDataDaoTest {
 
