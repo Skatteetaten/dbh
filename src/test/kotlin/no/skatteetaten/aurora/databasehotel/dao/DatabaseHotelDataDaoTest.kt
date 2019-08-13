@@ -49,7 +49,7 @@ abstract class DatabaseHotelDataDaoTest {
         hotelDataDao.deactivateSchemaData(schema.id, cooldownDuration)
         assertThat(hotelDataDao.findSchemaDataById(schema.id)).isNull()
 
-        val schemaData = hotelDataDao.findSchemaDataByIdIgnoreActive(schema.id)
+        val schemaData = hotelDataDao.findSchemaDataById(schema.id, 0)
         assertThat(schemaData).isNotNull()
 
         val now = Date()

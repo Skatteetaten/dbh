@@ -15,10 +15,26 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
+import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL.ACTIVE
+import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL.ID
+import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL.NAME
+import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL.SCHEMA_TYPE
+import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.select
 import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.transaction.annotation.Transactional
+
+object SchemaDataQueryBuilder {
+
+    enum class COL { ID, ACTIVE, NAME, SCHEMA_TYPE }
+
+    private val baseQuery = "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA"
+
+    fun select(vararg cols: COL) =
+        if (cols.isEmpty()) baseQuery
+        else "$baseQuery where ${cols.joinToString(separator = " and ") { "$it=?" }}"
+}
 
 open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(dataSource), DatabaseHotelDataDao {
     private fun generateId(): String {
@@ -26,54 +42,24 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         return UUID.randomUUID().toString()
     }
 
-    override fun createSchemaData(name: String): SchemaData {
-
-        return createSchemaData(name, SCHEMA_TYPE_MANAGED)
-    }
+    override fun createSchemaData(name: String): SchemaData = createSchemaData(name, SCHEMA_TYPE_MANAGED)
 
     override fun createSchemaData(name: String, schemaType: String): SchemaData {
 
         val id = generateId()
-        jdbcTemplate
-            .update("insert into SCHEMA_DATA (id, name, schema_type) values (?, ?, ?)", id, name, schemaType)
+        jdbcTemplate.update(
+            "insert into SCHEMA_DATA (id, name, schema_type, active) values (?, ?, ?, ?)", id, name, schemaType, 1
+        )
         return findSchemaDataById(id) ?: throw DataAccessException("Unable to create schema data")
     }
 
-    override fun findSchemaDataByIdIgnoreActive(id: String): SchemaData? =
-        queryForOne(
-            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where id=? and active=0",
-            SchemaData::class.java,
-            id
-        )
+    override fun findSchemaDataById(id: String, active: Int) = selectOneSchemaData(ID to id, ACTIVE to active)
 
-    override fun findSchemaDataById(id: String): SchemaData? =
-        queryForOne(
-            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where id=? and active=1",
-            SchemaData::class.java,
-            id
-        )
+    override fun findSchemaDataByName(name: String) = selectOneSchemaData(NAME to name, ACTIVE to 1)
 
-    override fun findSchemaDataByName(name: String): SchemaData? {
-
-        return queryForOne(
-            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where name=? and active=1",
-            SchemaData::class.java,
-            name
-        )
-    }
-
-    override fun findSchemaDataByNameIgnoreActive(name: String): SchemaData? {
-
-        //language=SQL
-        return queryForOne(
-            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where name=?",
-            SchemaData::class.java,
-            name
-        )
-    }
+    override fun findSchemaDataByNameIgnoreActive(name: String) = selectOneSchemaData(NAME to name)
 
     override fun deleteSchemaData(id: String) {
-
         jdbcTemplate.update("delete from SCHEMA_DATA where id=?", id)
     }
 
@@ -91,19 +77,13 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
 
     override fun findAllManagedSchemaData(): List<SchemaData> = findAllSchemaDataBySchemaType(SCHEMA_TYPE_MANAGED)
 
-    override fun findAllManagedSchemaDataIgnoreActive(): List<SchemaData> = queryForMany(
-            "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where schema_type=?",
-            SchemaData::class.java, SCHEMA_TYPE_MANAGED
-    )
+    override fun findAllManagedSchemaDataIgnoreActive() = selectManySchemaData(SCHEMA_TYPE to SCHEMA_TYPE_MANAGED)
 
-    override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> = queryForMany(
-        "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where active=1 and schema_type=?",
-        SchemaData::class.java, schemaType
-    )
+    override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> =
+        selectManySchemaData(SCHEMA_TYPE to SCHEMA_TYPE_MANAGED, ACTIVE to 1)
 
     override fun findAllManagedSchemaDataByDeleteAfterDate(deleteAfter: Date): List<SchemaData> = queryForMany(
-        "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where schema_type=? and delete_after<?",
-        SchemaData::class.java, SCHEMA_TYPE_MANAGED, deleteAfter
+        "${select()} where schema_type=? and delete_after<?", SchemaData::class.java, SCHEMA_TYPE_MANAGED, deleteAfter
     )
 
     /** Example query:
@@ -124,7 +104,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         parameters.addValue("type", SCHEMA_TYPE_MANAGED)
 
         return namedParameterJdbcTemplate.query(
-            """select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA where id in (
+            """${select()} where id in (
                 select schema_id
                 from LABELS where name in (:names)
                 group by schema_id
@@ -149,22 +129,15 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         return findUserById(id) ?: throw DataAccessException("Expected user to be created but it was not")
     }
 
-    override fun findUserById(id: String): SchemaUser? {
-        return queryForOne(
-            "select id, schema_id, type, username, password from USERS where ID=?", SchemaUser::class.java,
-            id
-        )
-    }
+    override fun findUserById(id: String): SchemaUser? = queryForOne(
+        "select id, schema_id, type, username, password from USERS where ID=?", SchemaUser::class.java, id
+    )
 
-    override fun findAllUsers(): List<SchemaUser> {
+    override fun findAllUsers(): List<SchemaUser> =
+        queryForMany("select id, schema_id, type, username, password from USERS", SchemaUser::class.java)
 
-        return queryForMany("select id, schema_id, type, username, password from USERS", SchemaUser::class.java)
-    }
-
-    override fun findAllUsersForSchema(schemaId: String): List<SchemaUser> {
-
-        return queryForMany("select * from USERS where schema_id=?", SchemaUser::class.java, schemaId)
-    }
+    override fun findAllUsersForSchema(schemaId: String): List<SchemaUser> =
+        queryForMany("select * from USERS where schema_id=?", SchemaUser::class.java, schemaId)
 
     override fun deleteUsersForSchema(schemaId: String) {
 
@@ -173,25 +146,17 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
 
     override fun updateUserPassword(schemaId: String, password: String) {
 
-        val username =
-            jdbcTemplate.queryForObject("select name from SCHEMA_DATA where id=?", String::class.java, schemaId)
-        jdbcTemplate
-            .update("update USERS set password=? where schema_id=? and username=?", password, schemaId, username)
-    }
-
-    override fun findAllLabels(): List<Label> {
-
-        return queryForMany("select id, schema_id, name, value from LABELS", Label::class.java)
-    }
-
-    override fun findAllLabelsForSchema(schemaId: String): List<Label> {
-
-        return queryForMany(
-            "select id, schema_id, name, value from LABELS where schema_id=?",
-            Label::class.java,
-            schemaId
+        val username = findSchemaDataById(schemaId)?.name ?: throw DataAccessException("No such schema id=$schemaId")
+        jdbcTemplate.update(
+            "update USERS set password=? where schema_id=? and username=?", password, schemaId, username
         )
     }
+
+    override fun findAllLabels(): List<Label> =
+        queryForMany("select id, schema_id, name, value from LABELS", Label::class.java)
+
+    override fun findAllLabelsForSchema(schemaId: String): List<Label> =
+        queryForMany("select id, schema_id, name, value from LABELS where schema_id=?", Label::class.java, schemaId)
 
     override fun replaceLabels(schemaId: String, labels: Map<String, String?>) {
 
@@ -219,13 +184,11 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         return ExternalSchema(Date(), jdbcUrl)
     }
 
-    override fun findExternalSchemaById(id: String): ExternalSchema? {
-
-        return queryForOne(
-            "select created_date, jdbc_url from EXTERNAL_SCHEMA where schema_id=?",
-            ExternalSchema::class.java, id
-        )
-    }
+    override fun findExternalSchemaById(id: String): ExternalSchema? = queryForOne(
+        "select created_date, jdbc_url from EXTERNAL_SCHEMA where schema_id=?",
+        ExternalSchema::class.java,
+        id
+    )
 
     override fun deleteExternalSchema(schemaId: String) {
 
@@ -244,5 +207,17 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         if (password != null) {
             updateUserPassword(schemaId, password)
         }
+    }
+
+    private fun selectOneSchemaData(vararg args: Pair<SchemaDataQueryBuilder.COL, Any>): SchemaData? {
+        val cols = args.map { it.first }.toTypedArray()
+        val values = args.map { it.second }.toTypedArray()
+        return queryForOne(select(*cols), SchemaData::class.java, *values)
+    }
+
+    private fun selectManySchemaData(vararg args: Pair<SchemaDataQueryBuilder.COL, Any>): List<SchemaData> {
+        val cols = args.map { it.first }.toTypedArray()
+        val values = args.map { it.second }.toTypedArray()
+        return queryForMany(select(*cols), SchemaData::class.java, *values)
     }
 }

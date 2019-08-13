@@ -23,7 +23,6 @@ class OracleSchemaDeleter(dataSource: DataSource) : DatabaseSupport(dataSource) 
     /**
      * Will try to disconnect all active users and connections against a specified schema.
      *
-     *
      * Disconnecting all users for a schema is actually more flaky and unreliable than it ideally should be, so this
      * method will try a few times before giving up.
      *
