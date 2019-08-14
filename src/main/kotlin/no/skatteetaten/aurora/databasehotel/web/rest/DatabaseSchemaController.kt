@@ -86,14 +86,14 @@ class DatabaseSchemaController(
     @Timed
     fun deleteById(
         @PathVariable id: String,
-        @RequestHeader(name = "cooldown-duration-hours", required = false) cooldownDurationHours: Long?
+        @RequestHeader(name = "cooldown-duration-seconds", required = false) cooldownDurationSeconds: Long?
     ): ResponseEntity<ApiResponse<*>> {
 
         if (!dropAllowed) {
             throw OperationDisabledException("Schema deletion has been disabled for this instance")
         }
 
-        val cooldownDuration = cooldownDurationHours?.let { Duration.ofHours(it) }
+        val cooldownDuration = cooldownDurationSeconds?.let { Duration.ofSeconds(it) }
         databaseHotelService.deleteSchemaByCooldown(id, cooldownDuration)
         return Responses.okResponse()
     }
