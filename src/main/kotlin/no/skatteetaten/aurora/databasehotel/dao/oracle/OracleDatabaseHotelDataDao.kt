@@ -85,7 +85,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
     override fun findAllManagedSchemaDataIgnoreActive() = selectManySchemaData(SCHEMA_TYPE to SCHEMA_TYPE_MANAGED)
 
     override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> =
-        selectManySchemaData(SCHEMA_TYPE to SCHEMA_TYPE_MANAGED, ACTIVE to 1)
+        selectManySchemaData(SCHEMA_TYPE to schemaType, ACTIVE to 1)
 
     override fun findAllManagedSchemaDataByDeleteAfterDate(deleteAfter: Date): List<SchemaData> = queryForMany(
         "${select()} where schema_type=? and delete_after<?", SchemaData::class.java, SCHEMA_TYPE_MANAGED, deleteAfter

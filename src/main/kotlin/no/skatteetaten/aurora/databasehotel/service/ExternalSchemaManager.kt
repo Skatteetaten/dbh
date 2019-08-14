@@ -19,7 +19,9 @@ import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuild
 class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataDao) {
 
     fun findSchemaById(schemaId: String): DatabaseSchema? =
-        databaseHotelDataDao.findSchemaDataById(schemaId)?.let(this::getDatabaseSchemaFromSchemaData)
+        databaseHotelDataDao.findSchemaDataById(schemaId)
+            ?.takeIf { it.schemaType == SCHEMA_TYPE_EXTERNAL }
+            ?.let(this::getDatabaseSchemaFromSchemaData)
 
     fun findAllSchemas(): Set<DatabaseSchema> =
         databaseHotelDataDao.findAllSchemaDataBySchemaType(SCHEMA_TYPE_EXTERNAL)
