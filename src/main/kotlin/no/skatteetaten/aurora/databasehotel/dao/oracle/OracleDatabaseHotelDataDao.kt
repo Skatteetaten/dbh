@@ -15,6 +15,7 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
+import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL
 import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL.ACTIVE
 import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL.ID
 import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL.NAME
@@ -29,12 +30,15 @@ object SchemaDataQueryBuilder {
 
     enum class COL { ID, ACTIVE, NAME, SCHEMA_TYPE }
 
-    private val baseQuery = "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA"
+    private const val baseQuery =
+        "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA"
 
     fun select(vararg cols: COL) =
         if (cols.isEmpty()) baseQuery
         else "$baseQuery where ${cols.joinToString(separator = " and ") { "$it=?" }}"
 }
+
+fun Boolean.toInt(): Int = if (this) 1 else 0
 
 open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(dataSource), DatabaseHotelDataDao {
     private fun generateId(): String {
@@ -53,7 +57,8 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         return findSchemaDataById(id) ?: throw DataAccessException("Unable to create schema data")
     }
 
-    override fun findSchemaDataById(id: String, active: Int) = selectOneSchemaData(ID to id, ACTIVE to active)
+    override fun findSchemaDataById(id: String, active: Boolean) =
+        selectOneSchemaData(ID to id, ACTIVE to active.toInt())
 
     override fun findSchemaDataByName(name: String) = selectOneSchemaData(NAME to name, ACTIVE to 1)
 
@@ -209,13 +214,13 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         }
     }
 
-    private fun selectOneSchemaData(vararg args: Pair<SchemaDataQueryBuilder.COL, Any>): SchemaData? {
+    private fun selectOneSchemaData(vararg args: Pair<COL, Any>): SchemaData? {
         val cols = args.map { it.first }.toTypedArray()
         val values = args.map { it.second }.toTypedArray()
         return queryForOne(select(*cols), SchemaData::class.java, *values)
     }
 
-    private fun selectManySchemaData(vararg args: Pair<SchemaDataQueryBuilder.COL, Any>): List<SchemaData> {
+    private fun selectManySchemaData(vararg args: Pair<COL, Any>): List<SchemaData> {
         val cols = args.map { it.first }.toTypedArray()
         val values = args.map { it.second }.toTypedArray()
         return queryForMany(select(*cols), SchemaData::class.java, *values)

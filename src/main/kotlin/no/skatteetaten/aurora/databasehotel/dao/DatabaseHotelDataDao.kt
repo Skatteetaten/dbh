@@ -13,7 +13,7 @@ interface DatabaseHotelDataDao {
 
     fun createSchemaData(name: String, schemaType: String): SchemaData
 
-    fun findSchemaDataById(id: String, active: Int = 1): SchemaData?
+    fun findSchemaDataById(id: String, active: Boolean = true): SchemaData?
 
     fun findSchemaDataByName(name: String): SchemaData?
 
