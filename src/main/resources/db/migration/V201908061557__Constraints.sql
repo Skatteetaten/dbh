@@ -1,8 +1,10 @@
 alter table schema_data add constraint schema_data_pk primary key (id);
 
+delete from users where SCHEMA_ID not in (select id from SCHEMA_DATA);
 alter table users add constraint users_schema_data_id_fk foreign key (schema_id) references schema_data (id) on delete cascade;
 alter table users add constraint users_pk primary key (id);
 
+delete from labels where SCHEMA_ID not in (select id from SCHEMA_DATA);
 alter table labels add constraint labels_schema_data_id_fk foreign key (schema_id) references schema_data (id) on delete cascade;
 alter table labels add constraint labels_pk primary key (id);
 
