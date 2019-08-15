@@ -1,6 +1,10 @@
 package no.skatteetaten.aurora.databasehotel.web.rest
 
 import io.micrometer.core.annotation.Timed
+import java.io.UnsupportedEncodingException
+import java.net.URLDecoder
+import java.time.Duration
+import java.util.Date
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
@@ -18,10 +22,6 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.io.UnsupportedEncodingException
-import java.net.URLDecoder
-import java.time.Duration
-import java.util.Date
 
 data class SchemaMetadataResource(val sizeInMb: Double?)
 
@@ -86,15 +86,15 @@ class DatabaseSchemaController(
     @Timed
     fun deleteById(
         @PathVariable id: String,
-        @RequestHeader(name = "cooldown-duration-hours", required = false) cooldownDurationHours: Long?
+        @RequestHeader(name = "cooldown-duration-seconds", required = false) cooldownDurationSeconds: Long?
     ): ResponseEntity<ApiResponse<*>> {
 
         if (!dropAllowed) {
             throw OperationDisabledException("Schema deletion has been disabled for this instance")
         }
 
-        val cooldownDuration = cooldownDurationHours?.let { Duration.ofHours(it) }
-        databaseHotelService.deleteSchemaById(id, cooldownDuration)
+        val cooldownDuration = cooldownDurationSeconds?.let { Duration.ofSeconds(it) }
+        databaseHotelService.deleteSchemaByCooldown(id, cooldownDuration)
         return Responses.okResponse()
     }
 
@@ -111,7 +111,7 @@ class DatabaseSchemaController(
         }
         val engine = engineName?.toDatabaseEngine()
         val schemas: Set<DatabaseSchema> = when {
-            q == "for-deletion" -> databaseHotelService.findAllDatabaseSchemasForDeletion()
+            q == "stale" -> databaseHotelService.findAllStaleDatabaseSchemas()
             labels.isBlank() -> databaseHotelService.findAllDatabaseSchemas(engine)
             else -> databaseHotelService.findAllDatabaseSchemasByLabels(engine, parseLabelsParam(labels))
         }

@@ -1,5 +1,10 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import java.time.Duration
+import java.util.ArrayList
+import java.util.Calendar
+import java.util.Date
+import java.util.Optional
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
@@ -9,16 +14,12 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuilder
 import org.springframework.transaction.annotation.Transactional
-import java.time.Duration
-import java.util.ArrayList
-import java.util.Calendar
-import java.util.Optional
 
 private val logger = KotlinLogging.logger {}
 
 open class DatabaseInstance(
     val metaInfo: DatabaseInstanceMetaInfo,
-    private val databaseManager: DatabaseManager,
+    val databaseManager: DatabaseManager,
     val databaseHotelDataDao: DatabaseHotelDataDao,
     private val jdbcUrlBuilder: JdbcUrlBuilder,
     private val resourceUsageCollector: ResourceUsageCollector,
@@ -43,6 +44,9 @@ open class DatabaseInstance(
         return if (labelsToMatch.isNullOrEmpty()) findAllSchemasUnfiltered()
         else findAllSchemasWithLabels(labelsToMatch)
     }
+
+    fun findAllSchemasIgnoreActive(): Set<DatabaseSchema> = databaseHotelDataDao.findAllManagedSchemaDataIgnoreActive()
+            .mapNotNull(this::getDatabaseSchemaFromSchemaData).toSet()
 
     private fun findAllSchemasUnfiltered(): Set<DatabaseSchema> {
 
@@ -70,7 +74,7 @@ open class DatabaseInstance(
     }
 
     @Transactional
-    open fun createSchema(labels: Map<String, String?>): DatabaseSchema {
+    open fun createSchema(labels: Map<String, String?> = emptyMap()): DatabaseSchema {
 
         val (schemaName, password) = createSchemaNameAndPassword()
         return createSchema(schemaName, password, labels)
@@ -105,49 +109,61 @@ open class DatabaseInstance(
     }
 
     @Transactional
-    open fun deleteSchema(schemaName: String, deleteParams: DeleteParams) {
+    open fun deleteSchemaByCooldown(schemaName: String, optionalCooldownDuration: Duration?) {
 
-        val schema = findSchemaByName(schemaName)
+        val cooldownDuration = optionalCooldownDuration ?: Duration.ofDays(cooldownDaysAfterDelete.toLong())
 
-        if (schema == null) {
-            if (deleteParams.isAssertExists) throw DatabaseServiceException("No schema named [$schemaName]")
-            else return
-        }
+        val schema = findSchemaByName(schemaName) ?: throw DatabaseServiceException("No schema named [$schemaName]")
 
         schema.apply {
             logger.info(
-                "Deleting schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}. Setting cooldown={}h",
-                id, lastUsedDateString, sizeMb, name, labels, deleteParams.cooldownDuration.toHours()
+                "Deactivating schema id={}, lastUsed={}, size(mb)={}, name={}, labels={}. Setting cooldown={}h",
+                id, lastUsedDateString, sizeMb, name, labels, cooldownDuration.toHours()
             )
-            databaseHotelDataDao.deactivateSchemaData(id)
+            databaseHotelDataDao.deactivateSchemaData(id, cooldownDuration)
             // We need to make sure that users can no longer connect to the schema. Let's just create a new random
             // password for the schema so that it is different from the one we have in the SchemaData.
             databaseManager.updatePassword(name, createSchemaNameAndPassword().second)
         }
 
-        integrations.forEach { it.onSchemaDeleted(schema, deleteParams.cooldownDuration) }
+        integrations.forEach { it.onSchemaDeleted(schema, cooldownDuration) }
     }
 
     @Transactional
-    open fun deleteSchema(schemaName: String, cooldownDuration: Duration?) {
+    open fun permanentlyDeleteSchema(schemaName: String) {
 
-        val duration = cooldownDuration ?: Duration.ofDays(cooldownDaysAfterDelete.toLong())
-        deleteSchema(schemaName, DeleteParams(duration))
-    }
+        val schema = databaseHotelDataDao.findSchemaDataByNameIgnoreActive(schemaName) ?: throw DatabaseServiceException("No schema named [$schemaName]")
 
-    @Transactional
-    open fun deleteUnusedSchemas() {
+        logger.info("Permanently deleting schema {} (id={})", schemaName, schema.id)
 
-        logger.info("Deleting schemas old unused schemas for server {}", metaInfo.instanceName)
-
-        val schemas = findAllSchemasForDeletion()
-        logger.info("Found {} old and unused schemas", schemas.size)
-        schemas.parallelStream().forEach {
-            deleteSchema(it.name, Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong()))
+        schema.apply {
+            databaseHotelDataDao.deleteSchemaData(id)
+            databaseManager.deleteSchema(name)
         }
     }
 
-    fun findAllSchemasForDeletion(): Set<DatabaseSchema> {
+    @Transactional
+    open fun deleteStaleSchemasByCooldown() {
+
+        logger.info("Deleting stale schemas for server {} by cooldown", metaInfo.instanceName)
+
+        val schemas = findAllStaleSchemas()
+        logger.info("Found {} stale schemas", schemas.size)
+        schemas.parallelStream().forEach {
+            deleteSchemaByCooldown(it.name, Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong()))
+        }
+    }
+
+    @Transactional
+    open fun deleteSchemasWithExpiredCooldowns() {
+
+        logger.info("Permanently deleting schemas with expired cooldowns for server {}", metaInfo.instanceName)
+
+        val schemas = findAllSchemasWithExpiredCooldowns()
+        schemas.map { it.name }.parallelStream().forEach(::permanentlyDeleteSchema)
+    }
+
+    fun findAllStaleSchemas(): Set<DatabaseSchema> {
 
         val daysAgo = Calendar.getInstance().run {
             add(Calendar.DAY_OF_MONTH, DAYS_BACK)
@@ -155,10 +171,23 @@ open class DatabaseInstance(
         }
 
         fun DatabaseSchema.isSystemTestSchema() = this.labels["userId"]?.endsWith(":jenkins-builder") ?: false
+        fun DatabaseSchema.isCandidateForDeletion() = this.isUnused || this.isSystemTestSchema()
         return findAllSchemas()
-            .filter { it.isUnused || it.isSystemTestSchema() }
+            .filter(DatabaseSchema::isCandidateForDeletion)
             .filter { s -> s.lastUsedOrCreatedDate.before(daysAgo) }
             .toSet()
+    }
+
+    fun findAllSchemasWithExpiredCooldowns(): Set<DatabaseSchema> {
+
+        val schemaData = databaseHotelDataDao.findAllManagedSchemaDataByDeleteAfterDate(Date())
+        val users = databaseHotelDataDao.findAllUsers()
+        val schemas = databaseManager.findAllNonSystemSchemas()
+        val labels = databaseHotelDataDao.findAllLabels()
+        val schemaSizes = resourceUsageCollector.schemaSizes
+
+        return DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder)
+            .createMany(schemaData, schemas, users, labels, schemaSizes)
     }
 
     @Transactional

@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.databasehotel.service.oracle
 import assertk.assertThat
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isNotNull
+import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleTest
@@ -11,7 +12,6 @@ import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
 import no.skatteetaten.aurora.databasehotel.deleteNonSystemSchemas
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import javax.sql.DataSource
 
 @DatabaseTest
 @OracleTest

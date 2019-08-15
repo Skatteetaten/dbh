@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
 import com.zaxxer.hikari.HikariDataSource
+import java.math.BigDecimal
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
@@ -21,7 +22,6 @@ import no.skatteetaten.aurora.databasehotel.toDatabaseEngineFromJdbcUrl
 import org.flywaydb.core.Flyway
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.math.BigDecimal
 
 @Component
 class DatabaseInstanceInitializer(

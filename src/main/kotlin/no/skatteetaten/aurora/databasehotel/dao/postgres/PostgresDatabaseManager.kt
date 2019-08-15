@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.databasehotel.dao.postgres
 
+import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
 import no.skatteetaten.aurora.databasehotel.dao.Schema
 import no.skatteetaten.aurora.databasehotel.dao.toSchema
 import org.springframework.jdbc.core.queryForObject
-import javax.sql.DataSource
 
 class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSource), DatabaseManager {
 

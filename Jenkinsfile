@@ -13,7 +13,7 @@ def overrides = [
     mountCredentials: [[ credentialId : "dbh-application.properties", path: "~/.spring-boot-devtools.properties"]],
     sonarQube: false,
     versionStrategy: [
-        [ branch: 'master', versionHint: '2' ]
+        [ branch: 'master', versionHint: '3' ]
     ]
 ]
 

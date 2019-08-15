@@ -5,6 +5,7 @@ import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
+import java.util.Date
 import no.skatteetaten.aurora.databasehotel.dao.Schema
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
@@ -14,7 +15,6 @@ import no.skatteetaten.aurora.databasehotel.domain.DomainUtils.metaInfo
 import no.skatteetaten.aurora.databasehotel.service.SchemaSize
 import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
 import org.junit.jupiter.api.Test
-import java.util.Date
 
 class DatabaseSchemaBuilderTest {
 
@@ -34,7 +34,7 @@ class DatabaseSchemaBuilderTest {
     fun `combines data correctly`() {
 
         val schemas = builder.createMany(
-            listOf(SchemaData("A", "SCHEMA_NAME")),
+            listOf(SchemaData("A", name = "SCHEMA_NAME")),
             listOf(Schema("SCHEMA_NAME", Date(), Date()))
         )
 
@@ -50,7 +50,7 @@ class DatabaseSchemaBuilderTest {
     fun `skips schemas with missing schema data`() {
 
         val schemas = builder.createMany(
-            listOf(SchemaData("A", "SCHEMA_NAME")),
+            listOf(SchemaData("A", name = "SCHEMA_NAME")),
             listOf(
                 Schema("SCHEMA_NAME", Date(), Date()),
                 Schema("SCHEMA_NAME_WITH_NO_MATCH", Date(), Date())

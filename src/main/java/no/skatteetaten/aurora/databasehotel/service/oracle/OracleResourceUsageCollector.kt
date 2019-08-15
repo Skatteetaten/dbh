@@ -2,12 +2,12 @@ package no.skatteetaten.aurora.databasehotel.service.oracle
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
-import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
-import no.skatteetaten.aurora.databasehotel.service.ResourceUsageCollector
-import no.skatteetaten.aurora.databasehotel.service.SchemaSize
 import java.sql.ResultSet
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
+import no.skatteetaten.aurora.databasehotel.service.ResourceUsageCollector
+import no.skatteetaten.aurora.databasehotel.service.SchemaSize
 
 class OracleResourceUsageCollector(dataSource: DataSource, resourceUseCollectInterval: Long) :
     DatabaseSupport(dataSource), ResourceUsageCollector {

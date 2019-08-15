@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.web.rest
 
+import no.skatteetaten.aurora.databasehotel.utils.OracleSchemaDeleter
+
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import static org.springframework.http.HttpMethod.GET
 import static org.springframework.http.HttpMethod.POST
@@ -29,12 +31,12 @@ abstract class AbstractControllerTest extends Specification {
   def setupSpec() {
 
     HikariDataSource ds = null// = Datasources.createTestDs()
-    def databaseManager = new OracleDatabaseManager(ds)
-    databaseManager.deleteSchema(DatabaseInstanceInitializer.DEFAULT_SCHEMA_NAME)
+    def deleter = new OracleSchemaDeleter(ds)
+    deleter.deleteSchema(DatabaseInstanceInitializer.DEFAULT_SCHEMA_NAME)
     def sql = new Sql(ds)
     sql.eachRow("select username from dba_users where length(username)>28") {
       try {
-        databaseManager.deleteSchema(it.USERNAME)
+        deleter.deleteSchema(it.USERNAME)
       } catch (Exception e) {
       }
     }

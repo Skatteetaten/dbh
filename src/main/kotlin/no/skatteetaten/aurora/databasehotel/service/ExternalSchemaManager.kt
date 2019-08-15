@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.databasehotel.service
 
 import com.google.common.collect.Lists
+import java.math.BigDecimal
+import java.util.HashMap
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.Schema
@@ -13,35 +15,18 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.EXTERNAL
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA
 import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuilder
-import java.math.BigDecimal
-import java.util.HashMap
 
 class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataDao) {
 
-    fun findSchemaById(schemaId: String): DatabaseSchema? {
+    fun findSchemaById(schemaId: String): DatabaseSchema? =
+        databaseHotelDataDao.findSchemaDataById(schemaId)
+            ?.takeIf { it.schemaType == SCHEMA_TYPE_EXTERNAL }
+            ?.let(this::getDatabaseSchemaFromSchemaData)
 
-        return databaseHotelDataDao.findSchemaDataById(schemaId)
-            .takeIf { it?.schemaType == SCHEMA_TYPE_EXTERNAL }
-            ?.let {
-                val externalSchema = databaseHotelDataDao.findExternalSchemaById(schemaId)
-                    ?: throw DatabaseServiceException("Could not find ExternalSchema data for schema with id $schemaId")
-                val users = databaseHotelDataDao.findAllUsersForSchema(schemaId)
-                createDatabaseSchema(it, externalSchema, users)
-            }
-    }
-
-    fun findAllSchemas(): Set<DatabaseSchema> {
-
-        val externalSchemas = databaseHotelDataDao.findAllSchemaDataBySchemaType(SCHEMA_TYPE_EXTERNAL)
-        // TODO: Iterating like this may (will) become a performance bottleneck at some point.
-        return externalSchemas.map { schemaData ->
-            val id = schemaData.id
-            val externalSchema = databaseHotelDataDao.findExternalSchemaById(id)
-                ?: throw DatabaseServiceException("Could not find ExternalSchema data for schema with id $id")
-            val users = databaseHotelDataDao.findAllUsersForSchema(id)
-            createDatabaseSchema(schemaData, externalSchema, users)
-        }.toSet()
-    }
+    fun findAllSchemas(): Set<DatabaseSchema> =
+        databaseHotelDataDao.findAllSchemaDataBySchemaType(SCHEMA_TYPE_EXTERNAL)
+            // TODO: Iterating like this may (will) become a performance bottleneck at some point.
+            .map(this::getDatabaseSchemaFromSchemaData).toSet()
 
     fun registerSchema(
         username: String,
@@ -65,6 +50,17 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
         databaseHotelDataDao.deleteUsersForSchema(schemaId)
         databaseHotelDataDao.deleteLabelsForSchema(schemaId)
         databaseHotelDataDao.deleteExternalSchema(schemaId)
+    }
+
+    fun updateSchema(
+        schema: DatabaseSchema,
+        labels: Map<String, String?>,
+        username: String?,
+        password: String?
+    ): DatabaseSchema {
+        replaceLabels(schema, labels)
+        updateConnectionInfo(schema.id, username, schema.jdbcUrl, password)
+        return findSchemaById(schema.id) ?: throw IllegalStateException("Unable to find schema ${schema.id}")
     }
 
     private fun createDatabaseSchema(
@@ -91,25 +87,25 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
         )
     }
 
-    fun replaceLabels(schema: DatabaseSchema, labels: Map<String, String?>) {
+    private fun replaceLabels(schema: DatabaseSchema, labels: Map<String, String?>) {
 
         schema.labels = labels
         databaseHotelDataDao.replaceLabels(schema.id, labels)
     }
 
-    fun updateConnectionInfo(schemaId: String, username: String?, jdbcUrl: String?, password: String?) {
+    private fun updateConnectionInfo(schemaId: String, username: String?, jdbcUrl: String?, password: String?) {
 
         databaseHotelDataDao.updateExternalSchema(schemaId, username, jdbcUrl, password)
     }
 
-    fun updateSchema(
-        schema: DatabaseSchema,
-        labels: Map<String, String?>,
-        username: String?,
-        password: String?
-    ): DatabaseSchema {
-        replaceLabels(schema, labels)
-        updateConnectionInfo(schema.id, username, schema.jdbcUrl, password)
-        return findSchemaById(schema.id) ?: throw IllegalStateException("Unable to find schema ${schema.id}")
+    private fun getDatabaseSchemaFromSchemaData(schemaData: SchemaData): DatabaseSchema {
+
+        schemaData.takeIf { it.schemaType == SCHEMA_TYPE_EXTERNAL }
+            ?: throw DatabaseServiceException("Schema with id ${schemaData.id} is not an external schema")
+        val externalSchema = databaseHotelDataDao.findExternalSchemaById(schemaData.id)
+            ?: throw DatabaseServiceException("Schema with id ${schemaData.id} is an external schema but no connection info found")
+        val users = databaseHotelDataDao.findAllUsersForSchema(schemaData.id)
+
+        return createDatabaseSchema(schemaData, externalSchema, users)
     }
 }

@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import java.sql.DriverManager
+import java.sql.SQLException
+import java.time.Duration
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher.findAllMatchingSchemas
 import org.springframework.stereotype.Service
-import java.sql.DriverManager
-import java.sql.SQLException
-import java.time.Duration
 
 private val logger = KotlinLogging.logger {}
 
@@ -33,7 +33,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         }
 
         databaseHotelAdminService.externalSchemaManager?.findSchemaById(id)
-            ?.let { Pair(it, null) }
+            ?.let { it to null }
             ?.let { candidates.add(it) }
 
         verifyOnlyOneCandidate(id, candidates)
@@ -57,9 +57,9 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return schemas + matchingExternalSchemas
     }
 
-    fun findAllDatabaseSchemasForDeletion(): Set<DatabaseSchema> =
+    fun findAllStaleDatabaseSchemas(): Set<DatabaseSchema> =
         databaseHotelAdminService.findAllDatabaseInstances()
-            .flatMap { it.findAllSchemasForDeletion() }.toSet()
+            .flatMap { it.findAllStaleSchemas() }.toSet()
 
     fun createSchema(requirements: DatabaseInstanceRequirements = DatabaseInstanceRequirements()): DatabaseSchema =
         createSchema(requirements)
@@ -76,13 +76,14 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return schema
     }
 
-    fun deleteSchemaById(id: String, cooldownDuration: Duration? = null) {
+    fun deleteSchemaByCooldown(id: String, cooldownDuration: Duration?) {
 
         findSchemaById(id)?.let { (schema, databaseInstance) ->
 
             when (databaseInstance) {
+                // TODO: Should ExternalSchemaManager put schemas into cooldown?
                 null -> databaseHotelAdminService.externalSchemaManager?.deleteSchema(id)
-                else -> databaseInstance.deleteSchema(schema.name, cooldownDuration)
+                else -> databaseInstance.deleteSchemaByCooldown(schema.name, cooldownDuration)
             }
         }
     }

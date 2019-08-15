@@ -1,20 +1,28 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
+import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.containsAll
 import assertk.assertions.hasClass
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
+import assertk.assertions.isFalse
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
+import assertk.assertions.support.fail
 import com.zaxxer.hikari.HikariDataSource
+import java.time.Duration
+import java.util.Date
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
+import no.skatteetaten.aurora.databasehotel.OracleTest
 import no.skatteetaten.aurora.databasehotel.TargetEngine
+import no.skatteetaten.aurora.databasehotel.createOracleSchema
+import no.skatteetaten.aurora.databasehotel.createPostgresSchema
+import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseHotelDataDao
-import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
-import no.skatteetaten.aurora.databasehotel.service.createSchemaNameAndPassword
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,8 +44,19 @@ abstract class DatabaseHotelDataDaoTest {
         val schema = hotelDataDao.createSchemaData("TO_DELETE")
         assertThat(hotelDataDao.findSchemaDataById(schema.id)).isNotNull()
 
-        hotelDataDao.deactivateSchemaData(schema.id)
+        val cooldownDuration = Duration.ofDays(7)
+
+        hotelDataDao.deactivateSchemaData(schema.id, cooldownDuration)
         assertThat(hotelDataDao.findSchemaDataById(schema.id)).isNull()
+
+        val schemaData = hotelDataDao.findSchemaDataById(schema.id, false)
+        assertThat(schemaData).isNotNull()
+
+        val now = Date()
+        val deleteAfter = Date.from(now.toInstant().plus(cooldownDuration))
+        assertThat(schemaData!!::active).isFalse()
+        assertThat(schemaData::setToCooldownAt).isAboutEqualTo(now)
+        assertThat(schemaData::deleteAfter).isAboutEqualTo(deleteAfter)
     }
 
     @Test
@@ -97,13 +116,31 @@ class PostgresDatabaseHotelDataDaoTest @Autowired constructor(
 
     @BeforeAll
     fun setup() {
-        val manager = PostgresDatabaseManager(dataSource)
-        val (username, password) = createSchemaNameAndPassword()
-        val schemaName = manager.createSchema(username, password)
-        val jdbcUrl = dataSource.jdbcUrl.replace(Regex("/[a-z]+$"), "/$schemaName")
-        val dataSource = DataSourceUtils.createDataSource(jdbcUrl, schemaName, password)
+        val dataSource = createPostgresSchema(dataSource)
         initializer.migrate(dataSource)
-
         hotelDataDao = PostgresDatabaseHotelDataDao(dataSource)
     }
+}
+
+@DatabaseTest
+@OracleTest
+class OracleDatabaseHotelDataDaoTest @Autowired constructor(
+    @TargetEngine(ORACLE) val dataSource: HikariDataSource,
+    val initializer: DatabaseInstanceInitializer
+) : DatabaseHotelDataDaoTest() {
+
+    @BeforeAll
+    fun setup() {
+        val dataSource = createOracleSchema(dataSource)
+        initializer.migrate(dataSource)
+
+        hotelDataDao = OracleDatabaseHotelDataDao(dataSource)
+    }
+}
+
+fun Assert<Date?>.isAboutEqualTo(expected: Date) = given { actual ->
+    val actualInstant = actual!!.toInstant()
+    val expectedInstant = expected.toInstant()
+    if (expectedInstant.plusSeconds(1).isAfter(actualInstant) && expectedInstant.plusSeconds(-1).isBefore(actualInstant)) return
+    fail(expected, actual)
 }

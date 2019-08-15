@@ -273,7 +273,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def "Delete schema by id"() {
     given:
-      databaseHotelService.deleteSchemaById(EXAMPLE_SCHEMA_ID, null)
+      databaseHotelService.deleteSchemaByCooldown(EXAMPLE_SCHEMA_ID, null)
 
     when:
       ResultActions result = mockMvc.perform(delete("/schema/{id}", EXAMPLE_SCHEMA_ID))
