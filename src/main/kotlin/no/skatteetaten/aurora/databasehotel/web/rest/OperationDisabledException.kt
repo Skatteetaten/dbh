@@ -1,10 +1,5 @@
-package no.skatteetaten.aurora.databasehotel.web.rest;
+package no.skatteetaten.aurora.databasehotel.web.rest
 
-import no.skatteetaten.aurora.databasehotel.service.DatabaseServiceException;
+import no.skatteetaten.aurora.databasehotel.service.DatabaseServiceException
 
-public class OperationDisabledException extends DatabaseServiceException {
-
-    public OperationDisabledException(String format) {
-        super(format);
-    }
-}
+class OperationDisabledException(format: String) : DatabaseServiceException(format)

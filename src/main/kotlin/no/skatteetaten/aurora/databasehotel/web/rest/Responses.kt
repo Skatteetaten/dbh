@@ -1,27 +1,13 @@
-package no.skatteetaten.aurora.databasehotel.web.rest;
+package no.skatteetaten.aurora.databasehotel.web.rest
 
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+object Responses {
 
-public class Responses {
+    fun okResponse(resource: Any): ResponseEntity<ApiResponse<*>> = okResponse(listOf(resource))
 
-    public static ResponseEntity<ApiResponse> okResponse() {
-
-        return okResponse(new ArrayList<>());
-    }
-
-    public static ResponseEntity<ApiResponse> okResponse(Object resource) {
-
-        List<Object> resources = new ArrayList<>();
-        resources.add(resource);
-        return okResponse(resources);
-    }
-
-    public static ResponseEntity<ApiResponse> okResponse(List<?> resources) {
-
-        return new ResponseEntity<>(new ApiResponse<>(resources), HttpStatus.OK);
-    }
+    @JvmOverloads
+    fun okResponse(resources: List<*> = emptyList<Any>()): ResponseEntity<ApiResponse<*>> =
+        ResponseEntity(ApiResponse(resources), HttpStatus.OK)
 }

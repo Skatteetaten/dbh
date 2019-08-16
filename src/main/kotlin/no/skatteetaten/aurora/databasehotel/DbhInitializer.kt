@@ -21,7 +21,7 @@ class DbhInitializer(
     @Async
     fun configure() {
 
-        val databasesConfig = configuration.databasesConfig.toMutableList()
+        val databasesConfig = configuration.databases.toMutableList()
 
         // Iterate over all the database configurations, removing them one by one as we manage to register them
         // (in practice being able to connect to them). For each pass of the configurations, sleep for a while before
