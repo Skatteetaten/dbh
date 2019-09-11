@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
 import com.zaxxer.hikari.HikariDataSource
+import java.math.BigDecimal
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
@@ -22,7 +23,6 @@ import org.flywaydb.core.Flyway
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
-import java.math.BigDecimal
 
 @Component
 class DatabaseInstanceInitializer(
@@ -59,7 +59,7 @@ class DatabaseInstanceInitializer(
             // forward.
             val jdbcTemplate = JdbcTemplate(managementDataSource)
             listOf("201703091203", "201703091537").forEach { flywayVersion ->
-                jdbcTemplate.update("delete from ${schemaName}.SCHEMA_VERSION where \"version\"=?", flywayVersion)
+                jdbcTemplate.update("delete from $schemaName.SCHEMA_VERSION where \"version\"=?", flywayVersion)
             }
         })()
 
