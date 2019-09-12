@@ -20,7 +20,10 @@ import no.skatteetaten.aurora.databasehotel.service.postgres.PostgresJdbcUrlBuil
 import no.skatteetaten.aurora.databasehotel.service.sits.ResidentsIntegration
 import no.skatteetaten.aurora.databasehotel.toDatabaseEngineFromJdbcUrl
 import org.flywaydb.core.Flyway
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
 
 @Component
@@ -51,6 +54,24 @@ class DatabaseInstanceInitializer(
         val managementDataSource = OracleDataSourceUtils.createDataSource(
             managementJdbcUrl, username, password, oracleScriptRequired
         )
+
+        (fun() {
+            // Assert some old bad migrations are missing from the flyway table since they have been removed from
+            // the db/migration folder. Keeping them would prevent the application to properly migrate the schema
+            // forward.
+            val jdbcTemplate = JdbcTemplate(managementDataSource)
+            listOf("201703091203", "201703091537").forEach { flywayVersion ->
+                try {
+                    val updates =
+                        jdbcTemplate.update("delete from $schemaName.SCHEMA_VERSION where \"version\"=?", flywayVersion)
+                    if (updates > 0) {
+                        logger.info("Deleted migration {}", flywayVersion)
+                    }
+                } catch (e: Exception) {
+                    logger.warn("Unable to delete migration {}; {}", flywayVersion, e.message)
+                }
+            }
+        })()
 
         val databaseManager = OracleDatabaseManager(managementDataSource)
 
@@ -154,6 +175,7 @@ class DatabaseInstanceInitializer(
 
     companion object {
 
+        val logger: Logger = LoggerFactory.getLogger(DatabaseInstanceInitializer::class.java)
         const val DEFAULT_SCHEMA_NAME: String = "DATABASEHOTEL_INSTANCE_DATA"
     }
 }
