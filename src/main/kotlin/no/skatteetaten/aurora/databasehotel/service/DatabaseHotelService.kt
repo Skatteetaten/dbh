@@ -40,14 +40,10 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return candidates.firstOrNull()
     }
 
-    fun findAllDatabaseSchemas(engine: DatabaseEngine?): Set<DatabaseSchema> {
-
-        return findAllDatabaseSchemasByLabels(engine, emptyMap())
-    }
-
-    fun findAllDatabaseSchemasByLabels(
+    fun findAllDatabaseSchemas(
         engine: DatabaseEngine? = null,
-        labelsToMatch: Map<String, String?> = emptyMap()
+        labelsToMatch: Map<String, String?> = emptyMap(),
+        includeCooldown: Boolean = false
     ): Set<DatabaseSchema> {
 
         val schemas = databaseHotelAdminService.findAllDatabaseInstances(engine)

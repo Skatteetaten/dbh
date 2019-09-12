@@ -4,7 +4,6 @@ import java.time.Duration
 import java.util.ArrayList
 import java.util.Calendar
 import java.util.Date
-import java.util.Optional
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
@@ -12,7 +11,6 @@ import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
-import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuilder
 import org.springframework.transaction.annotation.Transactional
 
 private val logger = KotlinLogging.logger {}
@@ -51,26 +49,13 @@ open class DatabaseInstance(
     private fun findAllSchemasUnfiltered(): Set<DatabaseSchema> {
 
         val schemaData = databaseHotelDataDao.findAllManagedSchemaData()
-        val users = databaseHotelDataDao.findAllUsers()
-        val schemas = databaseManager.findAllNonSystemSchemas()
-        val labels = databaseHotelDataDao.findAllLabels()
-        val schemaSizes = resourceUsageCollector.schemaSizes
-
-        return DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder)
-            .createMany(schemaData, schemas, users, labels, schemaSizes)
+        return getDatabaseSchemaFromSchemaData(schemaData)
     }
 
     private fun findAllSchemasWithLabels(labelsToMatch: Map<String, String?>): Set<DatabaseSchema> {
 
         val schemaData = databaseHotelDataDao.findAllManagedSchemaDataByLabels(labelsToMatch)
-
-        val users = schemaData.flatMap { databaseHotelDataDao.findAllUsersForSchema(it.id) }
-        val schemas = schemaData.mapNotNull { databaseManager.findSchemaByName(it.name) }
-        val labels = schemaData.flatMap { databaseHotelDataDao.findAllLabelsForSchema(it.id) }
-        val schemaSizes = resourceUsageCollector.schemaSizes
-
-        return DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder)
-            .createMany(schemaData, schemas, users, labels, schemaSizes)
+        return databaseSchemaBuilder.build(schemaData, LookupDataFetchStrategy.FOR_EACH)
     }
 
     @Transactional
@@ -181,13 +166,7 @@ open class DatabaseInstance(
     fun findAllSchemasWithExpiredCooldowns(): Set<DatabaseSchema> {
 
         val schemaData = databaseHotelDataDao.findAllManagedSchemaDataByDeleteAfterDate(Date())
-        val users = databaseHotelDataDao.findAllUsers()
-        val schemas = databaseManager.findAllNonSystemSchemas()
-        val labels = databaseHotelDataDao.findAllLabels()
-        val schemaSizes = resourceUsageCollector.schemaSizes
-
-        return DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder)
-            .createMany(schemaData, schemas, users, labels, schemaSizes)
+        return getDatabaseSchemaFromSchemaData(schemaData)
     }
 
     @Transactional
@@ -203,18 +182,14 @@ open class DatabaseInstance(
         this.integrations.add(integration)
     }
 
+    private val databaseSchemaBuilder = DatabaseSchemaBuilder2(metaInfo, jdbcUrlBuilder, databaseHotelDataDao, databaseManager, resourceUsageCollector)
+
+    private fun getDatabaseSchemaFromSchemaData(schemaData: List<SchemaData>) = databaseSchemaBuilder.build(schemaData)
+
     private fun getDatabaseSchemaFromSchemaData(schemaData: SchemaData): DatabaseSchema? {
 
         if (schemaData.schemaType != SchemaTypes.SCHEMA_TYPE_MANAGED) return null
-        val schema = databaseManager.findSchemaByName(schemaData.name) ?: return null
-
-        val users = databaseHotelDataDao.findAllUsersForSchema(schemaData.id)
-        val labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.id)
-
-        val schemaSize = resourceUsageCollector.getSchemaSize(schemaData.name)
-
-        return DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder)
-            .createOne(schemaData, schema, users, Optional.ofNullable(labels), schemaSize)
+        return databaseSchemaBuilder.build(schemaData)
     }
 
     enum class UserType {
@@ -227,5 +202,7 @@ open class DatabaseInstance(
         const val DAYS_BACK = -7
     }
 }
+
+
 
 private val DatabaseSchema.lastUsedDateString get() = this.lastUsedDate?.toInstant()?.toString() ?: "Never"

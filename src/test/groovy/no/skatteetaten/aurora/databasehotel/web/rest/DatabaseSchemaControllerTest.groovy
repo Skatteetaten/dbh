@@ -255,7 +255,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def "List schemas with labels"() {
     given:
-      databaseHotelService.findAllDatabaseSchemasByLabels([userId: USER_ID, affiliation: 'aurora']) >> EXAMPLE_RESPONSE
+      databaseHotelService.findAllDatabaseSchemas([userId: USER_ID, affiliation: 'aurora']) >> EXAMPLE_RESPONSE
 
 
     when:
