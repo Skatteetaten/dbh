@@ -19,11 +19,13 @@ open class DatabaseInstance(
     val metaInfo: DatabaseInstanceMetaInfo,
     val databaseManager: DatabaseManager,
     val databaseHotelDataDao: DatabaseHotelDataDao,
-    private val jdbcUrlBuilder: JdbcUrlBuilder,
-    private val resourceUsageCollector: ResourceUsageCollector,
+    jdbcUrlBuilder: JdbcUrlBuilder,
+    resourceUsageCollector: ResourceUsageCollector,
     private val cooldownDaysAfterDelete: Int,
     private val cooldownDaysForOldUnusedSchemas: Int
 ) {
+
+    private val databaseSchemaBuilder = DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder, databaseHotelDataDao, databaseManager, resourceUsageCollector)
 
     private val integrations = ArrayList<Integration>()
 
@@ -181,8 +183,6 @@ open class DatabaseInstance(
 
         this.integrations.add(integration)
     }
-
-    private val databaseSchemaBuilder = DatabaseSchemaBuilder2(metaInfo, jdbcUrlBuilder, databaseHotelDataDao, databaseManager, resourceUsageCollector)
 
     private fun getDatabaseSchemaFromSchemaData(schemaData: List<SchemaData>) = databaseSchemaBuilder.build(schemaData)
 

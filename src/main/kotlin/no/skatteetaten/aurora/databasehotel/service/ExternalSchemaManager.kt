@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.service
 
 import com.google.common.collect.Lists
-import java.math.BigDecimal
-import java.util.HashMap
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.Schema
@@ -13,8 +11,10 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.EXTERNAL
+import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.MANAGED
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA
-import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuilder
+import java.math.BigDecimal
+import java.util.HashMap
 
 class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataDao) {
 
@@ -80,11 +80,15 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
             }
         }
 
-        return DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder).createOne(
-            schemaData, schema, users, labels,
-            SchemaSize(schemaData.name, BigDecimal.ZERO),
-            EXTERNAL
+        return LookupData(
+            metaInfo,
+            jdbcUrlBuilder,
+            users,
+            listOf(schema),
+            labels,
+            listOf(SchemaSize(schemaData.name, BigDecimal.ZERO))
         )
+            .createOne(schemaData, EXTERNAL)
     }
 
     private fun replaceLabels(schema: DatabaseSchema, labels: Map<String, String?>) {

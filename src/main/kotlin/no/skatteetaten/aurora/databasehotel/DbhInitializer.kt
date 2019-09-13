@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.databasehotel
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelAdminService
 import no.skatteetaten.aurora.databasehotel.service.ExternalSchemaManager
-import no.skatteetaten.aurora.databasehotel.utils.MapUtils.get
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
@@ -34,7 +33,7 @@ class DbhInitializer(
                     registerDatabase(databaseConfig)
                     i.remove()
                 } catch (e: Exception) {
-                    val host: String = get(databaseConfig, "host")
+                    val host = databaseConfig["host"]
                     logger.warn("Unable to connect to $host - will try again later (${e.message})")
                     Thread.sleep(retryDelay.toLong())
                 }
