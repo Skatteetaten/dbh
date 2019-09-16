@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.databasehotel.service
 
 import com.google.common.collect.Lists
+import java.math.BigDecimal
+import java.util.HashMap
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.Schema
@@ -12,8 +14,6 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.EXTERNAL
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA
-import java.math.BigDecimal
-import java.util.HashMap
 
 class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataDao) {
 

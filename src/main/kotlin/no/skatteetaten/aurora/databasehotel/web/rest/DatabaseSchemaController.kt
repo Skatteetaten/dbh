@@ -114,7 +114,7 @@ class DatabaseSchemaController(
 
         val engine = engineName?.toDatabaseEngine()
 
-        val schemas: Set<DatabaseSchema> = when(q) {
+        val schemas: Set<DatabaseSchema> = when (q) {
             "filter-by" -> databaseHotelService.findAllDatabaseSchemas(engine, parseLabelsParam(labels), includeCooldown)
             "stale" -> databaseHotelService.findAllStaleDatabaseSchemas()
             else -> throw IllegalArgumentException("Unknown query type [$q]")

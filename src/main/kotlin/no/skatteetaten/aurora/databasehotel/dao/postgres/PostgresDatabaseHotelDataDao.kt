@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.dao.postgres
 
-import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.select
 import javax.sql.DataSource
+import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.select
 import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao

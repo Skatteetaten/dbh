@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import java.math.BigDecimal
 import no.skatteetaten.aurora.databasehotel.dao.Schema
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
@@ -10,7 +11,6 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.MANAGED
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData
 import no.skatteetaten.aurora.databasehotel.domain.User
-import java.math.BigDecimal
 
 data class DatabaseSchemaBuilder(
     private val metaInfo: DatabaseInstanceMetaInfo,
