@@ -1,9 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.service
 
-import java.time.Duration
-import java.util.ArrayList
-import java.util.Calendar
-import java.util.Date
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
@@ -12,20 +8,24 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
+import java.util.ArrayList
+import java.util.Calendar
+import java.util.Date
 
 private val logger = KotlinLogging.logger {}
+
+enum class LookupDataFetchStrategy { BY_ALL, FOR_EACH }
 
 open class DatabaseInstance(
     val metaInfo: DatabaseInstanceMetaInfo,
     val databaseManager: DatabaseManager,
     val databaseHotelDataDao: DatabaseHotelDataDao,
-    jdbcUrlBuilder: JdbcUrlBuilder,
-    resourceUsageCollector: ResourceUsageCollector,
+    val jdbcUrlBuilder: JdbcUrlBuilder,
+    val resourceUsageCollector: ResourceUsageCollector,
     private val cooldownDaysAfterDelete: Int,
     private val cooldownDaysForOldUnusedSchemas: Int
 ) {
-
-    private val databaseSchemaBuilder = DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder, databaseHotelDataDao, databaseManager, resourceUsageCollector)
 
     private val integrations = ArrayList<Integration>()
 
@@ -39,26 +39,22 @@ open class DatabaseInstance(
     fun findSchemaByName(name: String): DatabaseSchema? =
         databaseHotelDataDao.findSchemaDataByName(name)?.let(this::getDatabaseSchemaFromSchemaData)
 
-    fun findAllSchemas(labelsToMatch: Map<String, String?>? = null): Set<DatabaseSchema> {
+    fun findAllSchemas(
+        labelsToMatch: Map<String, String?>? = null,
+        includeCooldown: Boolean = false
+    ): Set<DatabaseSchema> {
 
-        return if (labelsToMatch.isNullOrEmpty()) findAllSchemasUnfiltered()
-        else findAllSchemasWithLabels(labelsToMatch)
+        return if (labelsToMatch.isNullOrEmpty()) findAllSchemas(includeCooldown)
+        else getDatabaseSchemaFromSchemaData(
+            databaseHotelDataDao.findAllManagedSchemaDataByLabels(
+                labelsToMatch,
+                includeCooldown
+            ), LookupDataFetchStrategy.FOR_EACH
+        )
     }
 
-    fun findAllSchemasIgnoreActive(): Set<DatabaseSchema> = databaseHotelDataDao.findAllManagedSchemaDataIgnoreActive()
-            .mapNotNull(this::getDatabaseSchemaFromSchemaData).toSet()
-
-    private fun findAllSchemasUnfiltered(): Set<DatabaseSchema> {
-
-        val schemaData = databaseHotelDataDao.findAllManagedSchemaData()
-        return getDatabaseSchemaFromSchemaData(schemaData)
-    }
-
-    private fun findAllSchemasWithLabels(labelsToMatch: Map<String, String?>): Set<DatabaseSchema> {
-
-        val schemaData = databaseHotelDataDao.findAllManagedSchemaDataByLabels(labelsToMatch)
-        return databaseSchemaBuilder.build(schemaData, LookupDataFetchStrategy.FOR_EACH)
-    }
+    fun findAllSchemas(includeCooldown: Boolean = false): Set<DatabaseSchema> =
+        getDatabaseSchemaFromSchemaData(databaseHotelDataDao.findAllManagedSchemaData(includeCooldown))
 
     @Transactional
     open fun createSchema(labels: Map<String, String?> = emptyMap()): DatabaseSchema {
@@ -119,7 +115,8 @@ open class DatabaseInstance(
     @Transactional
     open fun permanentlyDeleteSchema(schemaName: String) {
 
-        val schema = databaseHotelDataDao.findSchemaDataByNameIgnoreActive(schemaName) ?: throw DatabaseServiceException("No schema named [$schemaName]")
+        val schema = databaseHotelDataDao.findSchemaDataByNameIgnoreActive(schemaName)
+            ?: throw DatabaseServiceException("No schema named [$schemaName]")
 
         logger.info("Permanently deleting schema {} (id={})", schemaName, schema.id)
 
@@ -184,12 +181,37 @@ open class DatabaseInstance(
         this.integrations.add(integration)
     }
 
-    private fun getDatabaseSchemaFromSchemaData(schemaData: List<SchemaData>) = databaseSchemaBuilder.build(schemaData)
+    private fun getDatabaseSchemaFromSchemaData(
+        schemaData: List<SchemaData>,
+        strategy: LookupDataFetchStrategy = LookupDataFetchStrategy.BY_ALL
+    ): Set<DatabaseSchema> {
+
+        val builder = when (strategy) {
+
+            LookupDataFetchStrategy.BY_ALL -> DatabaseSchemaBuilder(
+                metaInfo,
+                jdbcUrlBuilder,
+                databaseHotelDataDao.findAllUsers(),
+                databaseManager.findAllNonSystemSchemas(),
+                databaseHotelDataDao.findAllLabels(),
+                resourceUsageCollector.schemaSizes
+            )
+            LookupDataFetchStrategy.FOR_EACH -> DatabaseSchemaBuilder(
+                metaInfo,
+                jdbcUrlBuilder,
+                schemaData.flatMap { databaseHotelDataDao.findAllUsersForSchema(it.id) },
+                schemaData.mapNotNull { databaseManager.findSchemaByName(it.name) },
+                schemaData.flatMap { databaseHotelDataDao.findAllLabelsForSchema(it.id) },
+                resourceUsageCollector.schemaSizes
+            )
+        }
+        return builder.createMany(schemaData)
+    }
 
     private fun getDatabaseSchemaFromSchemaData(schemaData: SchemaData): DatabaseSchema? {
 
         if (schemaData.schemaType != SchemaTypes.SCHEMA_TYPE_MANAGED) return null
-        return databaseSchemaBuilder.build(schemaData)
+        return getDatabaseSchemaFromSchemaData(listOf(schemaData), LookupDataFetchStrategy.FOR_EACH).firstOrNull()
     }
 
     enum class UserType {
@@ -202,7 +224,5 @@ open class DatabaseInstance(
         const val DAYS_BACK = -7
     }
 }
-
-
 
 private val DatabaseSchema.lastUsedDateString get() = this.lastUsedDate?.toInstant()?.toString() ?: "Never"

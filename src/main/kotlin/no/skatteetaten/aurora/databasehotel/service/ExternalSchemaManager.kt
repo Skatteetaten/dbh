@@ -11,7 +11,6 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.EXTERNAL
-import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.MANAGED
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA
 import java.math.BigDecimal
 import java.util.HashMap
@@ -80,7 +79,7 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
             }
         }
 
-        return LookupData(
+        return DatabaseSchemaBuilder(
             metaInfo,
             jdbcUrlBuilder,
             users,

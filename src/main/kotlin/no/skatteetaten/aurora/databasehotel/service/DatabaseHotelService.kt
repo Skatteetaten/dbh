@@ -47,7 +47,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
     ): Set<DatabaseSchema> {
 
         val schemas = databaseHotelAdminService.findAllDatabaseInstances(engine)
-            .flatMap { it.findAllSchemas(labelsToMatch) }.toSet()
+            .flatMap { it.findAllSchemas(labelsToMatch, includeCooldown) }.toSet()
         val externalSchemas = databaseHotelAdminService.externalSchemaManager?.findAllSchemas() ?: emptySet()
         val matchingExternalSchemas = findAllMatchingSchemas(externalSchemas, labelsToMatch)
         return schemas + matchingExternalSchemas

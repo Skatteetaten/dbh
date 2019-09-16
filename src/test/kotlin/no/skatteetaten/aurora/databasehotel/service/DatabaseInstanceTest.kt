@@ -133,7 +133,7 @@ abstract class AbstractDatabaseInstanceTest {
         instance.deleteSchemaByCooldown(s2.name, deleteAfter)
 
         assertThat(instance.findAllSchemas()).hasSize(1)
-        assertThat(instance.findAllSchemasIgnoreActive()).hasSize(3)
+        assertThat(instance.findAllSchemas(true)).hasSize(3)
 
         Thread.sleep(deleteAfter.toMillis())
         return listOf(s1, s2, s3)
@@ -168,7 +168,7 @@ class PostgresDatabaseInstanceTest @Autowired constructor(
 
         instance.deleteSchemasWithExpiredCooldowns()
 
-        val schemasAfterDeletion = instance.findAllSchemasIgnoreActive()
+        val schemasAfterDeletion = instance.findAllSchemas(true)
         assertThat(schemasAfterDeletion).hasSize(1)
         assertThat(schemasAfterDeletion.map { it.id }).containsAll(s3.id)
     }
@@ -218,7 +218,7 @@ class OracleDatabaseInstanceTest @Autowired constructor(
 
         instance.deleteSchemasWithExpiredCooldowns()
 
-        val schemasAfterDeletion = instance.findAllSchemasIgnoreActive()
+        val schemasAfterDeletion = instance.findAllSchemas(true)
         assertThat(schemasAfterDeletion).hasSize(1)
         assertThat(schemasAfterDeletion.map { it.id }).containsAll(s3.id)
 
