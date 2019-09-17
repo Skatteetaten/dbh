@@ -6,6 +6,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -49,7 +50,7 @@ public class SharedSecretReader {
         File secretFile = new File(secretLocation).getAbsoluteFile();
         try {
             log.info("Reading token from file {}", secretFile.getAbsolutePath());
-            return new String(Files.readAllBytes(Paths.get(secretLocation)), "utf-8");
+            return new String(Files.readAllBytes(Paths.get(secretLocation)), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new IllegalStateException(
                 format("Unable to read shared secret from specified location [%s]", secretFile.getAbsolutePath()));

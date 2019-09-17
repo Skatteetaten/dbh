@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.databasehotel.domain
 
-import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import java.util.Date
 import java.util.HashMap
 import java.util.HashSet
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 
 data class DatabaseInstanceMetaInfo(
     val engine: DatabaseEngine,
@@ -34,7 +34,7 @@ data class DatabaseSchema @JvmOverloads constructor(
     val type: Type = Type.MANAGED
 ) {
     private val _users = HashSet<User>()
-    private val _labels = HashMap<String, String>()
+    private val _labels = HashMap<String, String?>()
 
     val lastUsedOrCreatedDate: Date get() = lastUsedDate ?: createdDate
 
@@ -51,7 +51,7 @@ data class DatabaseSchema @JvmOverloads constructor(
     val users get() = HashSet(_users)
 
     var labels
-        get(): Map<String, String> = HashMap<String, String>().apply { putAll(_labels) }
+        get(): Map<String, String?> = HashMap<String, String?>().apply { putAll(_labels) }
         set(labels) {
             this._labels.clear()
             this._labels.putAll(labels)

@@ -1,26 +1,30 @@
 package no.skatteetaten.aurora.databasehotel.web.rest
 
-import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
+import java.net.URLEncoder.encode
+import java.util.stream.Stream
+import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
+import no.skatteetaten.aurora.mockmvc.extensions.Path
+import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
+import no.skatteetaten.aurora.mockmvc.extensions.post
+import no.skatteetaten.aurora.mockmvc.extensions.put
+import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
+import no.skatteetaten.aurora.mockmvc.extensions.status
+import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.springframework.http.MediaType
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup
-
-import java.net.URLEncoder.encode
-import java.util.stream.Stream
 
 class DatabaseSchemaControllerTest2 {
 
@@ -38,7 +42,7 @@ class DatabaseSchemaControllerTest2 {
     @ParameterizedTest
     @ArgumentsSource(Params::class)
     fun verifyLabelsParsing(labelString: String, expectedLabels: Map<String, String>) {
-        assert(parseLabelsParam(encode(labelString, "UTF-8"))).isEqualTo(expectedLabels)
+        assertThat(parseLabelsParam(encode(labelString, "UTF-8"))).isEqualTo(expectedLabels)
     }
 
     class JdbcParams : ArgumentsProvider {
@@ -61,25 +65,39 @@ class DatabaseSchemaControllerTest2 {
         }
         val databaseSchemaController = DatabaseSchemaController(databaseHotelService, true, true)
         val mockMvc = standaloneSetup(databaseSchemaController).build()
-        mockMvc.perform(put("/api/v1/schema/validate").content(json).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.status").value("OK"))
-            .andExpect(jsonPath("$.totalCount").value(1))
-            .andExpect(jsonPath("$.items[0]").value(true))
+        mockMvc.put(
+            path = Path("/api/v1/schema/validate"),
+            body = json,
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            statusIsOk()
+                .responseJsonPath("$.status").equalsValue("OK")
+                .responseJsonPath("$.totalCount").equalsValue(1)
+                .responseJsonPath("$.items[0]").isTrue()
+        }
     }
 
     @Test
     fun `validate connection given null values`() {
         val json = jacksonObjectMapper().writeValueAsString(ConnectionVerificationRequest())
 
-        val databaseSchemaController = DatabaseSchemaController(mockk(), true, true)
+        val databaseSchemaController = DatabaseSchemaController(
+            databaseHotelService = mockk(),
+            schemaListingAllowed = true,
+            dropAllowed = true
+        )
         val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
-        mockMvc.perform(put("/api/v1/schema/validate").content(json).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.status").value("Failed"))
-            .andExpect(jsonPath("$.totalCount").value(1))
-            .andExpect(jsonPath("$.items.length()").value(1))
-            .andExpect(jsonPath("$.items[0]").value("id or jdbcUser is required"))
+        mockMvc.put(
+            path = Path("/api/v1/schema/validate"),
+            body = json,
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            status(HttpStatus.BAD_REQUEST)
+                .responseJsonPath("$.status").equalsValue("Failed")
+                .responseJsonPath("$.totalCount").equalsValue(1)
+                .responseJsonPath("$.items.length()").equalsValue(1)
+                .responseJsonPath("$.items[0]").equalsValue("id or jdbcUser is required")
+        }
     }
 
     @Test
@@ -89,18 +107,57 @@ class DatabaseSchemaControllerTest2 {
 
         val databaseSchemaController = DatabaseSchemaController(mockk(), true, true)
         val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
-        mockMvc.perform(put("/api/v1/schema/123").content(json).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest)
+        mockMvc.put(
+            path = Path("/api/v1/schema/123"),
+            body = json,
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            status(HttpStatus.BAD_REQUEST)
+        }
     }
 
     @Test
     fun `validate jdbc input for create database schema`() {
-        val input = SchemaCreationRequest(schema = Schema("", "", ""))
-        val json = jacksonObjectMapper().writeValueAsString(input)
+        val json = jacksonObjectMapper().writeValueAsString(SchemaCreationRequest(schema = Schema("", "", "")))
 
-        val databaseSchemaController = DatabaseSchemaController(mockk(), true, true)
+        val databaseSchemaController = DatabaseSchemaController(
+            databaseHotelService = mockk(),
+            schemaListingAllowed = true,
+            dropAllowed = true
+        )
         val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
-        mockMvc.perform(post("/api/v1/schema/").content(json).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest)
+        mockMvc.post(
+            path = Path("/api/v1/schema/"),
+            body = json,
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            status(HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    @Test
+    fun `create schema throws exception`() {
+        val json = jacksonObjectMapper().writeValueAsString(SchemaCreationRequest())
+        val dbErrorMessage = "ORA-00059: maximum number of DB_FILES exceeded"
+        val databaseHotelService = mockk<DatabaseHotelService>().apply {
+            every { createSchema(any(), any()) } throws DataAccessException(dbErrorMessage)
+        }
+
+        val databaseSchemaController = DatabaseSchemaController(
+            databaseHotelService = databaseHotelService,
+            schemaListingAllowed = true,
+            dropAllowed = true
+        )
+        val mockMvc = standaloneSetup(ErrorHandler(), databaseSchemaController).build()
+        mockMvc.post(
+            path = Path("/api/v1/schema/"),
+            body = json,
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            status(HttpStatus.INTERNAL_SERVER_ERROR)
+            responseJsonPath("$.status").equalsValue("Failed")
+            responseJsonPath("$.totalCount").equalsValue(1)
+            responseJsonPath("$.items[0]").equalsValue(dbErrorMessage)
+        }
     }
 }

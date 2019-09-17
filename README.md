@@ -16,6 +16,47 @@ Dbh can easily be run locally either from your ide (IntellJ will be assumed) or
 from gradle. Before you can run or build the application, however, there are a couple of prerequisites that must be
 handled.
 
+### Setup
+ 
+ In order to use this project you must set repositories in your `~/.gradle/init.gradle` file
+ 
+     allprojects {
+       ext {
+         springBootDevtools = true
+         repos = {
+           maven { url "http://aurora/nexus/content/groups/public" }
+           mavenCentral()
+         }
+       }
+       repositories repos
+       buildscript {
+         repositories repos
+       }
+     }
+
+We use a local repository for distributionUrl in our gradle-wrapper.properties, you need to change it to a public repo in order to use the gradlew command. `../gradle/wrapper/gradle-wrapper.properties`
+
+    <...>
+    distributionUrl=https\://services.gradle.org/distributions/gradle-<version>-bin.zip
+    <...>
+
+### Running postgres locally
+
+    docker-compose up
+    
+### Connecting to postgres in the aurora-build namespace (for unit tests)
+
+    oc port-forward (oc get pods | grep postgresql | awk '{print $1;}') 35432:5432
+
+or
+
+    oc port-forward (oc get pods -o=custom-columns=NAME:.metadata.name --no-headers -l deploymentconfig=postgresql) 35432:5432
+    
+Will forward port 5432 of the postgresql pod to localhost:35432. Connect using 
+* Jdbc url: ```jdbc:postgresql://localhost:35432/postgres```.
+* Username: ```postgres```
+* Password: ```postgres```
+
 ### Oracle JDBC driver
 
 You will need to provide the Oracle JDBC driver as this dependency does not exist (legally) in any public maven repository.

@@ -1,21 +1,25 @@
 package no.skatteetaten.aurora.databasehotel.dao.postgres
 
+import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseManager
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
-import no.skatteetaten.aurora.databasehotel.dao.dto.Schema
+import no.skatteetaten.aurora.databasehotel.dao.Schema
+import no.skatteetaten.aurora.databasehotel.dao.toSchema
 import org.springframework.jdbc.core.queryForObject
-import java.util.Optional
-import javax.sql.DataSource
 
-/**
- *
- */
 class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSource), DatabaseManager {
 
     override fun createSchema(schemaName: String, password: String): String {
 
         val safeName = schemaName.toSafe()
         executeStatements(
+            """DO ${'$'}${'$'}
+                BEGIN
+                  CREATE ROLE app_user WITH NOLOGIN;
+                  EXCEPTION WHEN OTHERS THEN
+                  RAISE NOTICE 'not creating role app_user -- it already exists';
+                END
+                ${'$'}${'$'};""".trimIndent(),
             "create user $safeName with password '$password'",
             "create database $safeName",
             "GRANT CREATE ON DATABASE $safeName TO $safeName",
@@ -29,14 +33,15 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
         executeStatements("ALTER USER ${schemaName.toSafe()} WITH PASSWORD '$password'")
     }
 
-    override fun findSchemaByName(schemaName: String): Optional<Schema> {
+    override fun findSchemaByName(schemaName: String): Schema? {
         val query = "SELECT datname as username, now() as created, now() as lastLogin FROM pg_database WHERE datname=?"
-        return queryForOne(query, Schema::class.java, schemaName.toSafe())
+        return jdbcTemplate.queryForObject(query, toSchema, schemaName.toSafe())
     }
 
     override fun findAllNonSystemSchemas(): List<Schema> {
-        val query = "SELECT datname as username, now() as created, now() as lastLogin FROM pg_database"
-        return queryForMany(query, Schema::class.java)
+        val query =
+            "SELECT datname as username, now() as created, now() as lastLogin FROM pg_database WHERE datistemplate = false and datname not in ('postgres')"
+        return jdbcTemplate.query(query, toSchema)
     }
 
     override fun deleteSchema(schemaName: String) {

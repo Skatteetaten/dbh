@@ -7,7 +7,7 @@ database-config:
   retryDelay: 60000
   dropAllowed: false
   schemaListingAllowed: false
-  cooldownMonths: 6
+  cooldownMonths: 2
 
 metrics:
   resourceUseCollectInterval: "300000"
@@ -46,14 +46,15 @@ database-config:
     clientService: "${dbh.dev.db.oracle.clientService:dbhotel}"
     oracleScriptRequired: "${dbh.dev.db.oracle.oracleScriptRequired:true}"
   - host: "${dbh.dev.db.postgres.host:localhost}"
+    port: "${dbh.dev.db.postgres.port:15432}"
     engine: "${dbh.dev.db.postgres.engine:postgres}"
     instanceName: "${dbh.dev.db.postgres.instanceName:dev-postgres}"
     createSchemaAllowed: "${dbh.dev.db.postgres.createSchemaAllowed:true}"
-    username: "${dbh.dev.db.postgres.username:aos_api_user as sysdba}"
-    password: "${dbh.dev.db.postgres.password:dbh}"
+    username: "${dbh.dev.db.postgres.username:postgres}"
+    password: "${dbh.dev.db.postgres.password:postgres}"
     labels:
         affiliation: aurora
-        type: prod
+        type: dev
 
 aurora:
   authenticationEnabled: false

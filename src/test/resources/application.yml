@@ -1,28 +1,66 @@
-database-config:
-  retryDelay: 60000
-  dropAllowed: true
-  schemaListingAllowed: true
-  cooldownMonths: 6
-
-  databases:
-  - host: "${dbh.test.db.host:localhost}"
-    engine: oracle
-    service: "${dbh.test.db.service:dbhotel}"
-    instanceName: "${dbh.test.db.instanceName:dev}"
-    createSchemaAllowed: "${dbh.test.db.createSchemaAllowed:true}"
-    username: "${dbh.test.db.username:aos_api_user as sysdba}"
-    password: "${dbh.test.db.password:dbh}"
-    clientService: "${dbh.test.db.clientService:dbhotel}"
-    oracleScriptRequired: "${dbh.test.db.oracleScriptRequired:true}"
-
-metrics:
-  resourceUseCollectInterval: "300000"
-
-aurora:
-  token:
-    headerValuePrefix: aurora-token
-    value: shared-secret
+#database-config:
+#  retryDelay: 60000
+#  dropAllowed: true
+#  schemaListingAllowed: true
+#
+#  databases:
+#    - host: "${dbh.test.db.host:localhost}"
+#      engine: oracle
+#      service: "${dbh.test.db.service:dbhotel}"
+#      instanceName: "${dbh.test.db.instanceName:dev}"
+#      createSchemaAllowed: "${dbh.test.db.createSchemaAllowed:true}"
+#      username: "${dbh.test.db.username:aos_api_user as sysdba}"
+#      password: "${dbh.test.db.password:dbh}"
+#      clientService: "${dbh.test.db.clientService:dbhotel}"
+#      oracleScriptRequired: "${dbh.test.db.oracleScriptRequired:true}"
+#
+#metrics:
+#  resourceUseCollectInterval: "300000"
+#
+#aurora:
+#  token:
+#    headerValuePrefix: aurora-token
+#    value: shared-secret
 
 spring:
-    flyway:
-        out-of-order: true
+  main:
+    banner-mode: "off"
+
+test:
+  include-oracle-tests: "false"
+  datasource:
+    postgres:
+      host: localhost
+      port: 25432
+      username: postgres
+      password: postgres
+    oracle:
+      host: "${dbh.test.db.host:localhost}"
+      port: 1521
+      engine: oracle
+      service: "${dbh.test.db.service:dbhotel}"
+      instanceName: "${dbh.test.db.instanceName:dev}"
+      createSchemaAllowed: "${dbh.test.db.createSchemaAllowed:true}"
+      username: "${dbh.test.db.username:aos_api_user as sysdba}"
+      password: "${dbh.test.db.password:dbh}"
+      clientService: "${dbh.test.db.clientService:dbhotel}"
+      oracleScriptRequired: "${dbh.test.db.oracleScriptRequired:true}"
+
+logging:
+  level:
+    no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager: ERROR
+    # Setting  error level on some flyway logging to avoid warnings during test
+    org.flywaydb.core.internal.command.DbMigrate: ERROR
+    org.flywaydb.core.internal.database.base.Database: ERROR
+
+---
+
+spring:
+  profiles: ci
+
+test:
+  datasource:
+    postgres:
+      host: postgresql
+      port: 5432
+      password: postgres

@@ -1,36 +1,16 @@
 package no.skatteetaten.aurora.databasehotel.service
 
-import com.google.common.base.Strings
+import java.util.HashMap
+import java.util.Random
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
-import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
-import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
-import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
-import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer.Companion.DEFAULT_SCHEMA_NAME
-import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDataSourceUtils
-import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao
-import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
-import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseHotelDataDao
-import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
-import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
-import no.skatteetaten.aurora.databasehotel.service.oracle.OracleJdbcUrlBuilder
-import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector
-import no.skatteetaten.aurora.databasehotel.service.postgres.PostgresJdbcUrlBuilder
-import no.skatteetaten.aurora.databasehotel.service.sits.ResidentsIntegration
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
-import java.util.HashMap
-import java.util.Optional
-import java.util.Random
 
 @Service
 class DatabaseHotelAdminService(
     private val databaseInstanceInitializer: DatabaseInstanceInitializer,
-    @Value("\${database-config.cooldownMonths}") private val cooldownAfterDeleteMonths: Int,
-    @Value("\${database-config.cooldownDaysForOldUnusedSchemas:1}") private val cooldownDaysForOldUnusedSchemas: Int,
-    @Value("\${database-config.defaultInstanceName:}") private val defaultInstanceName: String,
-    @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long?
+    @Value("\${database-config.defaultInstanceName:}") private val defaultInstanceName: String
 ) {
 
     var externalSchemaManager: ExternalSchemaManager? = null
@@ -52,39 +32,21 @@ class DatabaseHotelAdminService(
         createSchemaAllowed: Boolean,
         oracleScriptRequired: Boolean,
         instanceLabels: Map<String, String>
-    ) {
+    ): DatabaseInstance {
 
-        val managementJdbcUrl = OracleJdbcUrlBuilder(service).create(dbHost, port, null)
-        val databaseInstanceMetaInfo =
-            DatabaseInstanceMetaInfo(ORACLE, instanceName, dbHost, port, createSchemaAllowed, instanceLabels)
-
-        val managementDataSource = OracleDataSourceUtils.createDataSource(
-            managementJdbcUrl, username, password, oracleScriptRequired
+        val databaseInstance = databaseInstanceInitializer.createInitializedOracleInstance(
+            instanceName,
+            dbHost,
+            port,
+            service,
+            username,
+            password,
+            clientService,
+            createSchemaAllowed,
+            oracleScriptRequired,
+            instanceLabels
         )
-
-        val databaseManager = OracleDatabaseManager(managementDataSource)
-
-        databaseInstanceInitializer.assertInitialized(databaseManager, password)
-
-        val databaseHotelDs = OracleDataSourceUtils.createDataSource(
-            managementJdbcUrl, DEFAULT_SCHEMA_NAME, password, oracleScriptRequired
-        )
-        databaseInstanceInitializer.migrate(databaseHotelDs)
-
-        val databaseHotelDataDao = OracleDatabaseHotelDataDao(databaseHotelDs)
-
-        val jdbcUrlBuilder = OracleJdbcUrlBuilder(clientService)
-
-        val resourceUsageCollector = OracleResourceUsageCollector(managementDataSource, resourceUseCollectInterval)
-        val databaseInstance = DatabaseInstance(
-            databaseInstanceMetaInfo, databaseManager,
-            databaseHotelDataDao, jdbcUrlBuilder, resourceUsageCollector, createSchemaAllowed,
-            cooldownAfterDeleteMonths, cooldownDaysForOldUnusedSchemas
-        )
-        val residentsIntegration = ResidentsIntegration(managementDataSource)
-        databaseInstance.registerIntegration(residentsIntegration)
-
-        registerDatabaseInstance(databaseInstance)
+        return registerDatabaseInstance(databaseInstance)
     }
 
     fun registerPostgresDatabaseInstance(
@@ -95,62 +57,31 @@ class DatabaseHotelAdminService(
         password: String,
         createSchemaAllowed: Boolean,
         instanceLabels: Map<String, String>
-    ) {
+    ): DatabaseInstance {
 
-        val urlBuilder = PostgresJdbcUrlBuilder()
-        val managementJdbcUrl = urlBuilder.create(dbHost, port, "postgres")
-        val databaseInstanceMetaInfo =
-            DatabaseInstanceMetaInfo(POSTGRES, instanceName, dbHost, port, createSchemaAllowed, instanceLabels)
-        val managementDataSource = DataSourceUtils.createDataSource(managementJdbcUrl, username, password)
-        val databaseManager = PostgresDatabaseManager(managementDataSource)
-
-        databaseInstanceInitializer.assertInitialized(databaseManager, password)
-
-        val database = DEFAULT_SCHEMA_NAME.toLowerCase()
-        val jdbcUrl = urlBuilder.create(dbHost, port, database)
-        val databaseHotelDs = DataSourceUtils.createDataSource(jdbcUrl, database, password)
-        databaseInstanceInitializer.migrate(databaseHotelDs)
-
-        val databaseHotelDataDao = PostgresDatabaseHotelDataDao(databaseHotelDs)
-
-        val resourceUsageCollector = object : ResourceUsageCollector {
-            override fun getSchemaSizes(): List<ResourceUsageCollector.SchemaSize> {
-                return emptyList()
-            }
-
-            override fun getSchemaSize(schemaName: String): Optional<ResourceUsageCollector.SchemaSize> {
-                return Optional.of(ResourceUsageCollector.SchemaSize(schemaName, BigDecimal.ZERO))
-            }
-        }
-        val databaseInstance = DatabaseInstance(
-            databaseInstanceMetaInfo, databaseManager,
-            databaseHotelDataDao, urlBuilder, resourceUsageCollector, createSchemaAllowed,
-            cooldownAfterDeleteMonths, cooldownDaysForOldUnusedSchemas
+        val databaseInstance = databaseInstanceInitializer.createInitializedPostgresInstance(
+            instanceName,
+            dbHost,
+            port,
+            username,
+            password,
+            createSchemaAllowed,
+            instanceLabels
         )
-
-        registerDatabaseInstance(databaseInstance)
+        return registerDatabaseInstance(databaseInstance)
     }
 
-    fun registerDatabaseInstance(databaseInstance: DatabaseInstance) {
+    fun registerDatabaseInstance(databaseInstance: DatabaseInstance): DatabaseInstance {
 
         databaseInstances[databaseInstance.metaInfo.host] = databaseInstance
+        return databaseInstance
     }
 
-    /**
-     * Will try to find the DatabaseInstance with the instanceName `instanceNameOption`. If
-     * `instanceNameOption` is null the method will return a DatabaseInstance if-and-only-if there is only
-     * one DatabaseInstance registered. In all other cases it will throw a
-     * `[DatabaseServiceException]`.
-     *
-     * @param instanceNameOption the nullable instanceName
-     * @return
-     */
     @JvmOverloads
     fun findDatabaseInstanceOrFail(requirements: DatabaseInstanceRequirements = DatabaseInstanceRequirements()): DatabaseInstance {
 
         val availableInstances = findAllDatabaseInstances()
-            .filter(DatabaseInstance::isCreateSchemaAllowed)
-            .filter { it.metaInfo.engine == requirements.databaseEngine }
+            .filter { it.isCreateSchemaAllowed && it.metaInfo.engine == requirements.databaseEngine }
             .takeIf { it.isNotEmpty() }
             ?: throw DatabaseServiceException("Schema creation has been disabled for all instances with the required engine=${requirements.databaseEngine}")
 
@@ -196,8 +127,8 @@ class DatabaseHotelAdminService(
         if (databaseInstances.size == 1) {
             return databaseInstances.entries.stream().findFirst().get().value
         }
-        if (Strings.isNullOrEmpty(defaultInstanceName)) {
-            throw DatabaseServiceException("More than one database instance registered but " + "database-config.defaultInstanceName has not been specified.")
+        if (defaultInstanceName.isEmpty()) {
+            throw DatabaseServiceException("More than one database instance registered but database-config.defaultInstanceName has not been specified.")
         }
         return findDatabaseInstanceByInstanceName(defaultInstanceName)
             ?: throw DatabaseServiceException("Unable to find database instance $defaultInstanceName among registered instances ${databaseInstances.keys}")
@@ -208,5 +139,9 @@ class DatabaseHotelAdminService(
 
         val random = Random().nextInt(instances.size)
         return instances[random].instanceName
+    }
+
+    fun removeAllInstances() {
+        databaseInstances.clear()
     }
 }

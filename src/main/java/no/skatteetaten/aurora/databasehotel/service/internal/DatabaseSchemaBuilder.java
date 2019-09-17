@@ -9,8 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import no.skatteetaten.aurora.databasehotel.dao.Schema;
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label;
-import no.skatteetaten.aurora.databasehotel.dao.dto.Schema;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData;
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo;
@@ -18,10 +18,8 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchemaMetaData;
 import no.skatteetaten.aurora.databasehotel.domain.User;
 import no.skatteetaten.aurora.databasehotel.service.JdbcUrlBuilder;
-import no.skatteetaten.aurora.databasehotel.service.oracle.OracleResourceUsageCollector;
+import no.skatteetaten.aurora.databasehotel.service.SchemaSize;
 import no.skatteetaten.aurora.databasehotel.utils.MapUtils;
-import no.skatteetaten.aurora.databasehotel.service.ResourceUsageCollector;
-import no.skatteetaten.aurora.databasehotel.service.ResourceUsageCollector.SchemaSize;
 
 public class DatabaseSchemaBuilder {
 
@@ -56,7 +54,7 @@ public class DatabaseSchemaBuilder {
                 user.ifPresent(schemaUsers::add);
 
                 Optional<List<Label>> schemaLabels = MapUtils.maybeGet(labelIndex, schemaData.getId());
-                Optional<SchemaSize> schemaSize = MapUtils.maybeGet(schemaSizeIndex, schema.getUsername());
+                SchemaSize schemaSize = schemaSizeIndex.get(schema.getUsername());
 
                 return createOne(schemaData, schema, schemaUsers, schemaLabels, schemaSize);
             })
@@ -64,13 +62,18 @@ public class DatabaseSchemaBuilder {
     }
 
     public DatabaseSchema createOne(SchemaData schemaData, Schema schema, List<SchemaUser> users,
-        Optional<List<Label>> labelsOption, Optional<SchemaSize> schemaSize) {
+        Optional<List<Label>> labelsOption, SchemaSize schemaSize) {
 
         return createOne(schemaData, schema, users, labelsOption, schemaSize, DatabaseSchema.Type.MANAGED);
     }
 
     public DatabaseSchema createOne(SchemaData schemaData, Schema schema, List<SchemaUser> users,
-        Optional<List<Label>> labelsOption, Optional<SchemaSize> schemaSize, DatabaseSchema.Type type) {
+        List<Label> labelsOption, SchemaSize schemaSize, DatabaseSchema.Type type) {
+        return createOne(schemaData, schema, users, Optional.ofNullable(labelsOption), schemaSize, type);
+    }
+
+    public DatabaseSchema createOne(SchemaData schemaData, Schema schema, List<SchemaUser> users,
+        Optional<List<Label>> labelsOption, SchemaSize schemaSize, DatabaseSchema.Type type) {
 
         String jdbcUrl = jdbcUrlBuilder.create(metaInfo.getHost(), metaInfo.getPort(), schema.getUsername());
 
@@ -93,10 +96,10 @@ public class DatabaseSchemaBuilder {
         return databaseSchema;
     }
 
-    private DatabaseSchemaMetaData createMetaData(Optional<SchemaSize> schemaSize) {
+    private DatabaseSchemaMetaData createMetaData(SchemaSize schemaSize) {
 
-        double size = schemaSize
-            .map(ResourceUsageCollector.SchemaSize::getSchemaSizeMb)
+        double size = Optional.ofNullable(schemaSize)
+            .map(SchemaSize::getSchemaSizeMb)
             .map(BigDecimal::doubleValue)
             .orElse(0.0);
         return new DatabaseSchemaMetaData(size);

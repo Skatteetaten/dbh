@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.databasehotel.web.rest
 
 import io.micrometer.core.annotation.Timed
+import java.io.UnsupportedEncodingException
+import java.net.URLDecoder
+import java.time.Duration
+import java.util.Date
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
-import no.skatteetaten.aurora.databasehotel.domain.User
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstanceRequirements
 import no.skatteetaten.aurora.databasehotel.toDatabaseEngine
@@ -19,11 +22,6 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.io.UnsupportedEncodingException
-import java.lang.String.format
-import java.net.URLDecoder
-import java.time.Duration
-import java.util.Date
 
 data class SchemaMetadataResource(val sizeInMb: Double?)
 
@@ -36,7 +34,7 @@ data class DatabaseSchemaResource(
     val lastUsedDate: Date?,
     val databaseInstance: DatabaseInstanceResource,
     val users: List<UserResource>,
-    val labels: Map<String, String>,
+    val labels: Map<String, String?>,
     val metadata: SchemaMetadataResource
 )
 
@@ -45,7 +43,7 @@ data class SchemaCreationRequest(
     val instanceName: String? = null,
     val instanceLabels: Map<String, String> = emptyMap(),
     val instanceFallback: Boolean? = null,
-    val labels: Map<String, String>? = null,
+    val labels: Map<String, String?>? = null,
     val schema: Schema? = null
 ) {
     val fallback: Boolean
@@ -79,9 +77,8 @@ class DatabaseSchemaController(
     @Timed
     fun findById(@PathVariable id: String): ResponseEntity<ApiResponse<*>> {
 
-        val databaseSchema = databaseHotelService.findSchemaById(id)
-            .map { it.left }
-            .orElseThrow { IllegalArgumentException(format("No such schema %s", id)) }
+        val databaseSchema = databaseHotelService.findSchemaById(id)?.first
+            ?: throw IllegalArgumentException("No such schema $id")
         return Responses.okResponse(databaseSchema.toResource())
     }
 
@@ -89,15 +86,15 @@ class DatabaseSchemaController(
     @Timed
     fun deleteById(
         @PathVariable id: String,
-        @RequestHeader(name = "cooldown-duration-hours", required = false) cooldownDurationHours: Long?
+        @RequestHeader(name = "cooldown-duration-seconds", required = false) cooldownDurationSeconds: Long?
     ): ResponseEntity<ApiResponse<*>> {
 
         if (!dropAllowed) {
             throw OperationDisabledException("Schema deletion has been disabled for this instance")
         }
 
-        val cooldownDuration = cooldownDurationHours?.let { Duration.ofHours(it) }
-        databaseHotelService.deleteSchemaById(id, cooldownDuration)
+        val cooldownDuration = cooldownDurationSeconds?.let { Duration.ofSeconds(it) }
+        databaseHotelService.deleteSchemaByCooldown(id, cooldownDuration)
         return Responses.okResponse()
     }
 
@@ -114,14 +111,14 @@ class DatabaseSchemaController(
         }
         val engine = engineName?.toDatabaseEngine()
         val schemas: Set<DatabaseSchema> = when {
-            q == "for-deletion" -> databaseHotelService.findAllDatabaseSchemasForDeletion()
+            q == "stale" -> databaseHotelService.findAllStaleDatabaseSchemas()
             labels.isBlank() -> databaseHotelService.findAllDatabaseSchemas(engine)
             else -> databaseHotelService.findAllDatabaseSchemasByLabels(engine, parseLabelsParam(labels))
         }
 
         val resources = schemas
             .sortedBy { it.lastUsedOrCreatedDate }
-            .map(DatabaseSchema::toResource)
+            .map { it.toResource() }
         return Responses.okResponse(resources)
     }
 
@@ -154,18 +151,23 @@ class DatabaseSchemaController(
 
         val labels = schemaCreationRequest.labels ?: emptyMap()
         val schema = schemaCreationRequest.schema
-        val databaseSchema = if (schema == null) {
-            val instanceRequirements = DatabaseInstanceRequirements(
-                databaseEngine = schemaCreationRequest.engine,
-                instanceName = schemaCreationRequest.instanceName,
-                instanceLabels = schemaCreationRequest.instanceLabels,
-                instanceFallback = schemaCreationRequest.fallback
+        val databaseSchema = when {
+            schema == null -> {
+                val instanceRequirements = DatabaseInstanceRequirements(
+                    databaseEngine = schemaCreationRequest.engine,
+                    instanceName = schemaCreationRequest.instanceName,
+                    instanceLabels = schemaCreationRequest.instanceLabels,
+                    instanceFallback = schemaCreationRequest.fallback
+                )
+                databaseHotelService.createSchema(instanceRequirements, labels)
+            }
+            schema.isValid -> databaseHotelService.registerExternalSchema(
+                schema.username,
+                schema.password,
+                schema.jdbcUrl,
+                labels
             )
-            databaseHotelService.createSchema(instanceRequirements, labels)
-        } else if (schema.isValid) {
-            databaseHotelService.registerExternalSchema(schema.username, schema.password, schema.jdbcUrl, labels)
-        } else {
-            throw IllegalArgumentException("Missing JDBC input")
+            else -> throw IllegalArgumentException("Missing JDBC input")
         }
         return Responses.okResponse(databaseSchema.toResource())
     }
@@ -189,12 +191,12 @@ fun DatabaseSchema.toResource() = DatabaseSchemaResource(
     createdDate = createdDate,
     lastUsedDate = lastUsedDate,
     databaseInstance = databaseInstanceMetaInfo.toResource(),
-    users = users.map(User::toResource),
+    users = users.map { it.toResource() },
     labels = labels,
     metadata = SchemaMetadataResource(metadata?.sizeInMb)
 )
 
-internal fun parseLabelsParam(labelsParam: String): Map<String, String?> {
+fun parseLabelsParam(labelsParam: String): Map<String, String?> {
 
     val labelsDecoded: String = try {
         URLDecoder.decode(labelsParam, "UTF-8")
@@ -206,17 +208,19 @@ internal fun parseLabelsParam(labelsParam: String): Map<String, String?> {
 
     val labelsUnparsed = labelsDecoded.splitRemoveEmpties(",")
 
-    return labelsUnparsed.mapNotNull {
-        val nameAndValue = it.splitRemoveEmpties("=")
-        val name = nameAndValue.firstOrNull()?.emptyToNull() ?: return@mapNotNull null
-        val value = nameAndValue.takeIf { it.size > 1 }?.get(1)
-        Pair(name, value)
-    }.toMap()
+    return labelsUnparsed
+        .map { it.splitRemoveEmpties("=") }
+        .filter { it.firstOrNull()?.emptyToNull() != null }
+        .map {
+            val name = it.first()
+            val value = it.takeIf { it.size > 1 }?.get(1)
+            Pair(name, value)
+        }.toMap()
 }
 
-fun String.splitRemoveEmpties(delimiter: String) =
+private fun String.splitRemoveEmpties(delimiter: String) =
     split(delimiter)
         .dropLastWhile { it.isEmpty() }
         .map { it.trim() }
 
-fun String.emptyToNull(): String? = if (isEmpty()) null else this
+private fun String.emptyToNull(): String? = if (isEmpty()) null else this

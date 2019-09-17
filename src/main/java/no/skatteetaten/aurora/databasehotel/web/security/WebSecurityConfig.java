@@ -1,6 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.web.security;
 
-import static jdk.nashorn.internal.runtime.PropertyDescriptor.GET;
+import static org.springframework.http.HttpMethod.GET;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,7 +60,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
 
         http.csrf().disable();
-
 
         if (authenticationEnabled) {
             http.authenticationProvider(preAuthenticationProvider())

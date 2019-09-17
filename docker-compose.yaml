@@ -2,11 +2,20 @@ version: '2'
 
 services:
 
-  db:
-    image: postgres
-    restart: always
-    ports:
-      - 5432:5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ar3nda1
+    postgres-dev:
+        image: postgres
+        restart: always
+        ports:
+            - 15432:5432
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+
+    postgres-unittest:
+        image: postgres
+        restart: always
+        ports:
+            - 25432:5432
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres

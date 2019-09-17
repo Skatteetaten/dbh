@@ -38,7 +38,6 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler({ IllegalArgumentException.class })
     protected ResponseEntity<Object> handleIllegalArgument(RuntimeException e, WebRequest request) {
 
-        LOGGER.warn("IllegalArgument", e);
         if (request instanceof ServletWebRequest) {
             ServletWebRequest servletWebRequest = (ServletWebRequest) request;
             if (servletWebRequest.getHttpMethod().equals(HttpMethod.GET)) {
