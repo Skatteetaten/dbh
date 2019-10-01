@@ -49,6 +49,8 @@ interface DatabaseHotelDataDao {
 
     fun replaceLabels(schemaId: String, labels: Map<String, String?>)
 
+    fun reactivateSchemaData(id: String)
+
     fun deleteLabelsForSchema(schemaId: String)
 
     fun registerExternalSchema(id: String, jdbcUrl: String): ExternalSchema

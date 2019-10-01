@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.Assert;
 
@@ -53,9 +54,7 @@ public class ResidentsIntegration implements Integration {
 
         String schemaName = databaseSchema.getName();
 
-        if (!residentsEntryForSchemaExists(schemaName)) {
-            createResidentsEntryForSchema(schemaName);
-        }
+        createResidentEntryForSchemaIfMissing(schemaName);
 
         LocalDateTime deleteAfterDate = LocalDateTime.now().plus(cooldownDuration);
         Date out = Date.from(deleteAfterDate.atZone(ZoneId.systemDefault()).toInstant());
@@ -69,10 +68,20 @@ public class ResidentsIntegration implements Integration {
 
         String schemaName = databaseSchema.getName();
 
+        createResidentEntryForSchemaIfMissing(schemaName);
+        updateResidentsEntryForSchemaWithLabelData(schemaName, databaseSchema.getLabels());
+    }
+
+    @Override
+    public void onSchemaReactivated(@NotNull DatabaseSchema schema) {
+
+        setResidentsEntryRemoveAfter(schema.getName(), null);
+    }
+
+    private void createResidentEntryForSchemaIfMissing(String schemaName) {
         if (!residentsEntryForSchemaExists(schemaName)) {
             createResidentsEntryForSchema(schemaName);
         }
-        updateResidentsEntryForSchemaWithLabelData(schemaName, databaseSchema.getLabels());
     }
 
     private boolean residentsEntryForSchemaExists(String schemaName) {
@@ -99,4 +108,5 @@ public class ResidentsIntegration implements Integration {
         jdbcTemplate.update("update RESIDENTS.RESIDENTS set RESIDENT_REMOVE_AFTER=? "
             + "where RESIDENT_NAME=?", time, schemaName);
     }
+
 }

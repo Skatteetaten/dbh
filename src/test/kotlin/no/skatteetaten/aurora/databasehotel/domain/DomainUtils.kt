@@ -9,9 +9,10 @@ object DomainUtils {
     fun createDatabaseSchema(id: String = "ID"): DatabaseSchema {
         return DatabaseSchema(
             id,
+            true,
             metaInfo("test", "localhost", 1521, true),
             "jdbc", "local",
-            Date(), Date(),
+            Date(), Date(), null, null,
             DatabaseSchemaMetaData(0.0)
         )
     }

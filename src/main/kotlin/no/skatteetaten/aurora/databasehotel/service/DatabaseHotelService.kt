@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.databasehotel.service
 
-import java.sql.DriverManager
-import java.sql.SQLException
-import java.time.Duration
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher.findAllMatchingSchemas
 import org.springframework.stereotype.Service
+import java.sql.DriverManager
+import java.sql.SQLException
+import java.time.Duration
 
 private val logger = KotlinLogging.logger {}
 
@@ -21,13 +21,13 @@ data class DatabaseInstanceRequirements(
 @Service
 class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelAdminService) {
 
-    fun findSchemaById(id: String): Pair<DatabaseSchema, DatabaseInstance?>? {
+    fun findSchemaById(id: String, active: Boolean = true): Pair<DatabaseSchema, DatabaseInstance?>? {
 
         val candidates = mutableListOf<Pair<DatabaseSchema, DatabaseInstance?>>()
 
         val allDatabaseInstances = databaseHotelAdminService.findAllDatabaseInstances()
         for (databaseInstance in allDatabaseInstances) {
-            val schemaAndInstance = databaseInstance.findSchemaById(id)
+            val schemaAndInstance = databaseInstance.findSchemaById(id, active)
                 ?.let { dbs -> Pair(dbs, databaseInstance) }
             schemaAndInstance?.let { candidates.add(it) }
         }
@@ -52,6 +52,12 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         val matchingExternalSchemas = findAllMatchingSchemas(externalSchemas, labelsToMatch)
         return schemas + matchingExternalSchemas
     }
+
+    fun findAllDatabaseSchemasByCooldown(labelsToMatch: Map<String, String?> = emptyMap()): Set<DatabaseSchema> =
+        databaseHotelAdminService.findAllDatabaseInstances(null)
+            .flatMap { it.findAllSchemas(labelsToMatch, true) }
+            .filter { !it.active }
+            .toSet()
 
     fun findAllStaleDatabaseSchemas(): Set<DatabaseSchema> =
         databaseHotelAdminService.findAllDatabaseInstances()

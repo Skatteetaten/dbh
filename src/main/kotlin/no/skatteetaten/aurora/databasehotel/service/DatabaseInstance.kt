@@ -11,6 +11,7 @@ import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
+import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.*
 import org.springframework.transaction.annotation.Transactional
 
 private val logger = KotlinLogging.logger {}
@@ -33,8 +34,8 @@ open class DatabaseInstance(
 
     val instanceName: String get() = metaInfo.instanceName
 
-    fun findSchemaById(id: String): DatabaseSchema? =
-        databaseHotelDataDao.findSchemaDataById(id)?.let(this::getDatabaseSchemaFromSchemaData)
+    fun findSchemaById(id: String, active: Boolean = true): DatabaseSchema? =
+        databaseHotelDataDao.findSchemaDataById(id, active)?.let(this::getDatabaseSchemaFromSchemaData)
 
     fun findSchemaByName(name: String): DatabaseSchema? =
         databaseHotelDataDao.findSchemaDataByName(name)?.let(this::getDatabaseSchemaFromSchemaData)
@@ -79,7 +80,7 @@ open class DatabaseInstance(
 
         val schemaNameValid = databaseManager.createSchema(schemaName, password)
         val schemaData = databaseHotelDataDao.createSchemaData(schemaNameValid)
-        databaseHotelDataDao.createUser(schemaData.id, UserType.SCHEMA.toString(), schemaData.name, password)
+        databaseHotelDataDao.createUser(schemaData.id, SCHEMA.toString(), schemaData.name, password)
 
         val databaseSchema = findSchemaByName(schemaNameValid)
             ?: throw DatabaseServiceException("Expected schema [$schemaNameValid] to be created, but it was not")
@@ -174,6 +175,13 @@ open class DatabaseInstance(
         schema.labels = labels
         databaseHotelDataDao.replaceLabels(schema.id, schema.labels)
         integrations.forEach { it.onSchemaUpdated(schema) }
+    }
+
+    @Transactional
+    open fun restoreSchema(schema: DatabaseSchema) {
+
+        databaseHotelDataDao.reactivateSchemaData(schema.id)
+        integrations.forEach { it.onSchemaReactivated(schema) }
     }
 
     fun registerIntegration(integration: Integration) {

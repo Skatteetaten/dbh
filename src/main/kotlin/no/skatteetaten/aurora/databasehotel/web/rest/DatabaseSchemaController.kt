@@ -27,14 +27,11 @@ data class SchemaMetadataResource(val sizeInMb: Double?)
 
 data class DatabaseSchemaResource(
     val id: String,
-    val active: Boolean,
     val type: String,
     val jdbcUrl: String,
     val name: String,
     val createdDate: Date,
     val lastUsedDate: Date?,
-    val setToCooldownAt: Date?,
-    val deleteAfter: Date?,
     val databaseInstance: DatabaseInstanceResource,
     val users: List<UserResource>,
     val labels: Map<String, String?>,
@@ -102,12 +99,10 @@ class DatabaseSchemaController(
     }
 
     @GetMapping("/")
-    @Timed
     fun findAll(
         @RequestParam(defaultValue = "filter-by") q: String,
         @RequestParam(name = "engine", required = false) engineName: String?,
-        @RequestParam(required = false) labels: String?,
-        @RequestParam(defaultValue = "false") includeCooldown: Boolean
+        @RequestParam(required = false) labels: String?
     ): ResponseEntity<ApiResponse<*>> {
 
         if (!schemaListingAllowed) throw OperationDisabledException("Schema listing has been disabled for this instance")
@@ -115,7 +110,7 @@ class DatabaseSchemaController(
         val engine = engineName?.toDatabaseEngine()
 
         val schemas: Set<DatabaseSchema> = when (q) {
-            "filter-by" -> databaseHotelService.findAllDatabaseSchemas(engine, parseLabelsParam(labels), includeCooldown)
+            "filter-by" -> databaseHotelService.findAllDatabaseSchemas(engine, parseLabelsParam(labels))
             "stale" -> databaseHotelService.findAllStaleDatabaseSchemas()
             else -> throw IllegalArgumentException("Unknown query type [$q]")
         }
@@ -189,14 +184,11 @@ class DatabaseSchemaController(
 
 fun DatabaseSchema.toResource() = DatabaseSchemaResource(
     id = id,
-    active = active,
     type = type.toString(),
     jdbcUrl = jdbcUrl,
     name = name,
     createdDate = createdDate,
     lastUsedDate = lastUsedDate,
-    setToCooldownAt = setToCooldownAt,
-    deleteAfter = deleteAfter,
     databaseInstance = databaseInstanceMetaInfo.toResource(),
     users = users.map { it.toResource() },
     labels = labels,

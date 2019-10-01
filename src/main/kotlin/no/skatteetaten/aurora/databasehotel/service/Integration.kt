@@ -1,14 +1,16 @@
-package no.skatteetaten.aurora.databasehotel.service;
+package no.skatteetaten.aurora.databasehotel.service
 
-import java.time.Duration;
+import java.time.Duration
 
-import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema;
+import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 
-public interface Integration {
+interface Integration {
 
-    void onSchemaCreated(DatabaseSchema databaseSchema);
+    fun onSchemaCreated(databaseSchema: DatabaseSchema)
 
-    void onSchemaDeleted(DatabaseSchema databaseSchema, Duration cooldownDuration);
+    fun onSchemaDeleted(databaseSchema: DatabaseSchema, cooldownDuration: Duration)
 
-    void onSchemaUpdated(DatabaseSchema databaseSchema);
+    fun onSchemaUpdated(databaseSchema: DatabaseSchema)
+
+    fun onSchemaReactivated(schema: DatabaseSchema)
 }
