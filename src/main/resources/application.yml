@@ -45,13 +45,13 @@ database-config:
     password: "${dbh.dev.db.oracle.password:dbh}"
     clientService: "${dbh.dev.db.oracle.clientService:dbhotel}"
     oracleScriptRequired: "${dbh.dev.db.oracle.oracleScriptRequired:true}"
-  - host: "${dbh.dev.db.postgres.host:localhost}"
-    port: "${dbh.dev.db.postgres.port:15432}"
-    engine: "${dbh.dev.db.postgres.engine:postgres}"
-    instanceName: "${dbh.dev.db.postgres.instanceName:dev-postgres}"
-    createSchemaAllowed: "${dbh.dev.db.postgres.createSchemaAllowed:true}"
-    username: "${dbh.dev.db.postgres.username:postgres}"
-    password: "${dbh.dev.db.postgres.password:postgres}"
+  - host: localhost
+    port: 15432
+    engine: postgres
+    instanceName: dev-postgres
+    createSchemaAllowed: true
+    username: postgres
+    password: postgres
     labels:
         affiliation: aurora
         type: dev
