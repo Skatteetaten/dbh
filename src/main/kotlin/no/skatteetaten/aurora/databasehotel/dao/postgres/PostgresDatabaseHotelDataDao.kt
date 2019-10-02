@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 class PostgresDatabaseHotelDataDao(dataSource: DataSource) : OracleDatabaseHotelDataDao(dataSource) {
-    override fun findAllManagedSchemaDataByLabels(labels: Map<String, String?>, ignoreActive: Boolean): MutableList<SchemaData> {
+    override fun findAllManagedSchemaDataByLabels(labels: Map<String, String?>, ignoreActiveFilter: Boolean): MutableList<SchemaData> {
 
         val labelNames = labels.keys.toList().sorted()
         val labelValues = labelNames.joinToString(",") { labels[it]!! }
@@ -19,7 +19,7 @@ class PostgresDatabaseHotelDataDao(dataSource: DataSource) : OracleDatabaseHotel
             addValue("names", labelNames)
             addValue("values", labelValues)
             addValue("type", SchemaTypes.SCHEMA_TYPE_MANAGED)
-            addValue("active", if (ignoreActive) 0 else 1)
+            addValue("active", if (ignoreActiveFilter) 0 else 1)
         }
 
         //language=PostgreSQL

@@ -27,7 +27,7 @@ interface DatabaseHotelDataDao {
 
     fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData>
 
-    fun findAllManagedSchemaDataByLabels(labels: Map<String, String?>, ignoreActive: Boolean = true): List<SchemaData>
+    fun findAllManagedSchemaDataByLabels(labels: Map<String, String?>, ignoreActiveFilter: Boolean = true): List<SchemaData>
 
     fun findAllManagedSchemaDataByDeleteAfterDate(deleteAfter: Date): List<SchemaData>
 
@@ -49,7 +49,7 @@ interface DatabaseHotelDataDao {
 
     fun replaceLabels(schemaId: String, labels: Map<String, String?>)
 
-    fun reactivateSchemaData(id: String)
+    fun reactivateSchemaData(schemaId: String)
 
     fun deleteLabelsForSchema(schemaId: String)
 

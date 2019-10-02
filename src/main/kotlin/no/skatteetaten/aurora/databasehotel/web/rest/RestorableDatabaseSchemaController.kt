@@ -1,21 +1,26 @@
 package no.skatteetaten.aurora.databasehotel.web.rest
 
+import java.util.Date
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.util.Date
 
 data class RestorableDatabaseSchemaResource(
     val setToCooldownAt: Date,
     val deleteAfter: Date,
 
     val databaseSchema: DatabaseSchemaResource
+)
+
+data class RestoreDatabaseSchemaPayload(
+    val active: Boolean?
 )
 
 @RestController
@@ -33,14 +38,15 @@ class RestorableDatabaseSchemaController(val databaseHotelService: DatabaseHotel
         return Responses.okResponse(resources)
     }
 
-    @PostMapping("/{id}")
-    fun restore(@PathVariable id: String) {
+    @PatchMapping("/{id}")
+    fun update(@PathVariable id: String, @RequestBody payload: RestoreDatabaseSchemaPayload) {
+
+        if (payload.active != true) return
 
         val (schema, databaseInstance) = databaseHotelService.findSchemaById(id, false)
-            ?: throw IllegalArgumentException("No such schema id=${id}")
-        databaseInstance ?: throw java.lang.IllegalArgumentException("Schema id=${id} does not appear to be a managed schema")
-
-        databaseInstance.restoreSchema(schema)
+            ?: throw IllegalArgumentException("No such schema id=$id")
+        databaseInstance ?: throw java.lang.IllegalArgumentException("Schema id=$id is not a managed schema")
+        databaseInstance.reactivateSchema(schema)
     }
 }
 

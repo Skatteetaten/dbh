@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import java.sql.DriverManager
+import java.sql.SQLException
+import java.time.Duration
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher.findAllMatchingSchemas
 import org.springframework.stereotype.Service
-import java.sql.DriverManager
-import java.sql.SQLException
-import java.time.Duration
 
 private val logger = KotlinLogging.logger {}
 
@@ -43,11 +43,11 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
     fun findAllDatabaseSchemas(
         engine: DatabaseEngine? = null,
         labelsToMatch: Map<String, String?> = emptyMap(),
-        includeCooldown: Boolean = false
+        ignoreActiveFilter: Boolean = false
     ): Set<DatabaseSchema> {
 
         val schemas = databaseHotelAdminService.findAllDatabaseInstances(engine)
-            .flatMap { it.findAllSchemas(labelsToMatch, includeCooldown) }.toSet()
+            .flatMap { it.findAllSchemas(labelsToMatch, ignoreActiveFilter) }.toSet()
         val externalSchemas = databaseHotelAdminService.externalSchemaManager?.findAllSchemas() ?: emptySet()
         val matchingExternalSchemas = findAllMatchingSchemas(externalSchemas, labelsToMatch)
         return schemas + matchingExternalSchemas

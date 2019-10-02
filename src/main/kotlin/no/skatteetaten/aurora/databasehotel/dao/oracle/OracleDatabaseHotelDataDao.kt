@@ -1,5 +1,11 @@
 package no.skatteetaten.aurora.databasehotel.dao.oracle
 
+import java.sql.Timestamp
+import java.time.Duration
+import java.time.Instant
+import java.util.Date
+import java.util.UUID
+import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
@@ -18,12 +24,6 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.transaction.annotation.Transactional
-import java.sql.Timestamp
-import java.time.Duration
-import java.time.Instant
-import java.util.Date
-import java.util.UUID
-import javax.sql.DataSource
 
 fun Boolean.toInt(): Int = if (this) 1 else 0
 
@@ -67,11 +67,11 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         )
     }
 
-    override fun reactivateSchemaData(id: String) {
+    override fun reactivateSchemaData(schemaId: String) {
 
         jdbcTemplate.update(
             "update SCHEMA_DATA set active=1, set_to_cooldown_at=null, delete_after=null where id=?",
-            id
+            schemaId
         )
     }
 
@@ -94,7 +94,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
      */
     override fun findAllManagedSchemaDataByLabels(
         labels: Map<String, String?>,
-        ignoreActive: Boolean
+        ignoreActiveFilter: Boolean
     ): List<SchemaData> {
 
         val labelNames = labels.keys.toList().sorted()
@@ -104,7 +104,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
             addValue("names", labelNames)
             addValue("values", labelValues)
             addValue("type", SCHEMA_TYPE_MANAGED)
-            addValue("active", if (ignoreActive) 0 else 1)
+            addValue("active", if (ignoreActiveFilter) 0 else 1)
         }
 
         //language=Oracle

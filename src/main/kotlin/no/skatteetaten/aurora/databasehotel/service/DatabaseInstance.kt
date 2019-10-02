@@ -11,7 +11,7 @@ import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
-import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.*
+import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA
 import org.springframework.transaction.annotation.Transactional
 
 private val logger = KotlinLogging.logger {}
@@ -42,14 +42,14 @@ open class DatabaseInstance(
 
     fun findAllSchemas(
         labelsToMatch: Map<String, String?>? = null,
-        includeCooldown: Boolean = false
+        ignoreActiveFilter: Boolean = false
     ): Set<DatabaseSchema> {
 
-        return if (labelsToMatch.isNullOrEmpty()) findAllSchemas(includeCooldown)
+        return if (labelsToMatch.isNullOrEmpty()) findAllSchemas(ignoreActiveFilter)
         else getDatabaseSchemaFromSchemaData(
             databaseHotelDataDao.findAllManagedSchemaDataByLabels(
                 labelsToMatch,
-                includeCooldown
+                ignoreActiveFilter
             ), LookupDataFetchStrategy.FOR_EACH
         )
     }
@@ -178,7 +178,7 @@ open class DatabaseInstance(
     }
 
     @Transactional
-    open fun restoreSchema(schema: DatabaseSchema) {
+    open fun reactivateSchema(schema: DatabaseSchema) {
 
         databaseHotelDataDao.reactivateSchemaData(schema.id)
         integrations.forEach { it.onSchemaReactivated(schema) }

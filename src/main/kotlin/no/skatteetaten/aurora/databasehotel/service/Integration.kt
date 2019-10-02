@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.service
 
 import java.time.Duration
-
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 
 interface Integration {
