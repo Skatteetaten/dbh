@@ -23,7 +23,7 @@ interface DatabaseHotelDataDao {
 
     fun deactivateSchemaData(id: String, cooldownDuration: Duration)
 
-    fun findAllManagedSchemaData(ignoreActive: Boolean = true): List<SchemaData>
+    fun findAllManagedSchemaData(ignoreActiveFilter: Boolean = true): List<SchemaData>
 
     fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData>
 

@@ -54,8 +54,8 @@ open class DatabaseInstance(
         )
     }
 
-    fun findAllSchemas(includeCooldown: Boolean = false): Set<DatabaseSchema> =
-        getDatabaseSchemaFromSchemaData(databaseHotelDataDao.findAllManagedSchemaData(includeCooldown))
+    fun findAllSchemas(ignoreActiveFilter: Boolean = false): Set<DatabaseSchema> =
+        getDatabaseSchemaFromSchemaData(databaseHotelDataDao.findAllManagedSchemaData(ignoreActiveFilter))
 
     @Transactional
     open fun createSchema(labels: Map<String, String?> = emptyMap()): DatabaseSchema {
@@ -93,7 +93,7 @@ open class DatabaseInstance(
     }
 
     @Transactional
-    open fun deleteSchemaByCooldown(schemaName: String, optionalCooldownDuration: Duration?) {
+    open fun deactivateSchema(schemaName: String, optionalCooldownDuration: Duration?) {
 
         val cooldownDuration = optionalCooldownDuration ?: Duration.ofDays(cooldownDaysAfterDelete.toLong())
 
@@ -128,14 +128,14 @@ open class DatabaseInstance(
     }
 
     @Transactional
-    open fun deleteStaleSchemasByCooldown() {
+    open fun deactivateStaleSchemas() {
 
-        logger.info("Deleting stale schemas for server {} by cooldown", metaInfo.instanceName)
+        logger.info("Deactivating stale schemas for server {}", metaInfo.instanceName)
 
         val schemas = findAllStaleSchemas()
         logger.info("Found {} stale schemas", schemas.size)
         schemas.parallelStream().forEach {
-            deleteSchemaByCooldown(it.name, Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong()))
+            deactivateSchema(it.name, Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong()))
         }
     }
 

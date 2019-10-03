@@ -75,8 +75,8 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         )
     }
 
-    override fun findAllManagedSchemaData(ignoreActive: Boolean): List<SchemaData> =
-        if (ignoreActive) selectManySchemaData(SCHEMA_TYPE to SCHEMA_TYPE_MANAGED)
+    override fun findAllManagedSchemaData(ignoreActiveFilter: Boolean): List<SchemaData> =
+        if (ignoreActiveFilter) selectManySchemaData(SCHEMA_TYPE to SCHEMA_TYPE_MANAGED)
         else findAllSchemaDataBySchemaType(SCHEMA_TYPE_MANAGED)
 
     override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> =
@@ -179,12 +179,12 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         jdbcTemplate.update("delete from LABELS where schema_id=?", schemaId)
     }
 
-    override fun registerExternalSchema(schemaId: String, jdbcUrl: String): ExternalSchema {
+    override fun registerExternalSchema(id: String, jdbcUrl: String): ExternalSchema {
 
         jdbcTemplate
             .update(
                 "insert into EXTERNAL_SCHEMA (id, created_date, schema_id, jdbc_url) values (?, ?, ?, ?)",
-                generateId(), Date(), schemaId, jdbcUrl
+                generateId(), Date(), id, jdbcUrl
             )
         return ExternalSchema(Date(), jdbcUrl)
     }

@@ -30,7 +30,7 @@ class RestorableDatabaseSchemaController(val databaseHotelService: DatabaseHotel
     @GetMapping("/")
     fun findAll(@RequestParam(required = false) labels: String?): ResponseEntity<ApiResponse<*>> {
 
-        val schemas = databaseHotelService.findAllDatabaseSchemasByCooldown(parseLabelsParam(labels))
+        val schemas = databaseHotelService.findAllInactiveDatabaseSchemas(parseLabelsParam(labels))
 
         val resources = schemas
             .sortedBy { it.lastUsedOrCreatedDate }

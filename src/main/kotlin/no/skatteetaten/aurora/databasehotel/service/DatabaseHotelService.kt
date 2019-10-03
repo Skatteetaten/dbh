@@ -53,7 +53,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return schemas + matchingExternalSchemas
     }
 
-    fun findAllDatabaseSchemasByCooldown(labelsToMatch: Map<String, String?> = emptyMap()): Set<DatabaseSchema> =
+    fun findAllInactiveDatabaseSchemas(labelsToMatch: Map<String, String?> = emptyMap()): Set<DatabaseSchema> =
         databaseHotelAdminService.findAllDatabaseInstances(null)
             .flatMap { it.findAllSchemas(labelsToMatch, true) }
             .filter { !it.active }
@@ -78,14 +78,14 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return schema
     }
 
-    fun deleteSchemaByCooldown(id: String, cooldownDuration: Duration?) {
+    fun deactivateSchema(id: String, cooldownDuration: Duration?) {
 
         findSchemaById(id)?.let { (schema, databaseInstance) ->
 
             when (databaseInstance) {
                 // TODO: Should ExternalSchemaManager put schemas into cooldown?
                 null -> databaseHotelAdminService.externalSchemaManager?.deleteSchema(id)
-                else -> databaseInstance.deleteSchemaByCooldown(schema.name, cooldownDuration)
+                else -> databaseInstance.deactivateSchema(schema.name, cooldownDuration)
             }
         }
     }
