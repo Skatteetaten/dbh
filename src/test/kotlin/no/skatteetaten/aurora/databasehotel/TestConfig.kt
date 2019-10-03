@@ -26,6 +26,18 @@ class PostgresConfig {
     lateinit var port: String
     lateinit var username: String
     lateinit var password: String
+
+    fun copy(
+        host: String = this.host,
+        port: String = this.port,
+        username: String = this.username,
+        password: String = this.password
+    ) = PostgresConfig().also {
+        it.host = host
+        it.port = port
+        it.username = username
+        it.password = password
+    }
 }
 
 @Component

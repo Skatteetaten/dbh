@@ -9,7 +9,21 @@ import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import no.skatteetaten.aurora.databasehotel.service.createSchemaNameAndPassword
 import no.skatteetaten.aurora.databasehotel.utils.OracleSchemaDeleter
 
-fun DatabaseManager.deleteNonSystemSchemas() = findAllNonSystemSchemas().forEach(this::permanentlyDeleteSchema)
+fun DatabaseManager.deleteNonSystemSchemas() {
+    val attempts = 10
+    for (i in (1..attempts)) {
+        try {
+            findAllNonSystemSchemas().forEach(this::permanentlyDeleteSchema)
+            break
+        } catch (e: Exception) {
+            // Because some of the schemas/roles that are created are superusers that are used to create
+            // other schemas, deleting those roles before the schemas that were created by them may fail. The fix for
+            // this is to try again and it will most likely succeed. If not, there is something other that is wrong and
+            // it is ok to fail.
+            if (i == attempts) throw e
+        }
+    }
+}
 
 fun DatabaseManager.permanentlyDeleteSchema(schema: Schema) = when (this) {
     // The OracleDatabaseManager.deleteSchema is a noop. Actual deletion is handled outside dbh. So, for
