@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.databasehotel.service
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.PostgresConfig
@@ -14,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
+import javax.sql.DataSource
 
 @DatabaseTest
 class DatabaseHotelServiceTest @Autowired constructor(

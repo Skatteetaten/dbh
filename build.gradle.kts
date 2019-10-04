@@ -56,7 +56,10 @@ dependencies {
     }
 }
 
-configurations.forEach { it.exclude("junit", "junit") }
+configurations.forEach {
+    it.exclude("org.springframework.cloud", "spring-cloud-contract-verifier")
+    it.exclude("junit", "junit")
+}
 
 testlogger {
     theme = ThemeType.PLAIN
