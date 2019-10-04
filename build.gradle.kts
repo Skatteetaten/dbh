@@ -40,9 +40,7 @@ dependencies {
 
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-test") {
-        exclude("junit", "junit")
-    }
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     testImplementation("io.mockk:mockk:1.9.3")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.19")
@@ -57,6 +55,8 @@ dependencies {
         testImplementation(devtools)
     }
 }
+
+configurations.forEach { it.exclude("junit", "junit") }
 
 testlogger {
     theme = ThemeType.PLAIN
