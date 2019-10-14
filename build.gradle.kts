@@ -5,11 +5,9 @@ plugins {
     id("org.jetbrains.kotlin.plugin.spring") version "1.3.50"
     id("org.jlleitschuh.gradle.ktlint") version "8.2.0"
     id("org.sonarqube") version "2.7.1"
+    id("org.asciidoctor.convert") version "2.3.0"
 
     id("org.springframework.boot") version "2.1.8.RELEASE"
-
-    // TODO: asciidoc
-    // id("org.asciidoctor.convert") version "1.6.0"
 
     id("com.gorylenko.gradle-git-properties") version "2.0.0"
     id("com.github.ben-manes.versions") version "0.22.0"
@@ -66,7 +64,12 @@ testlogger {
 }
 
 tasks {
+    val createSnippetsFolder by registering {
+        doLast { File("$buildDir/generated-snippets").mkdirs() }
+    }
+
     test {
+        dependsOn(createSnippetsFolder)
         val jenkinsUser: String? = System.getenv("JENKINS_USER")
         if (!jenkinsUser.isNullOrBlank()) {
             // We activate the ci profile when we build on Jenkins
