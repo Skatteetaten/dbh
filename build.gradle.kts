@@ -14,7 +14,7 @@ plugins {
     id("se.patrikerdes.use-latest-versions") version "0.2.12"
     id("com.adarshr.test-logger") version "1.7.0"
 
-    id("no.skatteetaten.gradle.aurora") version "2.4.2"
+    id("no.skatteetaten.gradle.aurora") version "3.1.0"
 }
 
 repositories {
