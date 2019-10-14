@@ -64,7 +64,12 @@ testlogger {
 }
 
 tasks {
+    val createSnippetsFolder by registering {
+        doLast { File("$buildDir/generated-snippets").mkdirs() }
+    }
+
     test {
+        dependsOn(createSnippetsFolder)
         val jenkinsUser: String? = System.getenv("JENKINS_USER")
         if (!jenkinsUser.isNullOrBlank()) {
             // We activate the ci profile when we build on Jenkins
