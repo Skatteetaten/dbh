@@ -21,13 +21,13 @@ data class DatabaseInstanceRequirements(
 @Service
 class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelAdminService) {
 
-    fun findSchemaById(id: String): Pair<DatabaseSchema, DatabaseInstance?>? {
+    fun findSchemaById(id: String, active: Boolean = true): Pair<DatabaseSchema, DatabaseInstance?>? {
 
         val candidates = mutableListOf<Pair<DatabaseSchema, DatabaseInstance?>>()
 
         val allDatabaseInstances = databaseHotelAdminService.findAllDatabaseInstances()
         for (databaseInstance in allDatabaseInstances) {
-            val schemaAndInstance = databaseInstance.findSchemaById(id)
+            val schemaAndInstance = databaseInstance.findSchemaById(id, active)
                 ?.let { dbs -> Pair(dbs, databaseInstance) }
             schemaAndInstance?.let { candidates.add(it) }
         }
@@ -40,29 +40,31 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return candidates.firstOrNull()
     }
 
-    fun findAllDatabaseSchemas(engine: DatabaseEngine?): Set<DatabaseSchema> {
-
-        return findAllDatabaseSchemasByLabels(engine, emptyMap())
-    }
-
-    fun findAllDatabaseSchemasByLabels(
+    fun findAllDatabaseSchemas(
         engine: DatabaseEngine? = null,
-        labelsToMatch: Map<String, String?> = emptyMap()
+        labelsToMatch: Map<String, String?> = emptyMap(),
+        ignoreActiveFilter: Boolean = false
     ): Set<DatabaseSchema> {
 
         val schemas = databaseHotelAdminService.findAllDatabaseInstances(engine)
-            .flatMap { it.findAllSchemas(labelsToMatch) }.toSet()
+            .flatMap { it.findAllSchemas(labelsToMatch, ignoreActiveFilter) }.toSet()
         val externalSchemas = databaseHotelAdminService.externalSchemaManager?.findAllSchemas() ?: emptySet()
         val matchingExternalSchemas = findAllMatchingSchemas(externalSchemas, labelsToMatch)
         return schemas + matchingExternalSchemas
     }
+
+    fun findAllInactiveDatabaseSchemas(labelsToMatch: Map<String, String?> = emptyMap()): Set<DatabaseSchema> =
+        databaseHotelAdminService.findAllDatabaseInstances(null)
+            .flatMap { it.findAllSchemas(labelsToMatch, true) }
+            .filter { !it.active }
+            .toSet()
 
     fun findAllStaleDatabaseSchemas(): Set<DatabaseSchema> =
         databaseHotelAdminService.findAllDatabaseInstances()
             .flatMap { it.findAllStaleSchemas() }.toSet()
 
     fun createSchema(requirements: DatabaseInstanceRequirements = DatabaseInstanceRequirements()): DatabaseSchema =
-        createSchema(requirements)
+        createSchema(requirements, emptyMap())
 
     fun createSchema(
         requirements: DatabaseInstanceRequirements,
@@ -76,14 +78,14 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return schema
     }
 
-    fun deleteSchemaByCooldown(id: String, cooldownDuration: Duration?) {
+    fun deactivateSchema(id: String, cooldownDuration: Duration?) {
 
         findSchemaById(id)?.let { (schema, databaseInstance) ->
 
             when (databaseInstance) {
                 // TODO: Should ExternalSchemaManager put schemas into cooldown?
                 null -> databaseHotelAdminService.externalSchemaManager?.deleteSchema(id)
-                else -> databaseInstance.deleteSchemaByCooldown(schema.name, cooldownDuration)
+                else -> databaseInstance.deactivateSchema(schema.name, cooldownDuration)
             }
         }
     }

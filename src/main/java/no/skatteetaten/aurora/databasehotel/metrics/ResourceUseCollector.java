@@ -11,11 +11,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.Sets;
+
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema;
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService;
-import no.skatteetaten.aurora.databasehotel.utils.MapUtils;
 
 @Component
 public class ResourceUseCollector {
@@ -41,11 +42,11 @@ public class ResourceUseCollector {
         long start = System.currentTimeMillis();
         LOG.info("Collecting resource use metrics");
 
-        Set<DatabaseSchema> allSchemas = databaseHotelService.findAllDatabaseSchemas(null);
+        Set<DatabaseSchema> allSchemas = databaseHotelService.findAllDatabaseSchemas(null, new HashMap<>(), false);
         LOG.debug("Found {} schemas total", allSchemas.size());
 
         List<DatabaseSchema> databaseSchemas = allSchemas.stream()
-            .filter(s -> MapUtils.containsEveryKey(s.getLabels(), ENVIRONMENT_LABEL, APP_LABEL, AFFILIATION_LABEL))
+            .filter(s -> containsEveryKey(s.getLabels(), ENVIRONMENT_LABEL, APP_LABEL, AFFILIATION_LABEL))
             .collect(Collectors.toList());
 
         // Let's update the SchemaSizeValues that backs the schema size gauges
@@ -78,6 +79,13 @@ public class ResourceUseCollector {
 
         LOG.info("Resource use metrics collected for {} schemas in {} millis", databaseSchemas.size(),
             System.currentTimeMillis() - start);
+    }
+
+    @SafeVarargs
+    private static <K> boolean containsEveryKey(Map<K, ?> map, K... keys) {
+
+        Set<K> keySet = Sets.newHashSet(keys);
+        return map.keySet().containsAll(keySet);
     }
 
     private void registerGaugeForSchema(DatabaseSchema schema, SchemaSizeValue value) {

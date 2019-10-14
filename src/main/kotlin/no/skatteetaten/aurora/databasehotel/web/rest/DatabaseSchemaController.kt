@@ -94,26 +94,25 @@ class DatabaseSchemaController(
         }
 
         val cooldownDuration = cooldownDurationSeconds?.let { Duration.ofSeconds(it) }
-        databaseHotelService.deleteSchemaByCooldown(id, cooldownDuration)
+        databaseHotelService.deactivateSchema(id, cooldownDuration)
         return Responses.okResponse()
     }
 
     @GetMapping("/")
-    @Timed
     fun findAll(
+        @RequestParam(defaultValue = "filter-by") q: String,
         @RequestParam(name = "engine", required = false) engineName: String?,
-        @RequestParam(required = false, defaultValue = "") labels: String,
-        @RequestParam(required = false) q: String?
+        @RequestParam(required = false) labels: String?
     ): ResponseEntity<ApiResponse<*>> {
 
-        if (!schemaListingAllowed) {
-            throw OperationDisabledException("Schema listing has been disabled for this instance")
-        }
+        if (!schemaListingAllowed) throw OperationDisabledException("Schema listing has been disabled for this instance")
+
         val engine = engineName?.toDatabaseEngine()
-        val schemas: Set<DatabaseSchema> = when {
-            q == "stale" -> databaseHotelService.findAllStaleDatabaseSchemas()
-            labels.isBlank() -> databaseHotelService.findAllDatabaseSchemas(engine)
-            else -> databaseHotelService.findAllDatabaseSchemasByLabels(engine, parseLabelsParam(labels))
+
+        val schemas: Set<DatabaseSchema> = when (q) {
+            "filter-by" -> databaseHotelService.findAllDatabaseSchemas(engine, parseLabelsParam(labels))
+            "stale" -> databaseHotelService.findAllStaleDatabaseSchemas()
+            else -> throw IllegalArgumentException("Unknown query type [$q]")
         }
 
         val resources = schemas
@@ -196,7 +195,9 @@ fun DatabaseSchema.toResource() = DatabaseSchemaResource(
     metadata = SchemaMetadataResource(metadata?.sizeInMb)
 )
 
-fun parseLabelsParam(labelsParam: String): Map<String, String?> {
+fun parseLabelsParam(labelsParam: String?): Map<String, String?> {
+
+    if (labelsParam.isNullOrBlank()) return emptyMap()
 
     val labelsDecoded: String = try {
         URLDecoder.decode(labelsParam, "UTF-8")

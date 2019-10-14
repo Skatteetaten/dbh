@@ -25,11 +25,14 @@ data class User(
 
 data class DatabaseSchema @JvmOverloads constructor(
     val id: String,
+    val active: Boolean,
     val databaseInstanceMetaInfo: DatabaseInstanceMetaInfo,
     val jdbcUrl: String,
     val name: String,
     val createdDate: Date,
     val lastUsedDate: Date?,
+    val setToCooldownAt: Date?,
+    val deleteAfter: Date?,
     val metadata: DatabaseSchemaMetaData?,
     val type: Type = Type.MANAGED
 ) {

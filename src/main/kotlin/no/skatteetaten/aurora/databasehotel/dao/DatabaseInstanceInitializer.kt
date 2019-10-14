@@ -33,7 +33,7 @@ class DatabaseInstanceInitializer(
     @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long = 300000L
 ) {
 
-    private var schemaName: String = DEFAULT_SCHEMA_NAME
+    var schemaName: String = DEFAULT_SCHEMA_NAME
 
     fun createInitializedOracleInstance(
         instanceName: String,

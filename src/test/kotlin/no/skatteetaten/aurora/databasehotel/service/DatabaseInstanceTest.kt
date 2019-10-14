@@ -33,11 +33,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 
 private val defaultLabels = mapOf(
-        "userId" to "id",
-        "affiliation" to "aurora",
-        "environment" to "dev",
-        "application" to "ref",
-        "name" to "db"
+    "userId" to "id",
+    "affiliation" to "aurora",
+    "environment" to "dev",
+    "application" to "ref",
+    "name" to "db"
 )
 
 private fun DatabaseInstance.createDefaultSchema() = this.createSchema(defaultLabels)
@@ -76,7 +76,7 @@ abstract class AbstractDatabaseInstanceTest {
         val schema = instance.createDefaultSchema()
         assertThat(instance.findSchemaById(schema.id)).isNotNull()
 
-        instance.deleteSchemaByCooldown(schema.name, Duration.ofSeconds(1))
+        instance.deactivateSchema(schema.name, Duration.ofSeconds(1))
         assertThat(instance.findSchemaById(schema.id)).isNull()
 
         val user = schema.users.firstOrNull() ?: throw AssertionError("Should be able to find a user")
@@ -129,11 +129,11 @@ abstract class AbstractDatabaseInstanceTest {
 
         assertThat(instance.findAllSchemas()).hasSize(3)
 
-        instance.deleteSchemaByCooldown(s1.name, deleteAfter)
-        instance.deleteSchemaByCooldown(s2.name, deleteAfter)
+        instance.deactivateSchema(s1.name, deleteAfter)
+        instance.deactivateSchema(s2.name, deleteAfter)
 
         assertThat(instance.findAllSchemas()).hasSize(1)
-        assertThat(instance.findAllSchemasIgnoreActive()).hasSize(3)
+        assertThat(instance.findAllSchemas(true)).hasSize(3)
 
         Thread.sleep(deleteAfter.toMillis())
         return listOf(s1, s2, s3)
@@ -150,13 +150,17 @@ class PostgresDatabaseInstanceTest @Autowired constructor(
     @BeforeEach
     fun setup() {
         PostgresDatabaseManager(dataSource).deleteNonSystemSchemas()
-        instance = createInitializedPostgresInstance(true)
+        instance = databaseInstanceInitializer.createInitializedPostgresInstance(config, instanceLabels = mapOf())
     }
 
     @Test
     fun `create schema when deletion is disabled fails`() {
 
-        val instance = createInitializedPostgresInstance(false)
+        val instance = databaseInstanceInitializer.createInitializedPostgresInstance(
+            config,
+            createSchemaAllowed = false,
+            instanceLabels = mapOf()
+        )
         assertThat { instance.createSchema(emptyMap()) }
             .isFailure().hasClass(DatabaseServiceException::class)
     }
@@ -168,27 +172,16 @@ class PostgresDatabaseInstanceTest @Autowired constructor(
 
         instance.deleteSchemasWithExpiredCooldowns()
 
-        val schemasAfterDeletion = instance.findAllSchemasIgnoreActive()
+        val schemasAfterDeletion = instance.findAllSchemas(true)
         assertThat(schemasAfterDeletion).hasSize(1)
         assertThat(schemasAfterDeletion.map { it.id }).containsAll(s3.id)
     }
-
-    private fun createInitializedPostgresInstance(createSchemaAllowed: Boolean) =
-        databaseInstanceInitializer.createInitializedPostgresInstance(
-            "dev",
-            config.host,
-            config.port.toInt(),
-            config.username,
-            config.password,
-            createSchemaAllowed,
-            mapOf()
-        )
 }
 
 @OracleTest
 @DatabaseTest
 class OracleDatabaseInstanceTest @Autowired constructor(
-    val testConfig: OracleConfig,
+    val config: OracleConfig,
     @TargetEngine(ORACLE) val dataSource: DataSource,
     val databaseInstanceInitializer: DatabaseInstanceInitializer
 ) : AbstractDatabaseInstanceTest() {
@@ -196,19 +189,7 @@ class OracleDatabaseInstanceTest @Autowired constructor(
     @BeforeEach
     fun setup() {
         OracleDatabaseManager(dataSource).deleteNonSystemSchemas()
-
-        instance = databaseInstanceInitializer.createInitializedOracleInstance(
-            "dev",
-            testConfig.host,
-            testConfig.port.toInt(),
-            testConfig.service,
-            testConfig.username,
-            testConfig.password,
-            testConfig.clientService,
-            true,
-            testConfig.oracleScriptRequired.toBoolean(),
-            mapOf()
-        )
+        instance = databaseInstanceInitializer.createInitializedOracelInstance(config)
     }
 
     @Test
@@ -218,7 +199,7 @@ class OracleDatabaseInstanceTest @Autowired constructor(
 
         instance.deleteSchemasWithExpiredCooldowns()
 
-        val schemasAfterDeletion = instance.findAllSchemasIgnoreActive()
+        val schemasAfterDeletion = instance.findAllSchemas(true)
         assertThat(schemasAfterDeletion).hasSize(1)
         assertThat(schemasAfterDeletion.map { it.id }).containsAll(s3.id)
 
@@ -227,3 +208,36 @@ class OracleDatabaseInstanceTest @Autowired constructor(
         assertThat(schemas.map { it.username }).containsAll(s1.name, s2.name, s3.name)
     }
 }
+
+fun DatabaseInstanceInitializer.createInitializedPostgresInstance(
+    config: PostgresConfig,
+    instanceName: String = "dev",
+    createSchemaAllowed: Boolean = true,
+    instanceLabels: Map<String, String> = emptyMap()
+) =
+    this.createInitializedPostgresInstance(
+        instanceName,
+        config.host,
+        config.port.toInt(),
+        config.username,
+        config.password,
+        createSchemaAllowed,
+        instanceLabels
+    )
+
+fun DatabaseInstanceInitializer.createInitializedOracelInstance(
+    config: OracleConfig,
+    instanceName: String = "dev"
+) =
+    this.createInitializedOracleInstance(
+        instanceName,
+        config.host,
+        config.port.toInt(),
+        config.service,
+        config.username,
+        config.password,
+        config.clientService,
+        true,
+        config.oracleScriptRequired.toBoolean(),
+        mapOf()
+    )

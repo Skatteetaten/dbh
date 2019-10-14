@@ -71,11 +71,8 @@ class DatabaseHotelAdminService(
         return registerDatabaseInstance(databaseInstance)
     }
 
-    fun registerDatabaseInstance(databaseInstance: DatabaseInstance): DatabaseInstance {
-
-        databaseInstances[databaseInstance.metaInfo.host] = databaseInstance
-        return databaseInstance
-    }
+    fun registerDatabaseInstance(databaseInstance: DatabaseInstance): DatabaseInstance =
+        databaseInstance.apply { databaseInstances[databaseInstance.metaInfo.instanceName] = this }
 
     @JvmOverloads
     fun findDatabaseInstanceOrFail(requirements: DatabaseInstanceRequirements = DatabaseInstanceRequirements()): DatabaseInstance {
@@ -116,7 +113,7 @@ class DatabaseHotelAdminService(
         return null
     }
 
-    fun findDatabaseInstanceByHost(host: String): DatabaseInstance? = databaseInstances[host]
+    fun findDatabaseInstanceByHost(host: String): DatabaseInstance? = databaseInstances.values.find { it.metaInfo.host == host }
 
     fun findDefaultDatabaseInstance(): DatabaseInstance {
 

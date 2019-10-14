@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.dao.oracle
 
-import com.google.common.collect.Lists.newArrayList
 import java.sql.Timestamp
 import java.time.Duration
 import java.time.Instant
@@ -10,33 +9,21 @@ import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
+import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.COL
+import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.COL.ACTIVE
+import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.COL.ID
+import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.COL.NAME
+import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.COL.SCHEMA_TYPE
+import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.select
 import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes.SCHEMA_TYPE_MANAGED
 import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
-import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL
-import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL.ACTIVE
-import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL.ID
-import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL.NAME
-import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.COL.SCHEMA_TYPE
-import no.skatteetaten.aurora.databasehotel.dao.oracle.SchemaDataQueryBuilder.select
 import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.transaction.annotation.Transactional
-
-object SchemaDataQueryBuilder {
-
-    enum class COL { ID, ACTIVE, NAME, SCHEMA_TYPE }
-
-    private const val baseQuery =
-        "select id, active, name, schema_type, set_to_cooldown_at, delete_after from SCHEMA_DATA"
-
-    fun select(vararg cols: COL) =
-        if (cols.isEmpty()) baseQuery
-        else "$baseQuery where ${cols.joinToString(separator = " and ") { "$it=?" }}"
-}
 
 fun Boolean.toInt(): Int = if (this) 1 else 0
 
@@ -80,9 +67,17 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         )
     }
 
-    override fun findAllManagedSchemaData(): List<SchemaData> = findAllSchemaDataBySchemaType(SCHEMA_TYPE_MANAGED)
+    override fun reactivateSchemaData(schemaId: String) {
 
-    override fun findAllManagedSchemaDataIgnoreActive() = selectManySchemaData(SCHEMA_TYPE to SCHEMA_TYPE_MANAGED)
+        jdbcTemplate.update(
+            "update SCHEMA_DATA set active=1, set_to_cooldown_at=null, delete_after=null where id=?",
+            schemaId
+        )
+    }
+
+    override fun findAllManagedSchemaData(ignoreActiveFilter: Boolean): List<SchemaData> =
+        if (ignoreActiveFilter) selectManySchemaData(SCHEMA_TYPE to SCHEMA_TYPE_MANAGED)
+        else findAllSchemaDataBySchemaType(SCHEMA_TYPE_MANAGED)
 
     override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> =
         selectManySchemaData(SCHEMA_TYPE to schemaType, ACTIVE to 1)
@@ -97,24 +92,29 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
      * group by schema_id
      * HAVING listagg(value, ',') WITHIN GROUP (ORDER BY name) like 'paas,boober,paas-boober,referanseapp'
      */
-    override fun findAllManagedSchemaDataByLabels(labels: Map<String, String?>): List<SchemaData> {
+    override fun findAllManagedSchemaDataByLabels(
+        labels: Map<String, String?>,
+        ignoreActiveFilter: Boolean
+    ): List<SchemaData> {
 
-        val namedParameterJdbcTemplate = NamedParameterJdbcTemplate(jdbcTemplate)
-        val parameters = MapSqlParameterSource()
-        val labelNames = newArrayList(labels.keys)
-        labelNames.sort()
-        val labelValues = labelNames.map { labels[it] }.joinToString(",")
-        parameters.addValue("names", labelNames)
-        parameters.addValue("values", labelValues)
-        parameters.addValue("type", SCHEMA_TYPE_MANAGED)
+        val labelNames = labels.keys.toList().sorted()
+        val labelValues = labelNames.joinToString(",") { labels[it]!! }
 
-        return namedParameterJdbcTemplate.query(
+        val parameters = MapSqlParameterSource().apply {
+            addValue("names", labelNames)
+            addValue("values", labelValues)
+            addValue("type", SCHEMA_TYPE_MANAGED)
+            addValue("active", if (ignoreActiveFilter) 0 else 1)
+        }
+
+        //language=Oracle
+        return NamedParameterJdbcTemplate(jdbcTemplate).query(
             """${select()} where id in (
                 select schema_id
                 from LABELS where name in (:names)
                 group by schema_id
                 HAVING listagg(value, ',') WITHIN GROUP (ORDER BY name) like (:values)
-                ) and active=1 and schema_type=(:type)""".trimIndent(),
+                ) and (active=1 or active=(:active)) and schema_type=(:type)""".trimIndent(),
             parameters,
             BeanPropertyRowMapper(SchemaData::class.java)
         )
@@ -179,12 +179,12 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         jdbcTemplate.update("delete from LABELS where schema_id=?", schemaId)
     }
 
-    override fun registerExternalSchema(schemaId: String, jdbcUrl: String): ExternalSchema {
+    override fun registerExternalSchema(id: String, jdbcUrl: String): ExternalSchema {
 
         jdbcTemplate
             .update(
                 "insert into EXTERNAL_SCHEMA (id, created_date, schema_id, jdbc_url) values (?, ?, ?, ?)",
-                generateId(), Date(), schemaId, jdbcUrl
+                generateId(), Date(), id, jdbcUrl
             )
         return ExternalSchema(Date(), jdbcUrl)
     }

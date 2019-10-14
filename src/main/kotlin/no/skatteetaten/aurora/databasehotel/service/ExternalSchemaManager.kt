@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.EXTERNAL
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA
-import no.skatteetaten.aurora.databasehotel.service.internal.DatabaseSchemaBuilder
 
 class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataDao) {
 
@@ -80,11 +79,15 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
             }
         }
 
-        return DatabaseSchemaBuilder(metaInfo, jdbcUrlBuilder).createOne(
-            schemaData, schema, users, labels,
-            SchemaSize(schemaData.name, BigDecimal.ZERO),
-            EXTERNAL
+        return DatabaseSchemaBuilder(
+            metaInfo,
+            jdbcUrlBuilder,
+            users,
+            listOf(schema),
+            labels,
+            listOf(SchemaSize(schemaData.name, BigDecimal.ZERO))
         )
+            .createOne(schemaData, EXTERNAL)
     }
 
     private fun replaceLabels(schema: DatabaseSchema, labels: Map<String, String?>) {

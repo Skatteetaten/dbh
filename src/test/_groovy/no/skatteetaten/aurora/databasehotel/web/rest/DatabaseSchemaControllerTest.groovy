@@ -255,7 +255,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def "List schemas with labels"() {
     given:
-      databaseHotelService.findAllDatabaseSchemasByLabels([userId: USER_ID, affiliation: 'aurora']) >> EXAMPLE_RESPONSE
+      databaseHotelService.findAllDatabaseSchemas([userId: USER_ID, affiliation: 'aurora']) >> EXAMPLE_RESPONSE
 
 
     when:
@@ -273,7 +273,7 @@ class DatabaseSchemaControllerTest extends Specification {
 
   def "Delete schema by id"() {
     given:
-      databaseHotelService.deleteSchemaByCooldown(EXAMPLE_SCHEMA_ID, null)
+      databaseHotelService.deactivateSchema(EXAMPLE_SCHEMA_ID, null)
 
     when:
       ResultActions result = mockMvc.perform(delete("/schema/{id}", EXAMPLE_SCHEMA_ID))

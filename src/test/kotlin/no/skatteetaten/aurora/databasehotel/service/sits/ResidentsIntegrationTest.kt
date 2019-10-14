@@ -26,9 +26,12 @@ class ResidentsIntegrationTest(
 
     val schema = DatabaseSchema(
         "id",
+        true,
         DatabaseInstanceMetaInfo(ORACLE, "A", "B", 1234, true, emptyMap()),
         "jdbc",
         "name",
+        Date(),
+        Date(),
         Date(),
         Date(),
         DatabaseSchemaMetaData(0.0)
