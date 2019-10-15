@@ -26,6 +26,16 @@ spring:
   main:
     banner-mode: "off"
 
+database-config:
+    schemaListingAllowed: true
+    dropAllowed: true
+
+aurora:
+    authenticationEnabled: false
+    token:
+        headerValuePrefix: abc
+
+
 test:
   include-oracle-tests: "false"
   datasource:
