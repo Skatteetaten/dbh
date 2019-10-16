@@ -33,7 +33,7 @@ import java.util.stream.Stream
 
 @AutoConfigureRestDocs
 @WebMvcTest(value = [DatabaseSchemaController::class, ErrorHandler::class])
-class DatabaseSchemaControllerTest2 {
+class DatabaseSchemaControllerTest {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
