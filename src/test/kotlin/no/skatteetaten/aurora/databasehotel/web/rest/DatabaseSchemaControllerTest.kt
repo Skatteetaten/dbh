@@ -3,11 +3,9 @@ package no.skatteetaten.aurora.databasehotel.web.rest
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.ninjasquad.springmockk.MockkBean
-import io.mockk.clearAllMocks
 import io.mockk.every
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
-import no.skatteetaten.aurora.databasehotel.web.security.SharedSecretReader
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
 import no.skatteetaten.aurora.mockmvc.extensions.post
@@ -15,39 +13,23 @@ import no.skatteetaten.aurora.mockmvc.extensions.put
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.status
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import org.springframework.test.web.servlet.MockMvc
 import java.net.URLEncoder.encode
 import java.util.stream.Stream
 
-@AutoConfigureRestDocs
 @WebMvcTest(value = [DatabaseSchemaController::class, ErrorHandler::class])
-class DatabaseSchemaControllerTest {
-
-    @Autowired
-    private lateinit var mockMvc: MockMvc
-
-    @MockkBean
-    private lateinit var sharedSecretReader: SharedSecretReader
+class DatabaseSchemaControllerTest : AbstractControllerTest() {
 
     @MockkBean
     private lateinit var databaseHotelService: DatabaseHotelService
-
-    @AfterEach
-    fun tearDown() {
-        clearAllMocks()
-    }
 
     class Params : ArgumentsProvider {
         override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> = Stream.of(
