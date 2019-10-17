@@ -43,13 +43,13 @@ dependencies {
     testImplementation("io.mockk:mockk:1.9.3")
     testImplementation("com.ninja-squad:springmockk:1.1.3")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.19")
-    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.0.1")
+    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.0.2")
 
     val devtools = "org.springframework.boot:spring-boot-devtools"
     if (project.hasProperty("springBootDevtools")) {
         implementation(devtools)
     } else {
-        // Required to compile test code
+        // Required to compile test codel
         testImplementation(devtools)
     }
 }
