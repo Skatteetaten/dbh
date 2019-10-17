@@ -229,3 +229,39 @@ Eksempel på et konfigurasjonsoppsett med to databaseservere kan da være
   DATABASE_CONFIG_DATABASES_1_username = user
   DATABASE_CONFIG_DATABASES_1_password = pass
   DATABASE_CONFIG_DATABASES_1_clientService = dbhotel
+
+
+
+== GET database instance
+*request:*
+include::{snippets}/get-api-v1-admin-databaseInstance/http-request.adoc[]
+*response:*
+include::{snippets}/get-api-v1-admin-databaseInstance/http-response.adoc[]
+
+
+== GET restorable schema
+*request:*
+include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-request.adoc[]
+*response:*
+include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-response.adoc[]
+
+
+== POST schema
+*request:*
+include::{snippets}/post-api-v1-schema/http-request.adoc[]
+*response:*
+include::{snippets}/post-api-v1-schema/http-response.adoc[]
+
+
+== PUT schema
+*request:*
+include::{snippets}/put-api-v1-schema-123/http-request.adoc[]
+*response:*
+include::{snippets}/put-api-v1-schema-123/http-response.adoc[]
+
+
+== PUT schema validate
+*request:*
+include::{snippets}/put-api-v1-schema-validate/http-request.adoc[]
+*response:*
+include::{snippets}/put-api-v1-schema-validate/http-response.adoc[]
