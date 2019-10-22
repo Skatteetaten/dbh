@@ -60,18 +60,15 @@ Database Hotel API'et prøver å følge standard HTTP og ReST konvensjoner i bru
 [[overview-authentication]]
 == Autentisering
 Alle forespørsler må sette `Authorization` headeren.
-include::{snippets}/empty-response/request-headers.adoc[]
 `shared-secret` er en statisk forhåndsbestemt nøkkel som vil variere pr. instans av tjenesten. Et eksempel på dette
 vil typisk være
-include::{snippets}/empty-response/curl-request.adoc[]
 
 
 [[overview-response-format]]
 == Format på svar
 Alle responser som inneholder ressurser wrappes på samme måte;
 
-include::{snippets}/empty-response/http-response.adoc[]
-include::{snippets}/empty-response/response-fields.adoc[]
+include::{snippets}/put-api-v1-schema-validate/response-body.adoc[]
 
 
 [[resources]]
@@ -88,19 +85,11 @@ Schema ressursen brukes til å opprette, slette og liste ut schema ressurser. De
 === Opprettelse av skjema
 Oppretter et nytt skjema.
 
-include::{snippets}/schemas-post/request-fields.adoc[]
-
-*Eksempel (uten labels):*
-include::{snippets}/schemas-post-no-labels/curl-request.adoc[]
-Merk at tom payload *ikke* er gyldig.
-
-*Eksempel (med labels og instanceName):*
-include::{snippets}/schemas-post/curl-request.adoc[]
+include::{snippets}/post-api-v1-schema/http-request.adoc[]
 
 *Respons:*
 Merk at `items` alltid vil inneholde ett og bare ett element.
-include::{snippets}/schemas-post/http-response.adoc[]
-include::{snippets}/schemas-post/response-fields.adoc[]
+include::{snippets}/post-api-v1-schema/http-response.adoc[]
 
 
 [[resource-schema-create-external]]
@@ -109,57 +98,25 @@ Registrere et eksternt skjema (istedenfor å opprette nytt på databasehotellet)
 benytter automatiske mekanismer for å konfigurere applikasjonene dine basert på databasehotell APIet, men har egne
 databaseservere.
 
-include::{snippets}/schemas-post-external/request-fields.adoc[]
-
-include::{snippets}/schemas-post-external/curl-request.adoc[]
-
-*Respons:*
-Merk at `items` alltid vil inneholde ett og bare ett element.
-include::{snippets}/schemas-post-external/http-response.adoc[]
-include::{snippets}/schemas-post-external/response-fields.adoc[]
-
-
 
 [[resource-schema-by-id]]
 === Hente skjema fra id
 Henter skjema fra en id
 
-include::{snippets}/schemas-get-with-id/path-parameters.adoc[]
-
-*Eksempel:*
-include::{snippets}/schemas-get-with-id/curl-request.adoc[]
+include::{snippets}/get-api-v1-schema-id/http-request.adoc[]
 
 *Respons:*
 Merk at `items` alltid vil inneholde ett og bare ett element.
-include::{snippets}/schemas-get-with-id/http-response.adoc[]
-
+include::{snippets}/get-api-v1-schema-id/http-response.adoc[]
 
 [[resource-schema-list]]
 === Utlisting av skjema
 Lister ut alle tilgjengelige skjema. Denne funksjonen kan være skrudd av på serversiden.
 
-include::{snippets}/schemas-get-with-labels/request-parameters.adoc[]
-
-*Eksempel:*
-include::{snippets}/schemas-get/curl-request.adoc[]
-
-*Eksempel (med labels):*
-include::{snippets}/schemas-get-with-labels/curl-request.adoc[]
+include::{snippets}/get-api-v1-schema/http-request.adoc[]
 
 *Respons:*
-include::{snippets}/schemas-get/http-response.adoc[]
-
-
-=== Slette skjema
-Sletter et skjema. Merk at denne funksjonen kan være skrudd av på serversiden.
-
-include::{snippets}/schemas-delete/path-parameters.adoc[]
-
-*Eksempel:*
-include::{snippets}/schemas-delete/curl-request.adoc[]
-
-*Respons:*
-include::{snippets}/schemas-delete/http-response.adoc[]
+include::{snippets}/get-api-v1-schema/http-response.adoc[]
 
 
 [[resources-databaseInstance]]
@@ -171,10 +128,10 @@ Brukes til å liste ut registrerte database instanser.
 Lister ut alle tilgjengelige database instanser.
 
 *Eksempel:*
-include::{snippets}/databaseInstance-get/curl-request.adoc[]
+include::{snippets}/get-api-v1-admin-databaseInstance/http-request.adoc[]
 
 *Respons:*
-include::{snippets}/databaseInstance-get/http-response.adoc[]
+include::{snippets}/get-api-v1-admin-databaseInstance/http-response.adoc[]
 
 
 = Konfigurasjon
@@ -233,10 +190,7 @@ Eksempel på et konfigurasjonsoppsett med to databaseservere kan da være
 
 
 == GET database instance
-*request:*
-include::{snippets}/get-api-v1-admin-databaseInstance/http-request.adoc[]
-*response:*
-include::{snippets}/get-api-v1-admin-databaseInstance/http-response.adoc[]
+
 
 
 == GET restorable schema

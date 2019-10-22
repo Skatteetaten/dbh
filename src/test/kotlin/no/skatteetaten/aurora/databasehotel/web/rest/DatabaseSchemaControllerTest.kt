@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
+import no.skatteetaten.aurora.mockmvc.extensions.get
 import no.skatteetaten.aurora.mockmvc.extensions.post
 import no.skatteetaten.aurora.mockmvc.extensions.put
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
@@ -106,10 +107,27 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
     fun `validate jdbc input for create database schema`() {
         mockMvc.post(
             path = Path("/api/v1/schema/"),
+            docsIdentifier = "post-schema-bad-request",
             body = SchemaCreationRequest(schema = Schema("", "", "")),
             headers = HttpHeaders().contentTypeJson()
         ) {
             status(HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    @Test
+    fun `create schema`() {
+        every { databaseHotelService.createSchema(any(), any()) } returns DatabaseSchemaTestBuilder().build()
+
+        mockMvc.post(
+            path = Path("/api/v1/schema/"),
+            body = SchemaCreationRequest(),
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            statusIsOk()
+                .responseJsonPath("$.status").equalsValue("OK")
+                .responseJsonPath("$.totalCount").equalsValue(1)
+                .responseJsonPath("$.items.length()").equalsValue(1)
         }
     }
 
@@ -120,6 +138,7 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
 
         mockMvc.post(
             path = Path("/api/v1/schema/"),
+            docsIdentifier = "post-schema-db-error",
             body = SchemaCreationRequest(),
             headers = HttpHeaders().contentTypeJson()
         ) {
@@ -127,6 +146,34 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
             responseJsonPath("$.status").equalsValue("Failed")
             responseJsonPath("$.totalCount").equalsValue(1)
             responseJsonPath("$.items[0]").equalsValue(dbErrorMessage)
+        }
+    }
+
+    @Test
+    fun `Get schema by id`() {
+        every { databaseHotelService.findSchemaById(any(), any()) } returns Pair(
+            DatabaseSchemaTestBuilder().build(),
+            DatabaseInstanceBuilder().build()
+        )
+
+        mockMvc.get(Path("/api/v1/schema/{id}", "123")) {
+            statusIsOk()
+            responseJsonPath("$.status").equalsValue("OK")
+            responseJsonPath("$.totalCount").equalsValue(1)
+            responseJsonPath("$.items[0].id").equalsValue("123")
+        }
+    }
+
+    @Test
+    fun `Get all schemas`() {
+        every { databaseHotelService.findAllDatabaseSchemas(any(), any(), any()) } returns
+            setOf(DatabaseSchemaTestBuilder().build())
+
+        mockMvc.get(Path("/api/v1/schema/")) {
+            statusIsOk()
+            responseJsonPath("$.status").equalsValue("OK")
+            responseJsonPath("$.totalCount").equalsValue(1)
+            responseJsonPath("$.items[0].id").equalsValue("123")
         }
     }
 }
