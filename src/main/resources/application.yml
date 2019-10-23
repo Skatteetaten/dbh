@@ -68,3 +68,7 @@ spring:
 aurora:
   token:
     location: /u01/secrets/app/aurora-token/token
+
+security:
+    basic:
+        enabled:

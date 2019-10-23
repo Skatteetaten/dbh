@@ -13,7 +13,7 @@ Bent André Solheim <BentAndre.Solheim@skatteetaten.no>
 
 Dette dokumentet gir en oversikt over Database Hotel API'et. Database Hotel API'et er en tjeneste for å
 opprette databaseskjema mot én eller flere databaser, og hente ut nøkkelinformasjon om skjemaene for senere bruk
-(tilkoblingsinformasjon, eier, o.l.). Tjenesten er laget primært for å virke med Oracle databaser.
+(tilkoblingsinformasjon, eier, o.l.). Tjenesten er laget for å virke med Oracle og Postgres databaser.
 
 [[overview]]
 = Oversikt
@@ -60,18 +60,15 @@ Database Hotel API'et prøver å følge standard HTTP og ReST konvensjoner i bru
 [[overview-authentication]]
 == Autentisering
 Alle forespørsler må sette `Authorization` headeren.
-include::{snippets}/empty-response/request-headers.adoc[]
 `shared-secret` er en statisk forhåndsbestemt nøkkel som vil variere pr. instans av tjenesten. Et eksempel på dette
 vil typisk være
-include::{snippets}/empty-response/curl-request.adoc[]
 
 
 [[overview-response-format]]
 == Format på svar
 Alle responser som inneholder ressurser wrappes på samme måte;
 
-include::{snippets}/empty-response/http-response.adoc[]
-include::{snippets}/empty-response/response-fields.adoc[]
+include::{snippets}/put-api-v1-schema-validate/response-body.adoc[]
 
 
 [[resources]]
@@ -88,19 +85,11 @@ Schema ressursen brukes til å opprette, slette og liste ut schema ressurser. De
 === Opprettelse av skjema
 Oppretter et nytt skjema.
 
-include::{snippets}/schemas-post/request-fields.adoc[]
-
-*Eksempel (uten labels):*
-include::{snippets}/schemas-post-no-labels/curl-request.adoc[]
-Merk at tom payload *ikke* er gyldig.
-
-*Eksempel (med labels og instanceName):*
-include::{snippets}/schemas-post/curl-request.adoc[]
+include::{snippets}/post-api-v1-schema/http-request.adoc[]
 
 *Respons:*
 Merk at `items` alltid vil inneholde ett og bare ett element.
-include::{snippets}/schemas-post/http-response.adoc[]
-include::{snippets}/schemas-post/response-fields.adoc[]
+include::{snippets}/post-api-v1-schema/http-response.adoc[]
 
 
 [[resource-schema-create-external]]
@@ -109,58 +98,57 @@ Registrere et eksternt skjema (istedenfor å opprette nytt på databasehotellet)
 benytter automatiske mekanismer for å konfigurere applikasjonene dine basert på databasehotell APIet, men har egne
 databaseservere.
 
-include::{snippets}/schemas-post-external/request-fields.adoc[]
+*Respons:*
+include::{snippets}/post-schema-external/http-response.adoc[]
 
-include::{snippets}/schemas-post-external/curl-request.adoc[]
+[[resource-schema-update]]
+=== Oppdater skjema
+Oppdater eksisterende skjema
+
+*Eksempel:*
+include::{snippets}/put-api-v1-schema-id/http-request.adoc[]
 
 *Respons:*
-Merk at `items` alltid vil inneholde ett og bare ett element.
-include::{snippets}/schemas-post-external/http-response.adoc[]
-include::{snippets}/schemas-post-external/response-fields.adoc[]
+include::{snippets}/put-api-v1-schema-id/http-response.adoc[]
 
+[[resource-schema-validate]]
+=== Test skjema tilkobling
+Tester forbindelsen til databaseskjemaet
 
+*Eksempel:*
+include::{snippets}/put-api-v1-schema-validate/http-request.adoc[]
+
+*Respons:*
+include::{snippets}/put-api-v1-schema-validate/http-response.adoc[]
 
 [[resource-schema-by-id]]
 === Hente skjema fra id
-Henter skjema fra en id
+Henter skjema fra en id (id 123 i eksempelet)
 
-include::{snippets}/schemas-get-with-id/path-parameters.adoc[]
-
-*Eksempel:*
-include::{snippets}/schemas-get-with-id/curl-request.adoc[]
+include::{snippets}/get-api-v1-schema-id/http-request.adoc[]
 
 *Respons:*
 Merk at `items` alltid vil inneholde ett og bare ett element.
-include::{snippets}/schemas-get-with-id/http-response.adoc[]
-
+include::{snippets}/get-api-v1-schema-id/http-response.adoc[]
 
 [[resource-schema-list]]
 === Utlisting av skjema
 Lister ut alle tilgjengelige skjema. Denne funksjonen kan være skrudd av på serversiden.
 
-include::{snippets}/schemas-get-with-labels/request-parameters.adoc[]
-
-*Eksempel:*
-include::{snippets}/schemas-get/curl-request.adoc[]
-
-*Eksempel (med labels):*
-include::{snippets}/schemas-get-with-labels/curl-request.adoc[]
+include::{snippets}/get-api-v1-schema/http-request.adoc[]
 
 *Respons:*
-include::{snippets}/schemas-get/http-response.adoc[]
+include::{snippets}/get-api-v1-schema/http-response.adoc[]
 
+[[resource-schema-delete]]
+=== Slett skjema med id
 
-=== Slette skjema
-Sletter et skjema. Merk at denne funksjonen kan være skrudd av på serversiden.
+Id i eksempelet er _123_
 
-include::{snippets}/schemas-delete/path-parameters.adoc[]
+include::{snippets}/delete-api-v1-schema-id/http-request.adoc[]
 
-*Eksempel:*
-include::{snippets}/schemas-delete/curl-request.adoc[]
-
-*Respons:*
-include::{snippets}/schemas-delete/http-response.adoc[]
-
+*Response:*
+include::{snippets}/delete-api-v1-schema-id/http-response.adoc[]
 
 [[resources-databaseInstance]]
 == Database Instance
@@ -171,11 +159,40 @@ Brukes til å liste ut registrerte database instanser.
 Lister ut alle tilgjengelige database instanser.
 
 *Eksempel:*
-include::{snippets}/databaseInstance-get/curl-request.adoc[]
+include::{snippets}/get-api-v1-admin-databaseInstance/http-request.adoc[]
 
 *Respons:*
-include::{snippets}/databaseInstance-get/http-response.adoc[]
+include::{snippets}/get-api-v1-admin-databaseInstance/http-response.adoc[]
 
+=== Slett ubrukte instanser
+Hvor _test_ i eksempelet er host.
+
+*Eksempel:*
+include::{snippets}/post-api-v1-admin-databaseInstance-host-deleteUnused/http-request.adoc[]
+
+*Response:*
+include::{snippets}/post-api-v1-admin-databaseInstance-host-deleteUnused/http-response.adoc[]
+
+[[restorable-schema]]
+== Gjenopprettbare skjemaer
+
+=== Hent skjemaer som kan gjenopprettes
+
+*Eksempel:*
+include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-request.adoc[]
+
+*Respons:*
+include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-response.adoc[]
+
+=== Oppdater gjenopprettbare skjemaer
+
+I eksempelet brukes id _123_
+
+*Eksempel:*
+include::{snippets}/patch-api-v1-restorableSchema-id/http-request.adoc[]
+
+*Respons:*
+include::{snippets}/patch-api-v1-restorableSchema-id/http-response.adoc[]
 
 = Konfigurasjon
 DatabaseHotel API'et støtter å fronte flere databaseservere samtidig. Konfigurasjon av disse gjøres via miljøvariable
