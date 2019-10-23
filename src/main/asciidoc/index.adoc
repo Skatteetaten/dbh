@@ -102,7 +102,7 @@ databaseservere.
 include::{snippets}/post-schema-external/http-response.adoc[]
 
 [[resource-schema-update]]
-== Oppdater skjema
+=== Oppdater skjema
 Oppdater eksisterende skjema
 
 *request:*
@@ -111,7 +111,7 @@ include::{snippets}/put-api-v1-schema-123/http-request.adoc[]
 include::{snippets}/put-api-v1-schema-123/http-response.adoc[]
 
 [[resource-schema-validate]]
-== Test skjema tilkobling
+=== Test skjema tilkobling
 Tester forbindelsen til databaseskjemaet
 
 *request:*
@@ -138,6 +138,15 @@ include::{snippets}/get-api-v1-schema/http-request.adoc[]
 *Respons:*
 include::{snippets}/get-api-v1-schema/http-response.adoc[]
 
+[[resource-schema-delete]]
+=== Slett skjema med id
+
+Id i eksempelet er _123_
+
+include::{snippets}/delete-api-v1-schema-id/http-request.adoc[]
+
+*Response:*
+include::{snippets}/delete-api-v1-schema-id/http-response.adoc[]
 
 [[resources-databaseInstance]]
 == Database Instance
@@ -163,13 +172,25 @@ include::{snippets}/post-api-v1-admin-databaseInstance-host-deleteUnused/http-re
 include::{snippets}/post-api-v1-admin-databaseInstance-host-deleteUnused/http-response.adoc[]
 
 [[restorable-schema]]
-== Hent restorable skjemaer
-Hent slettede skjemaer som kan gjenopprettes.
+== Gjenopprettbareskjemaer
 
-*request:*
+=== Hent skjemaer som kan gjenopprettes
+
+*Eksempel:*
 include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-request.adoc[]
-*response:*
+
+*Respons:*
 include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-response.adoc[]
+
+=== Oppdater gjenopprettbareskjemaer
+
+I eksempelet brukes id _123_
+
+*Eksempel:*
+include::{snippets}/patch-api-v1-restorableSchema-id/http-request.adoc[]
+
+*Respons:*
+include::{snippets}/patch-api-v1-restorableSchema-id/http-response.adoc[]
 
 = Konfigurasjon
 DatabaseHotel API'et støtter å fronte flere databaseservere samtidig. Konfigurasjon av disse gjøres via miljøvariable

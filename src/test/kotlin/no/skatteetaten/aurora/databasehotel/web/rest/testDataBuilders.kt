@@ -23,8 +23,8 @@ data class DatabaseSchemaTestBuilder(val type: DatabaseSchema.Type = DatabaseSch
         name = "name",
         createdDate = Date(),
         lastUsedDate = null,
-        setToCooldownAt = null,
-        deleteAfter = null,
+        setToCooldownAt = Date(),
+        deleteAfter = Date(),
         metadata = null,
         type = type
     )

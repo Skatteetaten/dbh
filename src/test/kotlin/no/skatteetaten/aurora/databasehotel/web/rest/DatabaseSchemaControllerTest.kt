@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
+import no.skatteetaten.aurora.mockmvc.extensions.delete
 import no.skatteetaten.aurora.mockmvc.extensions.get
 import no.skatteetaten.aurora.mockmvc.extensions.post
 import no.skatteetaten.aurora.mockmvc.extensions.put
@@ -30,7 +31,7 @@ import java.util.stream.Stream
 @WebMvcTest(value = [DatabaseSchemaController::class, ErrorHandler::class])
 class DatabaseSchemaControllerTest : AbstractControllerTest() {
 
-    @MockkBean
+    @MockkBean(relaxUnitFun = true)
     private lateinit var databaseHotelService: DatabaseHotelService
 
     class Params : ArgumentsProvider {
@@ -72,9 +73,9 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
             headers = HttpHeaders().contentTypeJson()
         ) {
             statusIsOk()
-                .responseJsonPath("$.status").equalsValue("OK")
-                .responseJsonPath("$.totalCount").equalsValue(1)
-                .responseJsonPath("$.items[0]").isTrue()
+            responseJsonPath("$.status").equalsValue("OK")
+            responseJsonPath("$.totalCount").equalsValue(1)
+            responseJsonPath("$.items[0]").isTrue()
         }
     }
 
@@ -86,10 +87,10 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
             body = ConnectionVerificationRequest()
         ) {
             status(HttpStatus.BAD_REQUEST)
-                .responseJsonPath("$.status").equalsValue("Failed")
-                .responseJsonPath("$.totalCount").equalsValue(1)
-                .responseJsonPath("$.items.length()").equalsValue(1)
-                .responseJsonPath("$.items[0]").equalsValue("id or jdbcUser is required")
+            responseJsonPath("$.status").equalsValue("Failed")
+            responseJsonPath("$.totalCount").equalsValue(1)
+            responseJsonPath("$.items.length()").equalsValue(1)
+            responseJsonPath("$.items[0]").equalsValue("id or jdbcUser is required")
         }
     }
 
@@ -126,15 +127,17 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
             headers = HttpHeaders().contentTypeJson()
         ) {
             statusIsOk()
-                .responseJsonPath("$.status").equalsValue("OK")
-                .responseJsonPath("$.totalCount").equalsValue(1)
-                .responseJsonPath("$.items.length()").equalsValue(1)
+            responseJsonPath("$.status").equalsValue("OK")
+            responseJsonPath("$.totalCount").equalsValue(1)
+            responseJsonPath("$.items.length()").equalsValue(1)
         }
     }
 
     @Test
     fun `Create external schema`() {
-        every { databaseHotelService.createSchema(any(), any()) } returns DatabaseSchemaTestBuilder(type = DatabaseSchema.Type.EXTERNAL).build()
+        every {
+            databaseHotelService.createSchema(any(), any())
+        } returns DatabaseSchemaTestBuilder(type = DatabaseSchema.Type.EXTERNAL).build()
 
         mockMvc.post(
             path = Path("/api/v1/schema/"),
@@ -143,9 +146,9 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
             headers = HttpHeaders().contentTypeJson()
         ) {
             statusIsOk()
-                .responseJsonPath("$.status").equalsValue("OK")
-                .responseJsonPath("$.totalCount").equalsValue(1)
-                .responseJsonPath("$.items.length()").equalsValue(1)
+            responseJsonPath("$.status").equalsValue("OK")
+            responseJsonPath("$.totalCount").equalsValue(1)
+            responseJsonPath("$.items.length()").equalsValue(1)
         }
     }
 
@@ -192,6 +195,15 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
             responseJsonPath("$.status").equalsValue("OK")
             responseJsonPath("$.totalCount").equalsValue(1)
             responseJsonPath("$.items[0].id").equalsValue("123")
+        }
+    }
+
+    @Test
+    fun `Delete schema by id`() {
+        mockMvc.delete(Path("/api/v1/schema/{id}", "123")) {
+            statusIsOk()
+            responseJsonPath("$.status").equalsValue("OK")
+            responseJsonPath("$.totalCount").equalsValue(0)
         }
     }
 }

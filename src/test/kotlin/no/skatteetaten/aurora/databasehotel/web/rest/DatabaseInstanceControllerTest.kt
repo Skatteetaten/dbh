@@ -24,8 +24,8 @@ class DatabaseInstanceControllerTest : AbstractControllerTest() {
 
         mockMvc.get(Path("/api/v1/admin/databaseInstance/")) {
             statusIsOk()
-                .responseJsonPath("$.status").equalsValue("OK")
-                .responseJsonPath("$.items[0].engine").equalsValue("ORACLE")
+            responseJsonPath("$.status").equalsValue("OK")
+            responseJsonPath("$.items[0].engine").equalsValue("ORACLE")
         }
     }
 
@@ -35,8 +35,8 @@ class DatabaseInstanceControllerTest : AbstractControllerTest() {
 
         mockMvc.post(Path("/api/v1/admin/databaseInstance/{host}/deleteUnused", "test")) {
             statusIsOk()
-                .responseJsonPath("$.status").equalsValue("OK")
-                .responseJsonPath("$.totalCount").equalsValue(0)
+            responseJsonPath("$.status").equalsValue("OK")
+            responseJsonPath("$.totalCount").equalsValue(0)
         }
     }
 }
