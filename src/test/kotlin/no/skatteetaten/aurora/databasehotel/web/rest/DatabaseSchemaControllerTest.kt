@@ -95,10 +95,24 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
     }
 
     @Test
-    fun `validate jdbc input for update database schema`() {
+    fun `Update database schema`() {
+        every { databaseHotelService.updateSchema(any(), any(), any(), any(), any()) } returns DatabaseSchemaTestBuilder().build()
+
         mockMvc.put(
-            path = Path("/api/v1/schema/123"),
+            path = Path("/api/v1/schema/{id}", "123"),
+            body = SchemaCreationRequest(schema = Schema("username", "passwprd", "jdbc-url")),
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            statusIsOk()
+        }
+    }
+
+    @Test
+    fun `Invalid jdbc input for update database schema`() {
+        mockMvc.put(
+            path = Path("/api/v1/schema/{id}", "123"),
             body = SchemaCreationRequest(schema = Schema("", "", "")),
+            docsIdentifier = "update-schema-invalid-jdbc",
             headers = HttpHeaders().contentTypeJson()
         ) {
             status(HttpStatus.BAD_REQUEST)
