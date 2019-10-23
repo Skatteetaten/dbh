@@ -105,18 +105,20 @@ include::{snippets}/post-schema-external/http-response.adoc[]
 === Oppdater skjema
 Oppdater eksisterende skjema
 
-*request:*
+*Eksempel:*
 include::{snippets}/put-api-v1-schema-123/http-request.adoc[]
-*response:*
+
+*Respons:*
 include::{snippets}/put-api-v1-schema-123/http-response.adoc[]
 
 [[resource-schema-validate]]
 === Test skjema tilkobling
 Tester forbindelsen til databaseskjemaet
 
-*request:*
+*Eksempel:*
 include::{snippets}/put-api-v1-schema-validate/http-request.adoc[]
-*response:*
+
+*Respons:*
 include::{snippets}/put-api-v1-schema-validate/http-response.adoc[]
 
 [[resource-schema-by-id]]
