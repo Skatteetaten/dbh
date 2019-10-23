@@ -49,7 +49,7 @@ dependencies {
     if (project.hasProperty("springBootDevtools")) {
         implementation(devtools)
     } else {
-        // Required to compile test codel
+        // Required to compile test code
         testImplementation(devtools)
     }
 }
