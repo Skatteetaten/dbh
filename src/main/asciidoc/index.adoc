@@ -106,10 +106,10 @@ include::{snippets}/post-schema-external/http-response.adoc[]
 Oppdater eksisterende skjema
 
 *Eksempel:*
-include::{snippets}/put-api-v1-schema-123/http-request.adoc[]
+include::{snippets}/put-api-v1-schema-id/http-request.adoc[]
 
 *Respons:*
-include::{snippets}/put-api-v1-schema-123/http-response.adoc[]
+include::{snippets}/put-api-v1-schema-id/http-response.adoc[]
 
 [[resource-schema-validate]]
 === Test skjema tilkobling
