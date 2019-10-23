@@ -5,6 +5,7 @@ import assertk.assertions.isEqualTo
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
+import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
@@ -122,6 +123,23 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
         mockMvc.post(
             path = Path("/api/v1/schema/"),
             body = SchemaCreationRequest(),
+            headers = HttpHeaders().contentTypeJson()
+        ) {
+            statusIsOk()
+                .responseJsonPath("$.status").equalsValue("OK")
+                .responseJsonPath("$.totalCount").equalsValue(1)
+                .responseJsonPath("$.items.length()").equalsValue(1)
+        }
+    }
+
+    @Test
+    fun `Create external schema`() {
+        every { databaseHotelService.createSchema(any(), any()) } returns DatabaseSchemaTestBuilder(type = DatabaseSchema.Type.EXTERNAL).build()
+
+        mockMvc.post(
+            path = Path("/api/v1/schema/"),
+            body = SchemaCreationRequest(),
+            docsIdentifier = "post-schema-external",
             headers = HttpHeaders().contentTypeJson()
         ) {
             statusIsOk()

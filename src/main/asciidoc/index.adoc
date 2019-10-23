@@ -13,7 +13,7 @@ Bent André Solheim <BentAndre.Solheim@skatteetaten.no>
 
 Dette dokumentet gir en oversikt over Database Hotel API'et. Database Hotel API'et er en tjeneste for å
 opprette databaseskjema mot én eller flere databaser, og hente ut nøkkelinformasjon om skjemaene for senere bruk
-(tilkoblingsinformasjon, eier, o.l.). Tjenesten er laget primært for å virke med Oracle databaser.
+(tilkoblingsinformasjon, eier, o.l.). Tjenesten er laget for å virke med Oracle og Postgres databaser.
 
 [[overview]]
 = Oversikt
@@ -98,10 +98,30 @@ Registrere et eksternt skjema (istedenfor å opprette nytt på databasehotellet)
 benytter automatiske mekanismer for å konfigurere applikasjonene dine basert på databasehotell APIet, men har egne
 databaseservere.
 
+*Respons:*
+include::{snippets}/post-schema-external/http-response.adoc[]
+
+[[resource-schema-update]]
+== Oppdater skjema
+Oppdater eksisterende skjema
+
+*request:*
+include::{snippets}/put-api-v1-schema-123/http-request.adoc[]
+*response:*
+include::{snippets}/put-api-v1-schema-123/http-response.adoc[]
+
+[[resource-schema-validate]]
+== Test skjema tilkobling
+Tester forbindelsen til databaseskjemaet
+
+*request:*
+include::{snippets}/put-api-v1-schema-validate/http-request.adoc[]
+*response:*
+include::{snippets}/put-api-v1-schema-validate/http-response.adoc[]
 
 [[resource-schema-by-id]]
 === Hente skjema fra id
-Henter skjema fra en id
+Henter skjema fra en id (id 123 i eksempelet)
 
 include::{snippets}/get-api-v1-schema-id/http-request.adoc[]
 
@@ -133,6 +153,14 @@ include::{snippets}/get-api-v1-admin-databaseInstance/http-request.adoc[]
 *Respons:*
 include::{snippets}/get-api-v1-admin-databaseInstance/http-response.adoc[]
 
+[[restorable-schema]]
+== Hent restorable skjemaer
+Hent slettede skjemaer som kan gjenopprettes.
+
+*request:*
+include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-request.adoc[]
+*response:*
+include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-response.adoc[]
 
 = Konfigurasjon
 DatabaseHotel API'et støtter å fronte flere databaseservere samtidig. Konfigurasjon av disse gjøres via miljøvariable
@@ -186,36 +214,3 @@ Eksempel på et konfigurasjonsoppsett med to databaseservere kan da være
   DATABASE_CONFIG_DATABASES_1_username = user
   DATABASE_CONFIG_DATABASES_1_password = pass
   DATABASE_CONFIG_DATABASES_1_clientService = dbhotel
-
-
-
-== GET database instance
-
-
-
-== GET restorable schema
-*request:*
-include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-request.adoc[]
-*response:*
-include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-response.adoc[]
-
-
-== POST schema
-*request:*
-include::{snippets}/post-api-v1-schema/http-request.adoc[]
-*response:*
-include::{snippets}/post-api-v1-schema/http-response.adoc[]
-
-
-== PUT schema
-*request:*
-include::{snippets}/put-api-v1-schema-123/http-request.adoc[]
-*response:*
-include::{snippets}/put-api-v1-schema-123/http-response.adoc[]
-
-
-== PUT schema validate
-*request:*
-include::{snippets}/put-api-v1-schema-validate/http-request.adoc[]
-*response:*
-include::{snippets}/put-api-v1-schema-validate/http-response.adoc[]
