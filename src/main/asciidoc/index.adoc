@@ -174,7 +174,7 @@ include::{snippets}/post-api-v1-admin-databaseInstance-host-deleteUnused/http-re
 include::{snippets}/post-api-v1-admin-databaseInstance-host-deleteUnused/http-response.adoc[]
 
 [[restorable-schema]]
-== Gjenopprettbareskjemaer
+== Gjenopprettbare skjemaer
 
 === Hent skjemaer som kan gjenopprettes
 
@@ -184,7 +184,7 @@ include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-request.adoc[
 *Respons:*
 include::{snippets}/get-api-v1-restorableSchema_labels=aurora/http-response.adoc[]
 
-=== Oppdater gjenopprettbareskjemaer
+=== Oppdater gjenopprettbare skjemaer
 
 I eksempelet brukes id _123_
 
