@@ -2,9 +2,11 @@ package no.skatteetaten.aurora.databasehotel.web.rest
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import io.mockk.mockk
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelAdminService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.get
+import no.skatteetaten.aurora.mockmvc.extensions.post
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
@@ -24,6 +26,17 @@ class DatabaseInstanceControllerTest : AbstractControllerTest() {
             statusIsOk()
                 .responseJsonPath("$.status").equalsValue("OK")
                 .responseJsonPath("$.items[0].engine").equalsValue("ORACLE")
+        }
+    }
+
+    @Test
+    fun `Delete unused`() {
+        every { databaseHotelAdminService.findDatabaseInstanceByHost(any()) } returns mockk(relaxed = true)
+
+        mockMvc.post(Path("/api/v1/admin/databaseInstance/{host}/deleteUnused", "test")) {
+            statusIsOk()
+                .responseJsonPath("$.status").equalsValue("OK")
+                .responseJsonPath("$.totalCount").equalsValue(0)
         }
     }
 }

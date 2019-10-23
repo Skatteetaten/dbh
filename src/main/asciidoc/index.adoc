@@ -153,6 +153,15 @@ include::{snippets}/get-api-v1-admin-databaseInstance/http-request.adoc[]
 *Respons:*
 include::{snippets}/get-api-v1-admin-databaseInstance/http-response.adoc[]
 
+=== Slett ubrukte instanser
+Hvor _test_ i eksempelet er host.
+
+*Eksempel:*
+include::{snippets}/post-api-v1-admin-databaseInstance-host-deleteUnused/http-request.adoc[]
+
+*Response:*
+include::{snippets}/post-api-v1-admin-databaseInstance-host-deleteUnused/http-response.adoc[]
+
 [[restorable-schema]]
 == Hent restorable skjemaer
 Hent slettede skjemaer som kan gjenopprettes.
