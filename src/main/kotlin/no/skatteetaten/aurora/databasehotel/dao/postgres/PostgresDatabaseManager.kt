@@ -47,7 +47,6 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
     override fun deleteSchema(schemaName: String) {
         val safeName = schemaName.toSafe()
         executeStatements(
-            "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '$safeName'",
             "ALTER DATABASE $safeName CONNECTION LIMIT 1",
             "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$safeName'",
             "drop database $safeName",
