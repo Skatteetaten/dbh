@@ -122,8 +122,12 @@ open class DatabaseInstance(
         logger.info("Permanently deleting schema {} (id={})", schemaName, schema.id)
 
         schema.apply {
-            databaseHotelDataDao.deleteSchemaData(id)
-            databaseManager.deleteSchema(name)
+            try {
+                databaseManager.deleteSchema(name)
+                databaseHotelDataDao.deleteSchemaData(id)
+            } catch (e: Exception) {
+                logger.warn("Unable to delete database schema [{}]. Cause: {}")
+            }
         }
     }
 
