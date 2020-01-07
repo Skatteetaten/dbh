@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class DatabaseInstanceInitializer(
-    @Value("\${database-config.cooldownDaysAfterDelete:180}") private val cooldownDaysAfterDelete: Int = 180,
+    @Value("\${database-config.cooldownDaysAfterDelete:30}") private val cooldownDaysAfterDelete: Int = 30,
     @Value("\${database-config.cooldownDaysForOldUnusedSchemas:1}") private val cooldownDaysForOldUnusedSchemas: Int = 1,
     @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long = 300000L
 ) {

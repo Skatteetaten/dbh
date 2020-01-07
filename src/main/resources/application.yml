@@ -7,7 +7,7 @@ database-config:
   retryDelay: 60000
   dropAllowed: false
   schemaListingAllowed: false
-  cooldownMonths: 2
+  cooldownDaysAfterDelete: 30
 
 metrics:
   resourceUseCollectInterval: "300000"
