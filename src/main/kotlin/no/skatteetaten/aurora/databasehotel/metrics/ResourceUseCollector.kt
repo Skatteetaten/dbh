@@ -23,61 +23,74 @@ class ResourceUseCollector(
     private val databaseHotelService: DatabaseHotelService,
     private val registry: MeterRegistry
 ) {
-    private val schemaSizeValues = mutableMapOf<String, SchemaSizeValue>()
-
-    private val gauges = mutableMapOf<String, Gauge>()
+    private val schemaGauges = mutableMapOf<String, Pair<SchemaMetricData, Gauge>>()
 
     @Scheduled(fixedDelayString = "\${metrics.resourceUseCollectInterval}", initialDelay = 5000)
     fun collectResourceUseMetrics() {
         val start = System.currentTimeMillis()
-        LOG.info("Collecting resource use metrics")
-        val allSchemas = databaseHotelService.findAllDatabaseSchemas(null, HashMap(), true)
-        LOG.debug("Found {} schemas total", allSchemas.size)
-        val databaseSchemas = allSchemas
-            .filter { it.labels.containsEveryKey(NAMESPACE_LABEL, APP_LABEL, AFFILIATION_LABEL) }
-            .filter { it.active }
 
-        // Let's update the SchemaSizeValues that backs the schema size gauges
-        databaseSchemas.forEach { schema ->
-            val existingValue = schemaSizeValues[schema.id]
-            if (existingValue != null) {
-                existingValue.sizeBytes = schema.sizeMb
-            } else {
-                val value = SchemaSizeValue(schema.id, schema.sizeMb)
-                schemaSizeValues[schema.id] = value
-                registerGaugeForSchema(schema, value)
-            }
-        }
+        val databaseSchemas = loadDatabaseSchemas()
+        registerOrUpdateMetrics(databaseSchemas)
+        removeMetricsForDeletedSchemas(databaseSchemas)
 
-        // Remove the SchemaSizeValues that does not currently have a DatabaseSchema object. This indicates that
-        // the DatabaseSchema has been deleted since the last time we updated the gauges. Deleting the value that
-        // backs a Gauge *should* also in fact delete the Gauge since the reference to the SchemaSizeValue is a
-        // WeakReference. This does not appear to happen (bug?(!)), so we have to remove the gauge from the registry
-        // manually.
-        schemaSizeValues.keys.removeIf { schemaId: String ->
-            val isAnExistingSchema = databaseSchemas.any { schemaId == it.id }
-            val isSchemaRemovedSinceLastIteration = !isAnExistingSchema
-            if (isSchemaRemovedSinceLastIteration) registry.remove(gauges[schemaId]!!)
-            isSchemaRemovedSinceLastIteration
-        }
         LOG.info(
             "Resource use metrics collected for {} schemas in {} millis", databaseSchemas.size,
             System.currentTimeMillis() - start
         )
     }
 
-    private fun registerGaugeForSchema(schema: DatabaseSchema, value: SchemaSizeValue) {
-        val gauge = Gauge.builder(METRIC_NAME, value, { it.sizeBytes * 1024 * 1024 })
+    private fun loadDatabaseSchemas(): List<DatabaseSchema> {
+        LOG.info("Collecting resource use metrics")
+        val databaseSchemas = databaseHotelService.findAllDatabaseSchemas(null, HashMap(), true)
+            .filter { it.labels.containsEveryKey(NAMESPACE_LABEL, APP_LABEL, AFFILIATION_LABEL) }
+        LOG.debug("Found {} schemas total", databaseSchemas.size)
+        return databaseSchemas
+    }
+
+    private fun registerOrUpdateMetrics(databaseSchemas: List<DatabaseSchema>) {
+        databaseSchemas.forEach { schema ->
+            val existing = schemaGauges[schema.id]
+            if (existing != null) {
+                val metricData = existing.first
+                metricData.sizeBytes = schema.sizeMb * 1024 * 1024
+            } else {
+                val data = SchemaMetricData(schema.id, schema.sizeMb)
+                val gauge = registerSchemaSizeGauge(schema, data)
+                schemaGauges[schema.id] = data to gauge
+            }
+        }
+    }
+
+    /**
+     * Remove the SchemaSizeValues that does not currently have a DatabaseSchema object. This indicates that
+     * the DatabaseSchema has been deleted since the last time we updated the gauges. Deleting the value that
+     * backs a Gauge *should* also in fact delete the Gauge since the reference to the SchemaSizeValue is a
+     * WeakReference. This does not appear to happen (bug?(!)), so we have to remove the gauge from the registry
+     * manually.
+     */
+    private fun removeMetricsForDeletedSchemas(databaseSchemas: List<DatabaseSchema>) {
+        val schemasToRemove = schemaGauges.keys
+            .filter { schemaId: String -> !databaseSchemas.any { schemaId == it.id } }
+
+        schemasToRemove
+            .mapNotNull { schemaGauges[it] }
+            .forEach { (data, gauge) ->
+                schemaGauges.remove(data.id)
+                registry.remove(gauge.id)
+            }
+    }
+
+    private fun registerSchemaSizeGauge(schema: DatabaseSchema, value: SchemaMetricData): Gauge {
+        return Gauge.builder(METRIC_NAME, value, { it.sizeBytes })
             .baseUnit("bytes")
             .description("the size of the schema")
             .tags(createLabelsArray(schema))
             .register(registry)
-        gauges[schema.id] = gauge
     }
 
     private fun createLabelsArray(schema: DatabaseSchema): List<Tag> {
         val labels = schema.labels
-        val t = { tag: Tags, value: String? -> Tag.of(tag.name2, value ?: "UNKNOWN") }
+        val t = { tag: Tags, value: String? -> Tag.of(tag.tagName, value ?: "UNKNOWN") }
         val namespace = labels[NAMESPACE_LABEL]?.removeSuffix("-")
         val affiliation = labels[AFFILIATION_LABEL]
         val environment = affiliation?.let { namespace?.getEnvironment(it) }
@@ -93,9 +106,9 @@ class ResourceUseCollector(
         )
     }
 
-    data class SchemaSizeValue(var id: String, var sizeBytes: Double)
+    data class SchemaMetricData(var id: String, var sizeBytes: Double)
 
-    enum class Tags(val name2: String) {
+    enum class Tags(val tagName: String) {
         SCHEMA_ID("id"),
         SCHEMA_TYPE("schemaType"),
         DATABASE_HOST("databaseHost"),
