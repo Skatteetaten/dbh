@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.databasehotel.utils
 
-import javax.sql.DataSource
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
+import javax.sql.DataSource
 
 private val logger = KotlinLogging.logger {}
 
@@ -14,8 +14,8 @@ class OracleSchemaDeleter(dataSource: DataSource) : DatabaseSupport(dataSource) 
         disconnectAllUsers(schemaName)
 
         val dropSchemaStatements = arrayOf(
-                "DROP USER $schemaName cascade",
-                "DROP TABLESPACE $schemaName INCLUDING CONTENTS AND DATAFILES"
+            "DROP USER $schemaName cascade",
+            "DROP TABLESPACE $schemaName INCLUDING CONTENTS AND DATAFILES"
         )
         executeStatementsOnlyLogErrors(*dropSchemaStatements)
     }
@@ -34,44 +34,41 @@ class OracleSchemaDeleter(dataSource: DataSource) : DatabaseSupport(dataSource) 
 
         val maxNumberOfDisconnectAttempts = 10
         // We may not be able to disconnect all users on our first try, so try a few times before moving on.
-        for (attempt in 1..maxNumberOfDisconnectAttempts) {
-            val activeSessions =
-                    jdbcTemplate.queryForList("SELECT s.sid, s.serial# FROM v\$session s where username=?", schemaName)
-            if (activeSessions.isEmpty()) {
-                // Only when there are no active sessions are we actually successfully finished.
-                return
-            }
-            activeSessions.forEach { session ->
-                val sid = session["sid"]
-                val serial = session["serial#"]
-                val statements = arrayOf(
-                        "ALTER SYSTEM KILL SESSION '$sid, $serial' IMMEDIATE",
-                        // KILL SESSION by it self does not always do the trick...
-                        "ALTER SYSTEM DISCONNECT SESSION '$sid, $serial' IMMEDIATE"
-                )
-                executeStatementsOnlyLogErrors(*statements)
-            }
-            if (attempt >= 2) {
-                // If we are beyond the first attempt, lets wait a little to let the database server catch its breath.
-                try {
-                    Thread.sleep(1000)
-                } catch (e: InterruptedException) {
-                }
-            }
+        (1..maxNumberOfDisconnectAttempts).forEach { attempt ->
+            val activeSessions = getActiveSessions(schemaName)
+            // Only when there are no active sessions are we actually successfully finished.
+            if (activeSessions.isEmpty()) return
+            killSessions(activeSessions)
+            // If we are beyond the first attempt, lets wait a little to let the database server catch its breath.
+            if (attempt >= 2) Thread.sleep(1000)
         }
         throw DataAccessException(
-                "Unable to disconnect all users from schema=$schemaName by the $maxNumberOfDisconnectAttempts attempt. Gave up."
+            "Unable to disconnect all users from schema=$schemaName by the $maxNumberOfDisconnectAttempts attempt. Gave up."
         )
     }
 
+    private fun killSessions(activeSessions: List<MutableMap<String, Any>>) {
+        activeSessions.forEach { session ->
+            val sid = session["sid"]
+            val serial = session["serial#"]
+            val statements = arrayOf(
+                "ALTER SYSTEM KILL SESSION '$sid, $serial' IMMEDIATE",
+                // KILL SESSION by it self does not always do the trick...
+                "ALTER SYSTEM DISCONNECT SESSION '$sid, $serial' IMMEDIATE"
+            )
+            executeStatementsOnlyLogErrors(*statements)
+        }
+    }
+
+    private fun getActiveSessions(schemaName: String) =
+        jdbcTemplate.queryForList("SELECT s.sid, s.serial# FROM v\$session s where username=?", schemaName)
+
     private fun executeStatementsOnlyLogErrors(vararg statements: String) {
 
-        for (statement in statements) {
-            try {
-                jdbcTemplate.execute(statement)
-            } catch (e: Exception) {
-                logger.warn("Error executing statement=[$statement]", e)
-            }
+        for (statement in statements) try {
+            jdbcTemplate.execute(statement)
+        } catch (e: Exception) {
+            logger.warn("Error executing statement=[$statement]", e)
         }
     }
 }

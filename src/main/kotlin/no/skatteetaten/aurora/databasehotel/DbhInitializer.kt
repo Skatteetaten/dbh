@@ -52,13 +52,13 @@ class DbhInitializer(
 
         val instanceLabels: Map<String, String> = databaseConfig.typedGet("labels", emptyMap())
         val host: String = databaseConfig.typedGet("host")
-        val createSchemaAllowed = databaseConfig.typedGet("createSchemaAllowed", "true").toBoolean()
+        val createSchemaAllowed: Boolean = databaseConfig.typedGet("createSchemaAllowed", true)
         val instanceName: String = databaseConfig.typedGet("instanceName")
         val username: String = databaseConfig.typedGet("username")
         val password: String = databaseConfig.typedGet("password")
         when (engine) {
             "postgres" -> {
-                val port: Int = (databaseConfig.typedGet<String>("port").toInt())
+                val port: Int = databaseConfig.typedGet("port")
                 databaseHotelAdminService.registerPostgresDatabaseInstance(
                     instanceName,
                     host,
@@ -70,7 +70,7 @@ class DbhInitializer(
                 )
             }
             "oracle" -> {
-                val oracleScriptRequired: Boolean = databaseConfig.typedGet("oracleScriptRequired", "false").toBoolean()
+                val oracleScriptRequired: Boolean = databaseConfig.typedGet("oracleScriptRequired", false)
                 val service: String = databaseConfig.typedGet("service")
                 val clientService: String = databaseConfig.typedGet("clientService")
                 databaseHotelAdminService.registerOracleDatabaseInstance(
@@ -90,6 +90,13 @@ class DbhInitializer(
         logger.info("Registered host [{}]", host)
     }
 
-    private inline fun <reified T> Map<String, *>.typedGet(key: String, default: T? = null): T =
-        this.getOrDefault(key, default) as T
+    private inline fun <reified T> Map<String, *>.typedGet(key: String, default: T? = null): T {
+        val value: Any = this.getOrDefault(key, default)
+            ?: throw IllegalArgumentException("No value for key $key")
+        return when(T::class) {
+            Boolean::class -> value.toString().toBoolean() as T
+            Int::class -> value.toString().toInt() as T
+            else -> value as T
+        }
+    }
 }
