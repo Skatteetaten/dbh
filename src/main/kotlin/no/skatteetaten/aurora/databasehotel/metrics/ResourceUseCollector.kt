@@ -41,7 +41,7 @@ class ResourceUseCollector(
 
     private fun loadDatabaseSchemas(): List<DatabaseSchema> {
         LOG.info("Collecting resource use metrics")
-        val databaseSchemas = databaseHotelService.findAllDatabaseSchemas(null, HashMap(), true)
+        val databaseSchemas = databaseHotelService.findAllDatabaseSchemas(null, HashMap(), false)
             .filter { it.labels.containsEveryKey(NAMESPACE_LABEL, APP_LABEL, AFFILIATION_LABEL) }
         LOG.debug("Found {} schemas total", databaseSchemas.size)
         return databaseSchemas
