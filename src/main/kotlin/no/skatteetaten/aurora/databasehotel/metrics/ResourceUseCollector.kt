@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.databasehotel.metrics
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
+import java.util.HashMap
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.AFFILIATION
 import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.APPLICATION
@@ -16,7 +17,6 @@ import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.HashMap
 
 @Component
 class ResourceUseCollector(
@@ -134,4 +134,3 @@ class ResourceUseCollector(
 }
 
 private fun <K> Map<K, *>.containsEveryKey(vararg keys: K) = this.keys.containsAll(setOf(*keys))
-

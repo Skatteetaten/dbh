@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.databasehotel.web.rest
 
 import io.mockk.mockk
+import java.util.Date
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance
-import java.util.Date
 
 data class DatabaseSchemaTestBuilder(val type: DatabaseSchema.Type = DatabaseSchema.Type.MANAGED) {
     fun build() = DatabaseSchema(

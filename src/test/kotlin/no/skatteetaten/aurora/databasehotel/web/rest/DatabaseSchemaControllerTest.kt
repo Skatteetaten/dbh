@@ -4,6 +4,8 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import java.net.URLEncoder.encode
+import java.util.stream.Stream
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
@@ -25,8 +27,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import java.net.URLEncoder.encode
-import java.util.stream.Stream
 
 @WebMvcTest(value = [DatabaseSchemaController::class, ErrorHandler::class])
 class DatabaseSchemaControllerTest : AbstractControllerTest() {

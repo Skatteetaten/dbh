@@ -93,7 +93,7 @@ class DbhInitializer(
     private inline fun <reified T> Map<String, *>.typedGet(key: String, default: T? = null): T {
         val value: Any = this.getOrDefault(key, default)
             ?: throw IllegalArgumentException("No value for key $key")
-        return when(T::class) {
+        return when (T::class) {
             Boolean::class -> value.toString().toBoolean() as T
             Int::class -> value.toString().toInt() as T
             else -> value as T

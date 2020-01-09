@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.databasehotel.utils
 
+import javax.sql.DataSource
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseSupport
-import javax.sql.DataSource
 
 private val logger = KotlinLogging.logger {}
 

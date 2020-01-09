@@ -1,6 +1,10 @@
 package no.skatteetaten.aurora.databasehotel.web.rest
 
 import io.micrometer.core.annotation.Timed
+import java.io.UnsupportedEncodingException
+import java.net.URLDecoder
+import java.time.Duration
+import java.util.Date
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
@@ -18,10 +22,6 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.io.UnsupportedEncodingException
-import java.net.URLDecoder
-import java.time.Duration
-import java.util.Date
 
 data class SchemaMetadataResource(val sizeInMb: Double?)
 
