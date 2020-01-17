@@ -5,6 +5,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import java.util.HashMap
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
+import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.ACTIVE
 import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.AFFILIATION
 import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.APPLICATION
 import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.DATABASE_ENGINE
@@ -57,6 +58,8 @@ class ResourceUseCollector(
                 val data = SchemaMetricData(schema.id, schema.sizeMb)
                 val gauge = registerSchemaSizeGauge(schema, data)
                 schemaGauges[schema.id] = data to gauge
+                val rename = registerSchemaSizeGaugeRename(schema, data)
+                schemaGauges[schema.id] = data to rename
             }
         }
     }
@@ -81,10 +84,18 @@ class ResourceUseCollector(
     }
 
     private fun registerSchemaSizeGauge(schema: DatabaseSchema, value: SchemaMetricData): Gauge {
-        return Gauge.builder(METRIC_NAME, value, { it.sizeBytes })
+        return Gauge.builder(SCHEMA_SIZE_METRIC_NAME, value, { it.sizeBytes })
             .baseUnit("bytes")
             .description("the size of the schema")
             .tags(createLabelsArray(schema))
+            .register(registry)
+    }
+
+    private fun registerSchemaSizeGaugeRename(schema: DatabaseSchema, value: SchemaMetricData): Gauge {
+        return Gauge.builder(RENAME_THIS_METRIC_NAME, value, { it.sizeBytes })
+            .baseUnit("bytes")
+            .description("the size of the schema")
+            .tags(createLabelsArrayForState(schema))
             .register(registry)
     }
 
@@ -106,6 +117,20 @@ class ResourceUseCollector(
         )
     }
 
+    private fun createLabelsArrayForState(schema: DatabaseSchema): List<Tag> {
+        val labels = schema.labels
+        val t = { tag: Tags, value: String? -> Tag.of(tag.tagName, value ?: "UNKNOWN") }
+        val affiliation = labels[AFFILIATION_LABEL]
+        val state = if (schema.active) "active" else "cooldown"
+        return listOf(
+            t(AFFILIATION, affiliation),
+            t(DATABASE_HOST, schema.databaseInstanceMetaInfo.host),
+            t(DATABASE_ENGINE, schema.databaseInstanceMetaInfo.engine.name),
+            t(SCHEMA_TYPE, schema.type.name),
+            t(ACTIVE, state)
+        )
+    }
+
     data class SchemaMetricData(var id: String, var sizeBytes: Double)
 
     enum class Tags(val tagName: String) {
@@ -116,12 +141,14 @@ class ResourceUseCollector(
         AFFILIATION("affiliation"),
         ENVIRONMENT("environment"),
         APPLICATION("application"),
-        NAMESPACE("namespace")
+        NAMESPACE("namespace"),
+        ACTIVE("state")
     }
 
     companion object {
         private val LOG = LoggerFactory.getLogger(ResourceUseCollector::class.java)
-        private const val METRIC_NAME = "aurora.dbh.schema.size.bytes"
+        private const val SCHEMA_SIZE_METRIC_NAME = "aurora.dbh.schema.size.bytes"
+        private const val RENAME_THIS_METRIC_NAME = "aurora.dbh.schema.rename.me"
         private const val NAMESPACE_LABEL = "environment"
         private const val APP_LABEL = "application"
         private const val AFFILIATION_LABEL = "affiliation"
