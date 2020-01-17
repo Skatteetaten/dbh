@@ -3,9 +3,7 @@ package no.skatteetaten.aurora.databasehotel.metrics
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
-import java.util.HashMap
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
-import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.ACTIVE
 import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.AFFILIATION
 import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.APPLICATION
 import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.DATABASE_ENGINE
@@ -18,13 +16,15 @@ import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.HashMap
 
 @Component
 class ResourceUseCollector(
     private val databaseHotelService: DatabaseHotelService,
     private val registry: MeterRegistry
 ) {
-    private val schemaGauges = mutableMapOf<String, Pair<SchemaMetricData, Gauge>>()
+    private val schemaGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
+    private val schemaCountGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
 
     @Scheduled(fixedDelayString = "\${metrics.resourceUseCollectInterval}", initialDelay = 5000)
     fun collectResourceUseMetrics() {
@@ -33,6 +33,7 @@ class ResourceUseCollector(
         val databaseSchemas = loadDatabaseSchemas()
         registerOrUpdateMetrics(databaseSchemas)
         removeMetricsForDeletedSchemas(databaseSchemas)
+        removeMetricsForRemovedLabels(databaseSchemas)
 
         LOG.info(
             "Resource use metrics collected for {} schemas in {} millis", databaseSchemas.size,
@@ -53,14 +54,31 @@ class ResourceUseCollector(
             val existing = schemaGauges[schema.id]
             if (existing != null) {
                 val metricData = existing.first
-                metricData.sizeBytes = schema.sizeMb * 1024 * 1024
+                metricData.value = schema.sizeMb * 1024 * 1024
             } else {
-                val data = SchemaMetricData(schema.id, schema.sizeMb)
+                val data = GaugeValue(schema.id, schema.sizeMb)
                 val gauge = registerSchemaSizeGauge(schema, data)
                 schemaGauges[schema.id] = data to gauge
-                val rename = registerSchemaSizeGaugeRename(schema, data)
-                schemaGauges[schema.id] = data to rename
             }
+        }
+        val grouped: Map<Map<String, String>, List<DatabaseSchema>> = groupDatabaseSchemas(databaseSchemas)
+        grouped.forEach { (groupKeys, schemas) ->
+            val id = groupKeys.toSortedMap().map { (k, v) -> "$k=$v" }.joinToString(",")
+            val data = GaugeValue(id, schemas.size.toDouble())
+            val gague = registerSchemaSizeGaugeRename(groupKeys, data)
+            schemaCountGauges[id] = data to gague
+        }
+    }
+
+    private fun groupDatabaseSchemas(databaseSchemas: List<DatabaseSchema>): Map<Map<String, String>, List<DatabaseSchema>> {
+        return databaseSchemas.groupBy {
+            mapOf(
+                "state" to if (it.active) "ACTIVE" else "COOLDOWN",
+                "databaseHost" to it.databaseInstanceMetaInfo.host,
+                "databaseEngine" to it.databaseInstanceMetaInfo.engine.name,
+                "schemaType" to it.type.name,
+                "affiliation" to (it.labels[AFFILIATION_LABEL] ?: "UNKNOWN_AFFILIATION")
+            )
         }
     }
 
@@ -83,19 +101,40 @@ class ResourceUseCollector(
             }
     }
 
-    private fun registerSchemaSizeGauge(schema: DatabaseSchema, value: SchemaMetricData): Gauge {
-        return Gauge.builder(SCHEMA_SIZE_METRIC_NAME, value, { it.sizeBytes })
+    private fun removeMetricsForRemovedLabels(databaseSchemas: List<DatabaseSchema>) {
+        val grouped = groupDatabaseSchemas(databaseSchemas)
+        val sortedMapOfTruth = grouped.forEach { (groupKeys) ->
+            groupKeys.toSortedMap().map { (k, v) -> "$k=$v" }.joinToString(",")
+        }
+
+        val schemasToRemove = schemaCountGauges.keys
+            .filter { id: String -> !sortedMapOfTruth.equals(id) }
+
+        schemasToRemove
+            .mapNotNull { schemaCountGauges[it] }
+            .forEach { (data, gauge) ->
+                schemaCountGauges.remove(data.id)
+                registry.remove(gauge.id)
+            }
+    }
+
+    private fun registerSchemaSizeGauge(schema: DatabaseSchema, value: GaugeValue): Gauge {
+        return Gauge.builder(SCHEMA_SIZE_METRIC_NAME, value, { it.value })
             .baseUnit("bytes")
             .description("the size of the schema")
             .tags(createLabelsArray(schema))
             .register(registry)
     }
 
-    private fun registerSchemaSizeGaugeRename(schema: DatabaseSchema, value: SchemaMetricData): Gauge {
-        return Gauge.builder(RENAME_THIS_METRIC_NAME, value, { it.sizeBytes })
-            .baseUnit("bytes")
-            .description("the size of the schema")
-            .tags(createLabelsArrayForState(schema))
+    private fun registerSchemaSizeGaugeRename(
+        groupKeys: Map<String, String?>,
+        value: GaugeValue
+    ): Gauge {
+        val tags = groupKeys.map { (k, v) -> Tag.of(k, v ?: "UNKNOWN") }
+        return Gauge.builder(RENAME_THIS_METRIC_NAME, value, { it.value })
+            .baseUnit("count")
+            .description("The amount of schemas")
+            .tags(tags)
             .register(registry)
     }
 
@@ -117,21 +156,7 @@ class ResourceUseCollector(
         )
     }
 
-    private fun createLabelsArrayForState(schema: DatabaseSchema): List<Tag> {
-        val labels = schema.labels
-        val t = { tag: Tags, value: String? -> Tag.of(tag.tagName, value ?: "UNKNOWN") }
-        val affiliation = labels[AFFILIATION_LABEL]
-        val state = if (schema.active) "active" else "cooldown"
-        return listOf(
-            t(AFFILIATION, affiliation),
-            t(DATABASE_HOST, schema.databaseInstanceMetaInfo.host),
-            t(DATABASE_ENGINE, schema.databaseInstanceMetaInfo.engine.name),
-            t(SCHEMA_TYPE, schema.type.name),
-            t(ACTIVE, state)
-        )
-    }
-
-    data class SchemaMetricData(var id: String, var sizeBytes: Double)
+    data class GaugeValue(var id: String, var value: Double)
 
     enum class Tags(val tagName: String) {
         SCHEMA_ID("id"),
@@ -141,8 +166,7 @@ class ResourceUseCollector(
         AFFILIATION("affiliation"),
         ENVIRONMENT("environment"),
         APPLICATION("application"),
-        NAMESPACE("namespace"),
-        ACTIVE("state")
+        NAMESPACE("namespace")
     }
 
     companion object {
