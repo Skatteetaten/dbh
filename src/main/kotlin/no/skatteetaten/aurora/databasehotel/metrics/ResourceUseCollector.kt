@@ -31,9 +31,8 @@ class ResourceUseCollector(
         val start = System.currentTimeMillis()
 
         val databaseSchemas = loadDatabaseSchemas()
-        registerOrUpdateMetrics(databaseSchemas)
-        removeMetricsForDeletedSchemas(databaseSchemas)
-        removeMetricsForRemovedLabels(databaseSchemas)
+        handleSchemaSizeMetrics(databaseSchemas)
+        handleSchemaCountMetrics(databaseSchemas)
 
         LOG.info(
             "Resource use metrics collected for {} schemas in {} millis", databaseSchemas.size,
@@ -49,25 +48,41 @@ class ResourceUseCollector(
         return databaseSchemas
     }
 
-    private fun registerOrUpdateMetrics(databaseSchemas: List<DatabaseSchema>) {
-        databaseSchemas.forEach { schema ->
-            val existing = schemaGauges[schema.id]
+    private fun handleSchemaSizeMetrics(databaseSchemas: List<DatabaseSchema>) {
+        val currentMetricIds = databaseSchemas.map { schema ->
+            val id = schema.id
+            val existing = schemaGauges[id]
             if (existing != null) {
                 val metricData = existing.first
                 metricData.value = schema.sizeMb * 1024 * 1024
             } else {
-                val data = GaugeValue(schema.id, schema.sizeMb)
+                val data = GaugeValue(id, schema.sizeMb)
                 val gauge = registerSchemaSizeGauge(schema, data)
-                schemaGauges[schema.id] = data to gauge
+                schemaGauges[id] = data to gauge
             }
+            id
         }
+
+        removeDeprecatedMetrics(schemaGauges, currentMetricIds)
+    }
+
+    private fun handleSchemaCountMetrics(databaseSchemas: List<DatabaseSchema>) {
         val grouped: Map<Map<String, String>, List<DatabaseSchema>> = groupDatabaseSchemas(databaseSchemas)
-        grouped.forEach { (groupKeys, schemas) ->
+        val currentMetricIds: List<String> = grouped.map { (groupKeys, schemas) ->
             val id = groupKeys.toSortedMap().map { (k, v) -> "$k=$v" }.joinToString(",")
-            val data = GaugeValue(id, schemas.size.toDouble())
-            val gague = registerSchemaSizeGaugeRename(groupKeys, data)
-            schemaCountGauges[id] = data to gague
+            val existing = schemaCountGauges[id]
+            if (existing != null) {
+                val metricData = existing.first
+                metricData.value = schemas.size.toDouble()
+            } else {
+                val data = GaugeValue(id, schemas.size.toDouble())
+                val gauge = registerSchemaCountGauge(groupKeys, data)
+                schemaCountGauges[id] = data to gauge
+            }
+            id
         }
+
+        removeDeprecatedMetrics(schemaCountGauges, currentMetricIds)
     }
 
     private fun groupDatabaseSchemas(databaseSchemas: List<DatabaseSchema>): Map<Map<String, String>, List<DatabaseSchema>> {
@@ -89,31 +104,15 @@ class ResourceUseCollector(
      * WeakReference. This does not appear to happen (bug?(!)), so we have to remove the gauge from the registry
      * manually.
      */
-    private fun removeMetricsForDeletedSchemas(databaseSchemas: List<DatabaseSchema>) {
-        val schemasToRemove = schemaGauges.keys
-            .filter { schemaId: String -> !databaseSchemas.any { schemaId == it.id } }
-
-        schemasToRemove
-            .mapNotNull { schemaGauges[it] }
+    private fun removeDeprecatedMetrics(
+        metricIndex: MutableMap<String, Pair<GaugeValue, Gauge>>,
+        currentMetricIds: List<String>
+    ) {
+        val metricsToRemove = metricIndex.keys.minus(currentMetricIds)
+        metricsToRemove
+            .mapNotNull { metricIndex[it] }
             .forEach { (data, gauge) ->
-                schemaGauges.remove(data.id)
-                registry.remove(gauge.id)
-            }
-    }
-
-    private fun removeMetricsForRemovedLabels(databaseSchemas: List<DatabaseSchema>) {
-        val grouped = groupDatabaseSchemas(databaseSchemas)
-        val sortedMapOfTruth = grouped.forEach { (groupKeys) ->
-            groupKeys.toSortedMap().map { (k, v) -> "$k=$v" }.joinToString(",")
-        }
-
-        val schemasToRemove = schemaCountGauges.keys
-            .filter { id: String -> !sortedMapOfTruth.equals(id) }
-
-        schemasToRemove
-            .mapNotNull { schemaCountGauges[it] }
-            .forEach { (data, gauge) ->
-                schemaCountGauges.remove(data.id)
+                metricIndex.remove(data.id)
                 registry.remove(gauge.id)
             }
     }
@@ -126,12 +125,12 @@ class ResourceUseCollector(
             .register(registry)
     }
 
-    private fun registerSchemaSizeGaugeRename(
+    private fun registerSchemaCountGauge(
         groupKeys: Map<String, String?>,
         value: GaugeValue
     ): Gauge {
         val tags = groupKeys.map { (k, v) -> Tag.of(k, v ?: "UNKNOWN") }
-        return Gauge.builder(RENAME_THIS_METRIC_NAME, value, { it.value })
+        return Gauge.builder(SCHEMA_COUNT_METRIC_NAME, value, { it.value })
             .baseUnit("count")
             .description("The amount of schemas")
             .tags(tags)
@@ -172,7 +171,7 @@ class ResourceUseCollector(
     companion object {
         private val LOG = LoggerFactory.getLogger(ResourceUseCollector::class.java)
         private const val SCHEMA_SIZE_METRIC_NAME = "aurora.dbh.schema.size.bytes"
-        private const val RENAME_THIS_METRIC_NAME = "aurora.dbh.schema.rename.me"
+        private const val SCHEMA_COUNT_METRIC_NAME = "aurora.dbh.schema.count"
         private const val NAMESPACE_LABEL = "environment"
         private const val APP_LABEL = "application"
         private const val AFFILIATION_LABEL = "affiliation"
