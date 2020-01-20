@@ -4,14 +4,14 @@ import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
-import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.AFFILIATION
-import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.APPLICATION
-import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.DATABASE_ENGINE
-import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.DATABASE_HOST
-import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.ENVIRONMENT
-import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.NAMESPACE
-import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.SCHEMA_ID
-import no.skatteetaten.aurora.databasehotel.metrics.ResourceUseCollector.Tags.SCHEMA_TYPE
+import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.AFFILIATION
+import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.APPLICATION
+import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.DATABASE_ENGINE
+import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.DATABASE_HOST
+import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.ENVIRONMENT
+import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.NAMESPACE
+import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.SCHEMA_ID
+import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.SCHEMA_TYPE
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -28,6 +28,8 @@ class ResourceUseCollector(
 
     @Scheduled(fixedDelayString = "\${metrics.resourceUseCollectInterval}", initialDelay = 5000)
     fun collectResourceUseMetrics() {
+
+        LOG.info("Collecting resource use metrics")
         val start = System.currentTimeMillis()
 
         val databaseSchemas = loadDatabaseSchemas()
@@ -40,13 +42,10 @@ class ResourceUseCollector(
         )
     }
 
-    private fun loadDatabaseSchemas(): List<DatabaseSchema> {
-        LOG.info("Collecting resource use metrics")
-        val databaseSchemas = databaseHotelService.findAllDatabaseSchemas(null, HashMap(), true)
-            .filter { it.labels.containsEveryKey(NAMESPACE_LABEL, APP_LABEL, AFFILIATION_LABEL) }
-        LOG.debug("Found {} schemas total", databaseSchemas.size)
-        return databaseSchemas
-    }
+    private fun loadDatabaseSchemas() =
+        databaseHotelService.findAllDatabaseSchemas(null, HashMap(), true)
+            .toList()
+            .also { LOG.debug("Found {} schemas total", it.size) }
 
     private fun handleSchemaSizeMetrics(databaseSchemas: List<DatabaseSchema>) {
         val currentMetricIds = databaseSchemas.map { schema ->
@@ -63,13 +62,13 @@ class ResourceUseCollector(
             id
         }
 
-        removeDeprecatedMetrics(schemaGauges, currentMetricIds)
+        schemaGauges.removeDeprecatedMetrics(currentMetricIds)
     }
 
     private fun handleSchemaCountMetrics(databaseSchemas: List<DatabaseSchema>) {
-        val grouped: Map<Map<String, String>, List<DatabaseSchema>> = groupDatabaseSchemas(databaseSchemas)
+        val grouped: Map<CountGroup, List<DatabaseSchema>> = groupDatabaseSchemasForCounting(databaseSchemas)
         val currentMetricIds: List<String> = grouped.map { (groupKeys, schemas) ->
-            val id = groupKeys.toSortedMap().map { (k, v) -> "$k=$v" }.joinToString(",")
+            val id = groupKeys.id
             val existing = schemaCountGauges[id]
             if (existing != null) {
                 val metricData = existing.first
@@ -82,54 +81,30 @@ class ResourceUseCollector(
             id
         }
 
-        removeDeprecatedMetrics(schemaCountGauges, currentMetricIds)
+        schemaCountGauges.removeDeprecatedMetrics(currentMetricIds)
     }
 
-    private fun groupDatabaseSchemas(databaseSchemas: List<DatabaseSchema>): Map<Map<String, String>, List<DatabaseSchema>> {
-        return databaseSchemas.groupBy {
+    private fun groupDatabaseSchemasForCounting(databaseSchemas: List<DatabaseSchema>) =
+        databaseSchemas.groupBy {
             mapOf(
                 "state" to if (it.active) "ACTIVE" else "COOLDOWN",
                 "databaseHost" to it.databaseInstanceMetaInfo.host,
                 "databaseEngine" to it.databaseInstanceMetaInfo.engine.name,
                 "schemaType" to it.type.name,
-                "affiliation" to (it.labels[AFFILIATION_LABEL] ?: "UNKNOWN_AFFILIATION")
+                "affiliation" to it.labels[AFFILIATION_LABEL]
             )
         }
-    }
-
-    /**
-     * Remove the SchemaSizeValues that does not currently have a DatabaseSchema object. This indicates that
-     * the DatabaseSchema has been deleted since the last time we updated the gauges. Deleting the value that
-     * backs a Gauge *should* also in fact delete the Gauge since the reference to the SchemaSizeValue is a
-     * WeakReference. This does not appear to happen (bug?(!)), so we have to remove the gauge from the registry
-     * manually.
-     */
-    private fun removeDeprecatedMetrics(
-        metricIndex: MutableMap<String, Pair<GaugeValue, Gauge>>,
-        currentMetricIds: List<String>
-    ) {
-        val metricsToRemove = metricIndex.keys.minus(currentMetricIds)
-        metricsToRemove
-            .mapNotNull { metricIndex[it] }
-            .forEach { (data, gauge) ->
-                metricIndex.remove(data.id)
-                registry.remove(gauge.id)
-            }
-    }
 
     private fun registerSchemaSizeGauge(schema: DatabaseSchema, value: GaugeValue): Gauge {
         return Gauge.builder(SCHEMA_SIZE_METRIC_NAME, value, { it.value })
             .baseUnit("bytes")
             .description("the size of the schema")
-            .tags(createLabelsArray(schema))
+            .tags(schema.metricTags)
             .register(registry)
     }
 
-    private fun registerSchemaCountGauge(
-        groupKeys: Map<String, String?>,
-        value: GaugeValue
-    ): Gauge {
-        val tags = groupKeys.map { (k, v) -> Tag.of(k, v ?: "UNKNOWN") }
+    private fun registerSchemaCountGauge(groupKeys: CountGroup, value: GaugeValue): Gauge {
+        val tags = groupKeys.map { (k, v) -> tagOfValueOrUnknown(k, v) }
         return Gauge.builder(SCHEMA_COUNT_METRIC_NAME, value, { it.value })
             .baseUnit("count")
             .description("The amount of schemas")
@@ -137,50 +112,66 @@ class ResourceUseCollector(
             .register(registry)
     }
 
-    private fun createLabelsArray(schema: DatabaseSchema): List<Tag> {
-        val labels = schema.labels
-        val t = { tag: Tags, value: String? -> Tag.of(tag.tagName, value ?: "UNKNOWN") }
-        val namespace = labels[NAMESPACE_LABEL]?.removeSuffix("-")
-        val affiliation = labels[AFFILIATION_LABEL]
-        val environment = affiliation?.let { namespace?.getEnvironment(it) }
-        return listOf(
-            t(SCHEMA_ID, schema.id),
-            t(AFFILIATION, affiliation),
-            t(APPLICATION, labels[APP_LABEL]),
-            t(ENVIRONMENT, environment),
-            t(NAMESPACE, namespace),
-            t(DATABASE_HOST, schema.databaseInstanceMetaInfo.host),
-            t(DATABASE_ENGINE, schema.databaseInstanceMetaInfo.engine.name),
-            t(SCHEMA_TYPE, schema.type.name)
-        )
-    }
-
-    data class GaugeValue(var id: String, var value: Double)
-
-    enum class Tags(val tagName: String) {
-        SCHEMA_ID("id"),
-        SCHEMA_TYPE("schemaType"),
-        DATABASE_HOST("databaseHost"),
-        DATABASE_ENGINE("databaseEngine"),
-        AFFILIATION("affiliation"),
-        ENVIRONMENT("environment"),
-        APPLICATION("application"),
-        NAMESPACE("namespace")
+    private fun MutableMap<String, Pair<GaugeValue, Gauge>>.removeDeprecatedMetrics(currentMetricIds: List<String>) {
+        val metricsToRemove = keys.minus(currentMetricIds)
+        metricsToRemove
+            .mapNotNull { this[it] }
+            .forEach { (data, gauge) ->
+                remove(data.id)
+                registry.remove(gauge.id)
+            }
     }
 
     companion object {
         private val LOG = LoggerFactory.getLogger(ResourceUseCollector::class.java)
         private const val SCHEMA_SIZE_METRIC_NAME = "aurora.dbh.schema.size.bytes"
         private const val SCHEMA_COUNT_METRIC_NAME = "aurora.dbh.schema.count"
-        private const val NAMESPACE_LABEL = "environment"
-        private const val APP_LABEL = "application"
-        private const val AFFILIATION_LABEL = "affiliation"
-    }
-
-    private fun String.getEnvironment(affiliation: String): String {
-        val environment = this.replace("^$affiliation".toRegex(), "").removePrefix("-")
-        return if (environment.isBlank()) affiliation else environment
     }
 }
 
-private fun <K> Map<K, *>.containsEveryKey(vararg keys: K) = this.keys.containsAll(setOf(*keys))
+private enum class MetricTag(val tagName: String) {
+    SCHEMA_ID("id"),
+    SCHEMA_TYPE("schemaType"),
+    DATABASE_HOST("databaseHost"),
+    DATABASE_ENGINE("databaseEngine"),
+    AFFILIATION("affiliation"),
+    ENVIRONMENT("environment"),
+    APPLICATION("application"),
+    NAMESPACE("namespace")
+}
+
+private val NAMESPACE_LABEL = ENVIRONMENT.tagName
+private val APP_LABEL = APPLICATION.tagName
+private val AFFILIATION_LABEL = AFFILIATION.tagName
+
+private val DatabaseSchema.metricTags
+    get(): List<Tag> {
+        val labels = this.labels
+        val t = { tag: MetricTag, value: String? -> tagOfValueOrUnknown(tag.tagName, value) }
+        val namespace = labels[NAMESPACE_LABEL]?.removeSuffix("-")
+        val affiliation = labels[AFFILIATION_LABEL]
+        val environment = affiliation?.let { namespace?.getEnvironment(it) }
+        return listOf(
+            t(SCHEMA_ID, this.id),
+            t(AFFILIATION, affiliation),
+            t(APPLICATION, labels[APP_LABEL]),
+            t(ENVIRONMENT, environment),
+            t(NAMESPACE, namespace),
+            t(DATABASE_HOST, this.databaseInstanceMetaInfo.host),
+            t(DATABASE_ENGINE, this.databaseInstanceMetaInfo.engine.name),
+            t(SCHEMA_TYPE, this.type.name)
+        )
+    }
+
+data class GaugeValue(var id: String, var value: Double)
+
+private fun tagOfValueOrUnknown(name: String, value: String?) = Tag.of(name, value ?: "UNKNOWN")
+
+private typealias CountGroup = Map<String, String?>
+
+private val CountGroup.id get() = this.toSortedMap().map { (k, v) -> "$k=$v" }.joinToString(",")
+
+private fun String.getEnvironment(affiliation: String): String {
+    val environment = this.replace("^$affiliation".toRegex(), "").removePrefix("-")
+    return if (environment.isBlank()) affiliation else environment
+}
