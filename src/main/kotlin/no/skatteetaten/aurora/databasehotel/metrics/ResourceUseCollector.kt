@@ -25,6 +25,8 @@ class ResourceUseCollector(
 ) {
     private val schemaGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
     private val schemaCountGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
+    //TODO private val availi = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
+
 
     @Scheduled(fixedDelayString = "\${metrics.resourceUseCollectInterval}", initialDelay = 5000)
     fun collectResourceUseMetrics() {
@@ -33,8 +35,11 @@ class ResourceUseCollector(
         val start = System.currentTimeMillis()
 
         val databaseSchemas = loadDatabaseSchemas()
+        //TODO val availibleTablespaces = calculateAvailibleTablespaces() - skiller dette på db01 og db02?
+
         handleSchemaSizeMetrics(databaseSchemas)
         handleSchemaCountMetrics(databaseSchemas)
+        //TODO handleAvailibleTablespacesMetrics(availibleTablespaces, databaseSchemas) - databaseSchemas for å hente ut host?
 
         LOG.info(
             "Resource use metrics collected for {} schemas in {} millis", databaseSchemas.size,
@@ -46,6 +51,12 @@ class ResourceUseCollector(
         databaseHotelService.findAllDatabaseSchemas(null, HashMap(), true)
             .toList()
             .also { LOG.debug("Found {} schemas total", it.size) }
+
+    private fun calculateAvailibleTablespaces() {
+        //TODO maxTablespaces = databaseHotelService.getMaxTablespaces
+        //TODO usedTablespaces = databaseHotelService.getUsedTablespaces
+        //TODO availibleTablespaces = foo - bar
+    }
 
     private fun handleSchemaSizeMetrics(databaseSchemas: List<DatabaseSchema>) {
         val currentMetricIds = databaseSchemas.map { schema ->
@@ -84,6 +95,9 @@ class ResourceUseCollector(
         schemaCountGauges.removeDeprecatedMetrics(currentMetricIds)
     }
 
+    //TODO private fun handleAvailibleTablespacesMetrics(availibleTablespaces)
+
+
     private fun groupDatabaseSchemasForCounting(databaseSchemas: List<DatabaseSchema>) =
         databaseSchemas.groupBy {
             mapOf(
@@ -112,6 +126,8 @@ class ResourceUseCollector(
             .register(registry)
     }
 
+    //TODO private fun registerAvailibleTablespacesGauge()
+
     private fun MutableMap<String, Pair<GaugeValue, Gauge>>.removeDeprecatedMetrics(currentMetricIds: List<String>) {
         val metricsToRemove = keys.minus(currentMetricIds)
         metricsToRemove
@@ -126,6 +142,7 @@ class ResourceUseCollector(
         private val LOG = LoggerFactory.getLogger(ResourceUseCollector::class.java)
         private const val SCHEMA_SIZE_METRIC_NAME = "aurora.dbh.schema.size.bytes"
         private const val SCHEMA_COUNT_METRIC_NAME = "aurora.dbh.schema.count"
+        //TODO private const val AVAILIBLE_TABLESPACES_METRIC_NAME = "aurora.dbh.availible.tablespaces"
     }
 }
 
