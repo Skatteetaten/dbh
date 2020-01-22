@@ -143,7 +143,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         this.parallelStream().flatMap {
             logger.debug("Fetching schemas for instance ${it.metaInfo.host}")
             val (timeSpent, res) = measureTimeMillis { func(it) }
-            logger.debug("Fetched schemas for instance ${it.metaInfo.host} in $timeSpent millis")
+            logger.debug("Fetched ${res.size} schemas for instance ${it.metaInfo.host} in $timeSpent millis")
             res.stream()
         }.toList().toSet()
 

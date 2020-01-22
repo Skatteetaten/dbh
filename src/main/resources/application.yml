@@ -14,13 +14,11 @@ metrics:
 
 logging:
   level:
-    no:
-        skatteetaten:
-            aurora:
-                databasehotel:
-                    DbhConfigurator: WARN
-                    service:
-                        DatabaseHotelService: DEBUG
+    no.skatteetaten.aurora: INFO
+    no.skatteetaten.aurora.databasehotel.DbhConfigurator: WARN
+    no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService: DEBUG
+
+
     com.zaxxer.hikari: WARN
     org:
       springframework: WARN
