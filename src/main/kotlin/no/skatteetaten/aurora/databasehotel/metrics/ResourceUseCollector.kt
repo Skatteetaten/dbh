@@ -53,8 +53,8 @@ class ResourceUseCollector(
             .also { LOG.debug("Found {} schemas total", it.size) }
 
     private fun calculateAvailibleTablespaces() {
-        //TODO maxTablespaces = databaseHotelService.getMaxTablespaces
-        //TODO usedTablespaces = databaseHotelService.getUsedTablespaces
+        //TODO maxTablespaces = databaseHotelService.getTotalMaxTablespaces()
+        //TODO usedTablespaces = databaseHotelService.getTotalUsedTablespaces()
         //TODO availibleTablespaces = foo - bar
     }
 

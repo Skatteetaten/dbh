@@ -23,4 +23,6 @@ interface DatabaseManager {
     fun deleteSchema(schemaName: String)
 
     fun executeStatements(vararg statements: String)
+
+    fun getMaxTablespaces(): Int?
 }

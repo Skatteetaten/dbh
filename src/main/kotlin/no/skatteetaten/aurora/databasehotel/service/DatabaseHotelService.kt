@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.databasehotel.service
 
-import java.sql.DriverManager
-import java.sql.SQLException
-import java.time.Duration
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher.findAllMatchingSchemas
 import org.springframework.stereotype.Service
+import java.sql.DriverManager
+import java.sql.SQLException
+import java.time.Duration
 
 private val logger = KotlinLogging.logger {}
 
@@ -52,6 +52,27 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         val matchingExternalSchemas = findAllMatchingSchemas(externalSchemas, labelsToMatch)
         return schemas + matchingExternalSchemas
     }
+
+    fun getTotalMaxTablespaces(
+        engine: DatabaseEngine? = null
+    ) : Int {
+        //TODO denne skal hente max for alle instanser
+        //TODO val count = databaseHotelAdminService.findAllDatabaseInstances(engine).flatMap { it.getMaxTablespaces }
+        //TODO return count
+        return 0
+    }
+
+    fun getTotalUsedTablespaces(
+        engine: DatabaseEngine? = null
+    ) : Int {
+        //TODO denne skal hente brukt for alle instanser
+        //TODO val count = databaseHotelAdminService.findAllDatabaseInstances(engine).flatMap { it.getUsedTablespaces }
+        //TODO return count
+        return 0
+    }
+
+    //TODO maxTablespaces = databaseHotelService.getMaxTablespaces
+    //TODO usedTablespaces = databaseHotelService.getUsedTablespaces
 
     fun findAllInactiveDatabaseSchemas(labelsToMatch: Map<String, String?> = emptyMap()): Set<DatabaseSchema> =
         databaseHotelAdminService.findAllDatabaseInstances(null)
