@@ -1,14 +1,14 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import java.sql.DriverManager
+import java.sql.SQLException
+import java.time.Duration
+import kotlin.streams.toList
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher.findAllMatchingSchemas
 import org.springframework.stereotype.Service
-import java.sql.DriverManager
-import java.sql.SQLException
-import java.time.Duration
-import kotlin.streams.toList
 
 private val logger = KotlinLogging.logger {}
 
@@ -170,4 +170,3 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         }
     }
 }
-
