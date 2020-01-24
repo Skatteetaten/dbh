@@ -16,7 +16,8 @@ class OracleDatabaseManagerTest {
     }
 
     @Test
-    fun `Get todo`() {
+    fun `Get max tablespaces from oracle database instance`() {
         //TODO lag test for maxTablespaces
+
     }
 }

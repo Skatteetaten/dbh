@@ -65,6 +65,11 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
         return -1
     }
 
+    override fun getUsedTablespaces(): Int? {
+        // Move along, nothing to see here
+        return -1
+    }
+
     /**
      * Converts the name of a schema to a string that is safe to use as a database name for Postgres.
      */

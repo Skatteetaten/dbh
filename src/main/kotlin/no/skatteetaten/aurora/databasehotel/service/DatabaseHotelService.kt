@@ -53,26 +53,17 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return schemas + matchingExternalSchemas
     }
 
-    fun getTotalMaxTablespaces(
+    fun getMaxTablespaces(
         engine: DatabaseEngine? = null
-    ) : Int {
-        //TODO denne skal hente max for alle instanser
-        //TODO val count = databaseHotelAdminService.findAllDatabaseInstances(engine).flatMap { it.getMaxTablespaces }
-        //TODO return count
-        return 0
+    ) : Int? {
+        return databaseHotelAdminService.findAllDatabaseInstances(engine).map { it.getMaxTablespaces() }.reduce { sum, element -> sum!! + element!! }
     }
 
-    fun getTotalUsedTablespaces(
+    fun getUsedTablespaces(
         engine: DatabaseEngine? = null
-    ) : Int {
-        //TODO denne skal hente brukt for alle instanser
-        //TODO val count = databaseHotelAdminService.findAllDatabaseInstances(engine).flatMap { it.getUsedTablespaces }
-        //TODO return count
-        return 0
+    ) : Int? {
+        return databaseHotelAdminService.findAllDatabaseInstances(engine).map { it.getUsedTablespaces() }.reduce { sum, element -> sum!! + element!! }
     }
-
-    //TODO maxTablespaces = databaseHotelService.getMaxTablespaces
-    //TODO usedTablespaces = databaseHotelService.getUsedTablespaces
 
     fun findAllInactiveDatabaseSchemas(labelsToMatch: Map<String, String?> = emptyMap()): Set<DatabaseSchema> =
         databaseHotelAdminService.findAllDatabaseInstances(null)

@@ -40,14 +40,12 @@ open class DatabaseInstance(
     fun findSchemaByName(name: String): DatabaseSchema? =
         databaseHotelDataDao.findSchemaDataByName(name)?.let(this::getDatabaseSchemaFromSchemaData)
 
-    //TODO mye de samme navnene som går igjen, kan det skape problem eller forvirring?
-    fun getMaxTablespaces() {
-        //TODO denne skal hente max for denne instansen
-        //TODO databaseHotelDataDao.getMaxTablespacesData
+    fun getMaxTablespaces(): Int? {
+        return databaseManager.getMaxTablespaces()
     }
-    fun getUsedTablespaces() {
-        //TODO denne skal hente brukt for denne instansen
-        //TODO databaseHotelDataDao.getUsedTablespacesData
+
+    fun getUsedTablespaces(): Int? {
+        return databaseManager.getUsedTablespaces()
     }
 
     fun findAllSchemas(

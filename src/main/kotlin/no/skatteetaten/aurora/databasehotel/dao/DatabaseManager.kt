@@ -25,4 +25,6 @@ interface DatabaseManager {
     fun executeStatements(vararg statements: String)
 
     fun getMaxTablespaces(): Int?
+
+    fun getUsedTablespaces(): Int?
 }

@@ -35,7 +35,8 @@ class ResourceUseCollector(
         val start = System.currentTimeMillis()
 
         val databaseSchemas = loadDatabaseSchemas()
-        //TODO val availibleTablespaces = calculateAvailibleTablespaces() - skiller dette på db01 og db02?
+        val availibleTablespaces = calculateAvailibleTablespaces()
+        LOG.info("availibleTablespaces = $availibleTablespaces")
 
         handleSchemaSizeMetrics(databaseSchemas)
         handleSchemaCountMetrics(databaseSchemas)
@@ -52,10 +53,10 @@ class ResourceUseCollector(
             .toList()
             .also { LOG.debug("Found {} schemas total", it.size) }
 
-    private fun calculateAvailibleTablespaces() {
-        //TODO maxTablespaces = databaseHotelService.getTotalMaxTablespaces()
-        //TODO usedTablespaces = databaseHotelService.getTotalUsedTablespaces()
-        //TODO availibleTablespaces = foo - bar
+    private fun calculateAvailibleTablespaces(): Int? {
+        val maxTablespaces = databaseHotelService.getMaxTablespaces() ?: 0
+        val usedTablespaces = databaseHotelService.getUsedTablespaces() ?: 0
+        return maxTablespaces - usedTablespaces
     }
 
     private fun handleSchemaSizeMetrics(databaseSchemas: List<DatabaseSchema>) {
