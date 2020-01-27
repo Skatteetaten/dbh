@@ -25,7 +25,7 @@ class ResourceUseCollector(
 ) {
     private val schemaGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
     private val schemaCountGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
-    //TODO private val availi = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
+    private val availibleTablespacesGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
 
 
     @Scheduled(fixedDelayString = "\${metrics.resourceUseCollectInterval}", initialDelay = 5000)
@@ -40,7 +40,7 @@ class ResourceUseCollector(
 
         handleSchemaSizeMetrics(databaseSchemas)
         handleSchemaCountMetrics(databaseSchemas)
-        //TODO handleAvailibleTablespacesMetrics(availibleTablespaces, databaseSchemas) - databaseSchemas for å hente ut host?
+        handleAvailibleTablespacesMetrics(availibleTablespaces, databaseSchemas)
 
         LOG.info(
             "Resource use metrics collected for {} schemas in {} millis", databaseSchemas.size,
@@ -53,10 +53,10 @@ class ResourceUseCollector(
             .toList()
             .also { LOG.debug("Found {} schemas total", it.size) }
 
-    private fun calculateAvailibleTablespaces(): Int? {
+    private fun calculateAvailibleTablespaces(): Double {
         val maxTablespaces = databaseHotelService.getMaxTablespaces() ?: 0
         val usedTablespaces = databaseHotelService.getUsedTablespaces() ?: 0
-        return maxTablespaces - usedTablespaces
+        return maxTablespaces.toDouble() - usedTablespaces.toDouble()
     }
 
     private fun handleSchemaSizeMetrics(databaseSchemas: List<DatabaseSchema>) {
@@ -96,8 +96,23 @@ class ResourceUseCollector(
         schemaCountGauges.removeDeprecatedMetrics(currentMetricIds)
     }
 
-    //TODO private fun handleAvailibleTablespacesMetrics(availibleTablespaces)
-
+    private fun handleAvailibleTablespacesMetrics(availibleTablespaces: Double, databaseSchemas: List<DatabaseSchema>) {
+        val grouped = databaseSchemas.groupBy { mapOf("databaseHost" to it.databaseInstanceMetaInfo.host) }
+        val currentMetricIds: List<String> = grouped.map { (groupKeys) ->
+            val host = groupKeys.id
+            val existing = availibleTablespacesGauges[host]
+            if (existing != null) {
+                val metricData = existing.first
+                metricData.value = availibleTablespaces
+            } else {
+                val data = GaugeValue(host, availibleTablespaces)
+                val gauge = registerAvailibleTablespacesGauge(groupKeys, data)
+                availibleTablespacesGauges[host] = data to gauge
+            }
+            host
+        }
+        availibleTablespacesGauges.removeDeprecatedMetrics(currentMetricIds)
+    }
 
     private fun groupDatabaseSchemasForCounting(databaseSchemas: List<DatabaseSchema>) =
         databaseSchemas.groupBy {
@@ -127,7 +142,14 @@ class ResourceUseCollector(
             .register(registry)
     }
 
-    //TODO private fun registerAvailibleTablespacesGauge()
+    private fun registerAvailibleTablespacesGauge(groupKeys: CountGroup, value: GaugeValue): Gauge {
+        val tags = groupKeys.map { (k, v) -> tagOfValueOrUnknown(k, v) }
+        return Gauge.builder(AVAILIBLE_TABLESPACES_METRIC_NAME, value, {it.value})
+            .baseUnit("availible")
+            .description("The amount of availible tablespaces")
+            .tags(tags)
+            .register(registry)
+    }
 
     private fun MutableMap<String, Pair<GaugeValue, Gauge>>.removeDeprecatedMetrics(currentMetricIds: List<String>) {
         val metricsToRemove = keys.minus(currentMetricIds)
@@ -143,7 +165,7 @@ class ResourceUseCollector(
         private val LOG = LoggerFactory.getLogger(ResourceUseCollector::class.java)
         private const val SCHEMA_SIZE_METRIC_NAME = "aurora.dbh.schema.size.bytes"
         private const val SCHEMA_COUNT_METRIC_NAME = "aurora.dbh.schema.count"
-        //TODO private const val AVAILIBLE_TABLESPACES_METRIC_NAME = "aurora.dbh.availible.tablespaces"
+        private const val AVAILIBLE_TABLESPACES_METRIC_NAME = "aurora.dbh.availible.tablespaces"
     }
 }
 
