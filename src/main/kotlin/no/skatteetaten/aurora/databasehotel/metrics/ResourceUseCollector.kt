@@ -27,7 +27,6 @@ class ResourceUseCollector(
     private val schemaCountGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
     private val availibleTablespacesGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
 
-
     @Scheduled(fixedDelayString = "\${metrics.resourceUseCollectInterval}", initialDelay = 5000)
     fun collectResourceUseMetrics() {
 
@@ -144,7 +143,7 @@ class ResourceUseCollector(
 
     private fun registerAvailibleTablespacesGauge(groupKeys: CountGroup, value: GaugeValue): Gauge {
         val tags = groupKeys.map { (k, v) -> tagOfValueOrUnknown(k, v) }
-        return Gauge.builder(AVAILIBLE_TABLESPACES_METRIC_NAME, value, {it.value})
+        return Gauge.builder(AVAILIBLE_TABLESPACES_METRIC_NAME, value, { it.value })
             .baseUnit("availible")
             .description("The amount of availible tablespaces")
             .tags(tags)
