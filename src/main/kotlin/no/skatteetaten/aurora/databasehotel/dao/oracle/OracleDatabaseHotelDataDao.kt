@@ -17,6 +17,7 @@ import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.COL.SCHEM
 import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.select
 import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes.SCHEMA_TYPE_MANAGED
 import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema
+import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchemaFull
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
@@ -81,6 +82,19 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
 
     override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> =
         selectManySchemaData(SCHEMA_TYPE to schemaType, ACTIVE to 1)
+
+    override fun findExternalSchemaData(): List<ExternalSchemaFull> {
+        val query = """
+        select sd.id, sd.active, sd.name, sd.schema_type, sd.set_to_cooldown_at, sd.delete_after, 
+            es.created_date, es.jdbc_url,
+            u.id as user_id, u.type, u.username, u.password
+        from SCHEMA_DATA sd
+        LEFT JOIN EXTERNAL_SCHEMA es on sd.ID=es.SCHEMA_ID
+            LEFT JOIN USERS u on sd.ID=u.SCHEMA_ID
+            where SCHEMA_TYPE='EXTERNAL' 
+        """
+        return queryForMany(query, ExternalSchemaFull::class.java)
+    }
 
     override fun findAllManagedSchemaDataByDeleteAfterDate(deleteAfter: Date): List<SchemaData> = queryForMany(
         "${select()} where schema_type=? and delete_after<?", SchemaData::class.java, SCHEMA_TYPE_MANAGED, deleteAfter
