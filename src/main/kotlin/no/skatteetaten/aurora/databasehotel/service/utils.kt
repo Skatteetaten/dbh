@@ -5,4 +5,3 @@ fun <T> measureTimeMillis(func: () -> T): Pair<Long, T> {
     val r = func()
     return System.currentTimeMillis() - s to r
 }
-

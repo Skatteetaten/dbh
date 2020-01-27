@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.databasehotel.service
 
 import com.google.common.collect.Lists
-import mu.KotlinLogging
 import java.math.BigDecimal
 import java.util.HashMap
+import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.Schema
