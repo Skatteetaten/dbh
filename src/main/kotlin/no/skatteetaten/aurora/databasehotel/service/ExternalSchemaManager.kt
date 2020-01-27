@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.databasehotel.service
 
 import com.google.common.collect.Lists
+import mu.KotlinLogging
 import java.math.BigDecimal
 import java.util.HashMap
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
@@ -15,6 +16,8 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.EXTERNAL
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA
 
+private val logger = KotlinLogging.logger {}
+
 class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataDao) {
 
     fun findSchemaById(schemaId: String): DatabaseSchema? =
@@ -22,10 +25,16 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
             ?.takeIf { it.schemaType == SCHEMA_TYPE_EXTERNAL }
             ?.let(this::getDatabaseSchemaFromSchemaData)
 
-    fun findAllSchemas(): Set<DatabaseSchema> =
-        databaseHotelDataDao.findAllSchemaDataBySchemaType(SCHEMA_TYPE_EXTERNAL)
-            // TODO: Iterating like this may (will) become a performance bottleneck at some point.
-            .map(this::getDatabaseSchemaFromSchemaData).toSet()
+    fun findAllSchemas(): Set<DatabaseSchema> {
+        logger.debug("Fetching all external schemas")
+        val (timeSpent, schemas) = measureTimeMillis {
+            databaseHotelDataDao.findAllSchemaDataBySchemaType(SCHEMA_TYPE_EXTERNAL)
+                // TODO: Iterating like this may (will) become a performance bottleneck at some point.
+                .map(this::getDatabaseSchemaFromSchemaData).toSet()
+        }
+        logger.debug { "Fetched ${schemas.size} external schemas in $timeSpent millis" }
+        return schemas
+    }
 
     fun registerSchema(
         username: String,

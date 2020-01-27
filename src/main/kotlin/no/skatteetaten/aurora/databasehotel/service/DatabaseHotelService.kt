@@ -147,12 +147,6 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
             res.stream()
         }.toList().toSet()
 
-    fun <T> measureTimeMillis(func: () -> T): Pair<Long, T> {
-        val s = System.currentTimeMillis()
-        val r = func()
-        return System.currentTimeMillis() - s to r
-    }
-
     companion object {
 
         private fun verifyOnlyOneCandidate(

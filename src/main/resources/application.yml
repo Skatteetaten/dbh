@@ -17,6 +17,7 @@ logging:
     no.skatteetaten.aurora: INFO
     no.skatteetaten.aurora.databasehotel.DbhConfigurator: WARN
     no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService: DEBUG
+    no.skatteetaten.aurora.databasehotel.service.ExternalSchemaManager: DEBUG
 
 
     com.zaxxer.hikari: WARN
