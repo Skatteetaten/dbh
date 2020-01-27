@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchemaFull
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
+import org.intellij.lang.annotations.Language
 import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -83,17 +84,27 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
     override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> =
         selectManySchemaData(SCHEMA_TYPE to schemaType, ACTIVE to 1)
 
-    override fun findExternalSchemaData(): List<ExternalSchemaFull> {
-        val query = """
-        select sd.id, sd.active, sd.name, sd.schema_type, sd.set_to_cooldown_at, sd.delete_after, 
+    override fun findAllExternalSchemaData(): List<ExternalSchemaFull> {
+        @Language("SQL") val query = """
+        select 
+            sd.id, sd.active, sd.name, sd.schema_type, sd.set_to_cooldown_at, sd.delete_after, 
             es.created_date, es.jdbc_url,
             u.id as user_id, u.type, u.username, u.password
         from SCHEMA_DATA sd
-        LEFT JOIN EXTERNAL_SCHEMA es on sd.ID=es.SCHEMA_ID
-            LEFT JOIN USERS u on sd.ID=u.SCHEMA_ID
-            where SCHEMA_TYPE='EXTERNAL' 
+            LEFT JOIN EXTERNAL_SCHEMA es on sd.id=es.schema_id
+            LEFT JOIN USERS u on sd.id=u.schema_id
+        where schema_type='EXTERNAL' 
         """
-        return queryForMany(query, ExternalSchemaFull::class.java)
+        val list = queryForMany(query, ExternalSchemaFull::class.java)
+
+        @Language("SQL") val query2 = """
+        select l.id, l.SCHEMA_ID, l.NAME, l.VALUE
+            from SCHEMA_DATA sd LEFT JOIN LABELS l on sd.id=l.SCHEMA_ID
+            where schema_type='EXTERNAL'
+        """
+        val list2 = queryForMany(query2, Label::class.java)
+
+        return list.map { schema -> schema.copy(labels = list2.filter { it.schemaId == schema.id }) }
     }
 
     override fun findAllManagedSchemaDataByDeleteAfterDate(deleteAfter: Date): List<SchemaData> = queryForMany(

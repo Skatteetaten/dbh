@@ -16,5 +16,7 @@ data class ExternalSchemaFull(
     var userId: String? = null,
     var type: String? = null,
     var username: String? = null,
-    var password: String? = null
+    var password: String? = null,
+
+    var labels: List<Label> = emptyList()
 )
