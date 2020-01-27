@@ -85,7 +85,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         selectManySchemaData(SCHEMA_TYPE to schemaType, ACTIVE to 1)
 
     override fun findAllExternalSchemaData(): List<ExternalSchemaFull> {
-        @Language("SQL") val query = """
+        @Language("SQL") val dataQuery = """
         select 
             sd.id, sd.active, sd.name, sd.schema_type, sd.set_to_cooldown_at, sd.delete_after, 
             es.created_date, es.jdbc_url,
@@ -95,16 +95,16 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
             LEFT JOIN USERS u on sd.id=u.schema_id
         where schema_type='EXTERNAL' 
         """
-        val list = queryForMany(query, ExternalSchemaFull::class.java)
+        val schemaData = queryForMany(dataQuery, ExternalSchemaFull::class.java)
 
-        @Language("SQL") val query2 = """
+        @Language("SQL") val labelQuery = """
         select l.id, l.SCHEMA_ID, l.NAME, l.VALUE
             from SCHEMA_DATA sd LEFT JOIN LABELS l on sd.id=l.SCHEMA_ID
             where schema_type='EXTERNAL'
         """
-        val list2 = queryForMany(query2, Label::class.java)
+        val labelIndex = queryForMany(labelQuery, Label::class.java).groupBy { it.schemaId }
 
-        return list.map { schema -> schema.copy(labels = list2.filter { it.schemaId == schema.id }) }
+        return schemaData.map { schema -> schema.copy(labels = labelIndex[schema.id] ?: emptyList()) }
     }
 
     override fun findAllManagedSchemaDataByDeleteAfterDate(deleteAfter: Date): List<SchemaData> = queryForMany(
