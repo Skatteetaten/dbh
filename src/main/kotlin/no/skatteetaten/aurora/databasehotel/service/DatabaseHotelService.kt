@@ -56,7 +56,11 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
     fun getMaxTablespaces(
         engine: DatabaseEngine? = null
     ): Int? {
-        return databaseHotelAdminService.findAllDatabaseInstances(engine).map { it.getMaxTablespaces() }.reduce { sum, element -> sum!! + element!! }
+        logger.info("getMaxTablespaces called")
+        return databaseHotelAdminService.findAllDatabaseInstances(engine)
+            .map { it.getMaxTablespaces() }
+            .also { logger.info { "also called" } }
+            .reduce { sum, element -> sum!! + element!! }
     }
 
     fun getUsedTablespaces(

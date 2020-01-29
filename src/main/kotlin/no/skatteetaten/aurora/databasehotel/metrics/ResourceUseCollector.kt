@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.databasehotel.metrics
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import java.util.HashMap
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.AFFILIATION
@@ -34,7 +35,7 @@ class ResourceUseCollector(
         val start = System.currentTimeMillis()
 
         val databaseSchemas = loadDatabaseSchemas()
-        val availibleTablespaces = calculateAvailibleTablespaces()
+        val availibleTablespaces = calculateAvailibleTablespaces(databaseSchemas)
         LOG.info("availibleTablespaces = $availibleTablespaces")
 
         handleSchemaSizeMetrics(databaseSchemas)
@@ -52,9 +53,10 @@ class ResourceUseCollector(
             .toList()
             .also { LOG.debug("Found {} schemas total", it.size) }
 
-    private fun calculateAvailibleTablespaces(): Double {
-        val maxTablespaces = databaseHotelService.getMaxTablespaces() ?: 0
-        val usedTablespaces = databaseHotelService.getUsedTablespaces() ?: 0
+    private fun calculateAvailibleTablespaces(databaseSchemas: List<DatabaseSchema>): Double {
+
+        val maxTablespaces = databaseHotelService.getMaxTablespaces(DatabaseEngine.ORACLE) ?: 0
+        val usedTablespaces = databaseHotelService.getUsedTablespaces(DatabaseEngine.ORACLE) ?: 0
         return maxTablespaces.toDouble() - usedTablespaces.toDouble()
     }
 
