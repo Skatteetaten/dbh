@@ -63,7 +63,14 @@ class ResourceUseCollector(
                 metricData.value = schema.sizeMb * 1024 * 1024
             } else {
                 val data = GaugeValue(id, schema.sizeMb)
-                val gauge = registerSchemaSizeGauge(schema, data)
+                val gauge =
+                    registerGauge(
+                        SCHEMA_SIZE_METRIC_NAME,
+                        "bytes",
+                        "the size of the schema",
+                        schema.metricTags,
+                        data
+                    )
                 schemaGauges[id] = data to gauge
             }
             id
@@ -82,7 +89,14 @@ class ResourceUseCollector(
                 metricData.value = schemas.size.toDouble()
             } else {
                 val data = GaugeValue(id, schemas.size.toDouble())
-                val gauge = registerSchemaCountGauge(groupKeys, data)
+                val tags = groupKeys.map { (k, v) -> tagOfValueOrUnknown(k, v) }
+                val gauge = registerGauge(
+                    SCHEMA_COUNT_METRIC_NAME,
+                    "count",
+                    "the amount of schemas",
+                    tags,
+                    data
+                )
                 schemaCountGauges[id] = data to gauge
             }
             id
@@ -100,7 +114,13 @@ class ResourceUseCollector(
                 metricData.value = tablespaceInfo.available.toDouble()
             } else {
                 val data = GaugeValue(id, tablespaceInfo.available.toDouble())
-                val gauge = registerAvailibleTablespacesGauge(instance, data)
+                val gauge = registerGauge(
+                    AVAILIBLE_TABLESPACES_METRIC_NAME,
+                    "count",
+                    "the amount of availible tablespaces left on databaseHost",
+                    instance.metricTags,
+                    data
+                )
                 availibleTablespacesGauges[id] = data to gauge
             }
             id
@@ -119,28 +139,17 @@ class ResourceUseCollector(
             )
         }
 
-    private fun registerSchemaSizeGauge(schema: DatabaseSchema, value: GaugeValue): Gauge {
-        return Gauge.builder(SCHEMA_SIZE_METRIC_NAME, value, { it.value })
-            .baseUnit("bytes")
-            .description("the size of the schema")
-            .tags(schema.metricTags)
-            .register(registry)
-    }
-
-    private fun registerSchemaCountGauge(groupKeys: CountGroup, value: GaugeValue): Gauge {
-        val tags = groupKeys.map { (k, v) -> tagOfValueOrUnknown(k, v) }
-        return Gauge.builder(SCHEMA_COUNT_METRIC_NAME, value, { it.value })
-            .baseUnit("count")
-            .description("The amount of schemas")
+    private fun registerGauge(
+        metricName: String,
+        baseUnit: String,
+        description: String,
+        tags: List<Tag>,
+        value: GaugeValue
+    ): Gauge {
+        return Gauge.builder(metricName, value, { it.value })
+            .baseUnit(baseUnit)
+            .description(description)
             .tags(tags)
-            .register(registry)
-    }
-
-    private fun registerAvailibleTablespacesGauge(databaseInstance: DatabaseInstance, value: GaugeValue): Gauge {
-        return Gauge.builder(AVAILIBLE_TABLESPACES_METRIC_NAME, value, { it.value })
-            .baseUnit("availible")
-            .description("The amount of availible tablespaces left on databaseHost")
-            .tags(databaseInstance.metricTags)
             .register(registry)
     }
 
@@ -158,7 +167,7 @@ class ResourceUseCollector(
         private val LOG = LoggerFactory.getLogger(ResourceUseCollector::class.java)
         private const val SCHEMA_SIZE_METRIC_NAME = "aurora.dbh.schema.size.bytes"
         private const val SCHEMA_COUNT_METRIC_NAME = "aurora.dbh.schema.count"
-        private const val AVAILIBLE_TABLESPACES_METRIC_NAME = "aurora.dbh.availible.tablespaces"
+        private const val AVAILIBLE_TABLESPACES_METRIC_NAME = "aurora.dbh.available.tablespaces"
     }
 }
 
@@ -199,10 +208,10 @@ private val DatabaseSchema.metricTags
 
 private val DatabaseInstance.metricTags
     get(): List<Tag> {
-        val t = {tag: MetricTag, value: String? -> tagOfValueOrUnknown(tag.tagName,value)}
+        val t = { tag: MetricTag, value: String? -> tagOfValueOrUnknown(tag.tagName, value) }
         return listOf(
             t(DATABASE_HOST, this.metaInfo.host),
-            t(INSTANCE_NAME,  this.instanceName),
+            t(INSTANCE_NAME, this.instanceName),
             t(DATABASE_ENGINE, this.metaInfo.engine.name)
         )
     }
