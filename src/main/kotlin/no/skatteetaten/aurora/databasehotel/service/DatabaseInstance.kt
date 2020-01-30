@@ -40,13 +40,9 @@ open class DatabaseInstance(
     fun findSchemaByName(name: String): DatabaseSchema? =
         databaseHotelDataDao.findSchemaDataByName(name)?.let(this::getDatabaseSchemaFromSchemaData)
 
-    fun getMaxTablespaces(): Int? {
-        return databaseManager.getMaxTablespaces()
-    }
+    fun getMaxTablespaces(): Int? = databaseManager.getMaxTablespaces()
 
-    fun getUsedTablespaces(): Int? {
-        return databaseManager.getUsedTablespaces()
-    }
+    fun getUsedTablespaces(): Int? = databaseManager.getUsedTablespaces()
 
     fun findAllSchemas(
         labelsToMatch: Map<String, String?>? = null,

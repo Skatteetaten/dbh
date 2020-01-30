@@ -18,6 +18,13 @@ data class DatabaseInstanceRequirements(
     val instanceFallback: Boolean = true
 )
 
+data class TablespaceInfo(
+    val max: Int,
+    val used: Int
+) {
+    val available get(): Int = max - used
+}
+
 @Service
 class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelAdminService) {
 
@@ -53,20 +60,18 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         return schemas + matchingExternalSchemas
     }
 
-    fun getMaxTablespaces(
-        engine: DatabaseEngine? = null
-    ): Int? {
-        logger.info("getMaxTablespaces called")
-        return databaseHotelAdminService.findAllDatabaseInstances(engine)
-            .map { it.getMaxTablespaces() }
-            .also { logger.info { "also called" } }
-            .reduce { sum, element -> sum!! + element!! }
-    }
+    fun getTablespaceInfo(): List<Pair<DatabaseInstance, TablespaceInfo>> {
+        val databaseInstances = databaseHotelAdminService.findAllDatabaseInstances()
+        return databaseInstances
+            .mapNotNull { instance ->
+                val maxTablespaces = instance.getMaxTablespaces()
+                val usedTablespaces = instance.getUsedTablespaces()
 
-    fun getUsedTablespaces(
-        engine: DatabaseEngine? = null
-    ): Int? {
-        return databaseHotelAdminService.findAllDatabaseInstances(engine).map { it.getUsedTablespaces() }.reduce { sum, element -> sum!! + element!! }
+                if (maxTablespaces == null || usedTablespaces == null) return@mapNotNull null
+
+                val tablespaceInfo = TablespaceInfo(maxTablespaces, usedTablespaces)
+                Pair(instance, tablespaceInfo)
+            }
     }
 
     fun findAllInactiveDatabaseSchemas(labelsToMatch: Map<String, String?> = emptyMap()): Set<DatabaseSchema> =

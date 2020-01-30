@@ -61,13 +61,13 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
         )!!
 
     override fun getMaxTablespaces(): Int? {
-        //TODO Nope, nice try
-        return -100
+        // Not implemented for postgres
+        return null
     }
 
     override fun getUsedTablespaces(): Int? {
-        //TODO Move along, nothing to see here
-        return -500
+        // Not implemented for postgres
+        return null
     }
 
     /**
