@@ -14,9 +14,4 @@ class OracleDatabaseManagerTest {
             .getDbMessage()
         assertThat(message).contains(dbError)
     }
-
-    @Test
-    fun `Get max tablespaces from oracle database instance`() {
-        // TODO lag test for maxTablespaces
-    }
 }
