@@ -17,9 +17,11 @@ import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.COL.SCHEM
 import no.skatteetaten.aurora.databasehotel.dao.SchemaDataQueryBuilder.select
 import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes.SCHEMA_TYPE_MANAGED
 import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema
+import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchemaFull
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
+import org.intellij.lang.annotations.Language
 import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -81,6 +83,29 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
 
     override fun findAllSchemaDataBySchemaType(schemaType: String): List<SchemaData> =
         selectManySchemaData(SCHEMA_TYPE to schemaType, ACTIVE to 1)
+
+    override fun findAllExternalSchemaData(): List<ExternalSchemaFull> {
+        @Language("SQL") val dataQuery = """
+        select 
+            sd.id, sd.active, sd.name, sd.schema_type, sd.set_to_cooldown_at, sd.delete_after, 
+            es.created_date, es.jdbc_url,
+            u.id as user_id, u.type, u.username, u.password
+        from SCHEMA_DATA sd
+            LEFT JOIN EXTERNAL_SCHEMA es on sd.id=es.schema_id
+            LEFT JOIN USERS u on sd.id=u.schema_id
+        where schema_type='EXTERNAL' 
+        """
+        val schemaData = queryForMany(dataQuery, ExternalSchemaFull::class.java)
+
+        @Language("SQL") val labelQuery = """
+        select l.id, l.SCHEMA_ID, l.NAME, l.VALUE
+            from SCHEMA_DATA sd LEFT JOIN LABELS l on sd.id=l.SCHEMA_ID
+            where schema_type='EXTERNAL'
+        """
+        val labelIndex = queryForMany(labelQuery, Label::class.java).groupBy { it.schemaId }
+
+        return schemaData.map { schema -> schema.copy(labels = labelIndex[schema.id] ?: emptyList()) }
+    }
 
     override fun findAllManagedSchemaDataByDeleteAfterDate(deleteAfter: Date): List<SchemaData> = queryForMany(
         "${select()} where schema_type=? and delete_after<?", SchemaData::class.java, SCHEMA_TYPE_MANAGED, deleteAfter

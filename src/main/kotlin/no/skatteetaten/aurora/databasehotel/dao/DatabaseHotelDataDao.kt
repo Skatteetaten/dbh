@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.databasehotel.dao
 import java.time.Duration
 import java.util.Date
 import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema
+import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchemaFull
 import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
@@ -54,6 +55,8 @@ interface DatabaseHotelDataDao {
     fun deleteLabelsForSchema(schemaId: String)
 
     fun registerExternalSchema(id: String, jdbcUrl: String): ExternalSchema
+
+    fun findAllExternalSchemaData(): List<ExternalSchemaFull>
 
     fun findExternalSchemaById(id: String): ExternalSchema?
 

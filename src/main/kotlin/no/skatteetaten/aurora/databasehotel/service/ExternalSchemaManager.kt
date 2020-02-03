@@ -3,17 +3,22 @@ package no.skatteetaten.aurora.databasehotel.service
 import com.google.common.collect.Lists
 import java.math.BigDecimal
 import java.util.HashMap
+import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.Schema
 import no.skatteetaten.aurora.databasehotel.dao.SchemaTypes.SCHEMA_TYPE_EXTERNAL
 import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchema
+import no.skatteetaten.aurora.databasehotel.dao.dto.ExternalSchemaFull
+import no.skatteetaten.aurora.databasehotel.dao.dto.Label
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaData
 import no.skatteetaten.aurora.databasehotel.dao.dto.SchemaUser
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseInstanceMetaInfo
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema.Type.EXTERNAL
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance.UserType.SCHEMA
+
+private val logger = KotlinLogging.logger {}
 
 class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataDao) {
 
@@ -22,10 +27,15 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
             ?.takeIf { it.schemaType == SCHEMA_TYPE_EXTERNAL }
             ?.let(this::getDatabaseSchemaFromSchemaData)
 
-    fun findAllSchemas(): Set<DatabaseSchema> =
-        databaseHotelDataDao.findAllSchemaDataBySchemaType(SCHEMA_TYPE_EXTERNAL)
-            // TODO: Iterating like this may (will) become a performance bottleneck at some point.
-            .map(this::getDatabaseSchemaFromSchemaData).toSet()
+    fun findAllSchemas(): Set<DatabaseSchema> {
+        logger.debug("Fetching all external schemas")
+        val (timeSpent, schemas) = measureTimeMillis {
+            val allExternalSchemas = databaseHotelDataDao.findAllExternalSchemaData()
+            allExternalSchemas.map { getDatabaseSchemaFromExternalSchema(it) }.toSet()
+        }
+        logger.debug { "Fetched ${schemas.size} external schemas in $timeSpent millis" }
+        return schemas
+    }
 
     fun registerSchema(
         username: String,
@@ -39,8 +49,9 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
         databaseHotelDataDao.replaceLabels(schemaData.id, labelMap)
         val user = databaseHotelDataDao.createUser(schemaData.id, SCHEMA.toString(), username, password)
         val users = Lists.newArrayList(user)
+        val labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.id)
 
-        return createDatabaseSchema(schemaData, externalSchema, users)
+        return createDatabaseSchema(schemaData, externalSchema, users, labels)
     }
 
     fun deleteSchema(schemaId: String) {
@@ -65,12 +76,11 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
     private fun createDatabaseSchema(
         schemaData: SchemaData,
         externalSchema: ExternalSchema,
-        users: List<SchemaUser>
+        users: List<SchemaUser>,
+        labels: List<Label>
     ): DatabaseSchema {
 
         val schema = Schema(schemaData.name, externalSchema.createdDate!!)
-
-        val labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.id)
 
         val metaInfo = DatabaseInstanceMetaInfo(ORACLE, "external", "-", 0, false, HashMap())
         val jdbcUrlBuilder = object : JdbcUrlBuilder {
@@ -108,7 +118,19 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
         val externalSchema = databaseHotelDataDao.findExternalSchemaById(schemaData.id)
             ?: throw DatabaseServiceException("Schema with id ${schemaData.id} is an external schema but no connection info found")
         val users = databaseHotelDataDao.findAllUsersForSchema(schemaData.id)
+        val labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.id)
 
-        return createDatabaseSchema(schemaData, externalSchema, users)
+        return createDatabaseSchema(schemaData, externalSchema, users, labels)
+    }
+
+    private fun getDatabaseSchemaFromExternalSchema(externalSchemaFull: ExternalSchemaFull): DatabaseSchema {
+
+        val schemaData =
+            externalSchemaFull.run { SchemaData(id, active, name, schemaType, setToCooldownAt, deleteAfter) }
+        val externalSchema = externalSchemaFull.run { ExternalSchema(createdDate, jdbcUrl) }
+        val users = listOf(externalSchemaFull.run { SchemaUser(userId, id, type, username, password) })
+        val labels = externalSchemaFull.labels
+
+        return createDatabaseSchema(schemaData, externalSchema, users, labels)
     }
 }

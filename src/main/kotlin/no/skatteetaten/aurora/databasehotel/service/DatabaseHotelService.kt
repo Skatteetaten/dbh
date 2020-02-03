@@ -1,13 +1,14 @@
 package no.skatteetaten.aurora.databasehotel.service
 
+import java.sql.DriverManager
+import java.sql.SQLException
+import java.time.Duration
+import kotlin.streams.toList
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher.findAllMatchingSchemas
 import org.springframework.stereotype.Service
-import java.sql.DriverManager
-import java.sql.SQLException
-import java.time.Duration
 
 private val logger = KotlinLogging.logger {}
 
@@ -32,12 +33,12 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
 
         val candidates = mutableListOf<Pair<DatabaseSchema, DatabaseInstance?>>()
 
-        val allDatabaseInstances = databaseHotelAdminService.findAllDatabaseInstances()
-        for (databaseInstance in allDatabaseInstances) {
-            val schemaAndInstance = databaseInstance.findSchemaById(id, active)
-                ?.let { dbs -> Pair(dbs, databaseInstance) }
-            schemaAndInstance?.let { candidates.add(it) }
-        }
+        databaseHotelAdminService.findAllDatabaseInstances()
+            .parallelStream()
+            .map { it.findSchemaById(id, active) to it }
+            .filter { it.first != null }
+            .map { it.first!! to it.second }
+            .toList().also { candidates.addAll(it) }
 
         databaseHotelAdminService.externalSchemaManager?.findSchemaById(id)
             ?.let { it to null }
@@ -54,7 +55,8 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
     ): Set<DatabaseSchema> {
 
         val schemas = databaseHotelAdminService.findAllDatabaseInstances(engine)
-            .flatMap { it.findAllSchemas(labelsToMatch, ignoreActiveFilter) }.toSet()
+            .pFlatMap { it.findAllSchemas(labelsToMatch, ignoreActiveFilter) }
+
         val externalSchemas = databaseHotelAdminService.externalSchemaManager?.findAllSchemas() ?: emptySet()
         val matchingExternalSchemas = findAllMatchingSchemas(externalSchemas, labelsToMatch)
         return schemas + matchingExternalSchemas
@@ -76,13 +78,13 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
 
     fun findAllInactiveDatabaseSchemas(labelsToMatch: Map<String, String?> = emptyMap()): Set<DatabaseSchema> =
         databaseHotelAdminService.findAllDatabaseInstances(null)
-            .flatMap { it.findAllSchemas(labelsToMatch, true) }
+            .pFlatMap { it.findAllSchemas(labelsToMatch, true) }
             .filter { !it.active }
             .toSet()
 
     fun findAllStaleDatabaseSchemas(): Set<DatabaseSchema> =
         databaseHotelAdminService.findAllDatabaseInstances()
-            .flatMap { it.findAllStaleSchemas() }.toSet()
+            .pFlatMap { it.findAllStaleSchemas() }
 
     fun createSchema(requirements: DatabaseInstanceRequirements = DatabaseInstanceRequirements()): DatabaseSchema =
         createSchema(requirements, emptyMap())
@@ -157,6 +159,14 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
             ?: throw DatabaseServiceException("External Schema Manager has not been registered")
         return externalSchemaManager.registerSchema(username, password, jdbcUrl, labels)
     }
+
+    fun Set<DatabaseInstance>.pFlatMap(func: (t: DatabaseInstance) -> Set<DatabaseSchema>): Set<DatabaseSchema> =
+        this.parallelStream().flatMap {
+            logger.debug("Fetching schemas for instance ${it.metaInfo.host}")
+            val (timeSpent, res) = measureTimeMillis { func(it) }
+            logger.debug("Fetched ${res.size} schemas for instance ${it.metaInfo.host} in $timeSpent millis")
+            res.stream()
+        }.toList().toSet()
 
     companion object {
 
