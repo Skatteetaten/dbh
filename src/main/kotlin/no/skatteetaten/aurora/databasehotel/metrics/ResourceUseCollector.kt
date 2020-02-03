@@ -10,10 +10,13 @@ import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.APPLICATION
 import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.DATABASE_ENGINE
 import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.DATABASE_HOST
 import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.ENVIRONMENT
+import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.INSTANCE_NAME
 import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.NAMESPACE
 import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.SCHEMA_ID
 import no.skatteetaten.aurora.databasehotel.metrics.MetricTag.SCHEMA_TYPE
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
+import no.skatteetaten.aurora.databasehotel.service.DatabaseInstance
+import no.skatteetaten.aurora.databasehotel.service.TablespaceInfo
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -25,6 +28,7 @@ class ResourceUseCollector(
 ) {
     private val schemaGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
     private val schemaCountGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
+    private val availibleTablespacesGauges = mutableMapOf<String, Pair<GaugeValue, Gauge>>()
 
     @Scheduled(fixedDelayString = "\${metrics.resourceUseCollectInterval}", initialDelay = 5000)
     fun collectResourceUseMetrics() {
@@ -33,8 +37,11 @@ class ResourceUseCollector(
         val start = System.currentTimeMillis()
 
         val databaseSchemas = loadDatabaseSchemas()
+        val tablespaceInfo = databaseHotelService.getTablespaceInfo()
+
         handleSchemaSizeMetrics(databaseSchemas)
         handleSchemaCountMetrics(databaseSchemas)
+        handleAvailibleTablespacesMetrics(tablespaceInfo)
 
         LOG.info(
             "Resource use metrics collected for {} schemas in {} millis", databaseSchemas.size,
@@ -56,7 +63,14 @@ class ResourceUseCollector(
                 metricData.value = schema.sizeMb * 1024 * 1024
             } else {
                 val data = GaugeValue(id, schema.sizeMb)
-                val gauge = registerSchemaSizeGauge(schema, data)
+                val gauge =
+                    registerGauge(
+                        SCHEMA_SIZE_METRIC_NAME,
+                        "bytes",
+                        "the size of the schema",
+                        schema.metricTags,
+                        data
+                    )
                 schemaGauges[id] = data to gauge
             }
             id
@@ -75,13 +89,43 @@ class ResourceUseCollector(
                 metricData.value = schemas.size.toDouble()
             } else {
                 val data = GaugeValue(id, schemas.size.toDouble())
-                val gauge = registerSchemaCountGauge(groupKeys, data)
+                val gauge = registerGauge(
+                    SCHEMA_COUNT_METRIC_NAME,
+                    "count",
+                    "the amount of schemas",
+                    groupKeys.metricTags,
+                    data
+                )
                 schemaCountGauges[id] = data to gauge
             }
             id
         }
 
         schemaCountGauges.removeDeprecatedMetrics(currentMetricIds)
+    }
+
+    private fun handleAvailibleTablespacesMetrics(tablespaceInfo: List<Pair<DatabaseInstance, TablespaceInfo>>) {
+        val currentMetricIds: List<String> = tablespaceInfo.map { (instance, tablespaceInfo) ->
+            val id = instance.metaInfo.host
+            val existing = availibleTablespacesGauges[id]
+            if (existing != null) {
+                val metricData = existing.first
+                metricData.value = tablespaceInfo.available.toDouble()
+            } else {
+                val data = GaugeValue(id, tablespaceInfo.available.toDouble())
+                val gauge = registerGauge(
+                    AVAILIBLE_TABLESPACES_METRIC_NAME,
+                    "count",
+                    "the amount of availible tablespaces left on databaseHost",
+                    instance.metricTags,
+                    data
+                )
+                availibleTablespacesGauges[id] = data to gauge
+            }
+            id
+        }
+
+        availibleTablespacesGauges.removeDeprecatedMetrics(currentMetricIds)
     }
 
     private fun groupDatabaseSchemasForCounting(databaseSchemas: List<DatabaseSchema>) =
@@ -95,19 +139,16 @@ class ResourceUseCollector(
             )
         }
 
-    private fun registerSchemaSizeGauge(schema: DatabaseSchema, value: GaugeValue): Gauge {
-        return Gauge.builder(SCHEMA_SIZE_METRIC_NAME, value, { it.value })
-            .baseUnit("bytes")
-            .description("the size of the schema")
-            .tags(schema.metricTags)
-            .register(registry)
-    }
-
-    private fun registerSchemaCountGauge(groupKeys: CountGroup, value: GaugeValue): Gauge {
-        val tags = groupKeys.map { (k, v) -> tagOfValueOrUnknown(k, v) }
-        return Gauge.builder(SCHEMA_COUNT_METRIC_NAME, value, { it.value })
-            .baseUnit("count")
-            .description("The amount of schemas")
+    private fun registerGauge(
+        metricName: String,
+        baseUnit: String,
+        description: String,
+        tags: List<Tag>,
+        value: GaugeValue
+    ): Gauge {
+        return Gauge.builder(metricName, value, { it.value })
+            .baseUnit(baseUnit)
+            .description(description)
             .tags(tags)
             .register(registry)
     }
@@ -126,6 +167,7 @@ class ResourceUseCollector(
         private val LOG = LoggerFactory.getLogger(ResourceUseCollector::class.java)
         private const val SCHEMA_SIZE_METRIC_NAME = "aurora.dbh.schema.size.bytes"
         private const val SCHEMA_COUNT_METRIC_NAME = "aurora.dbh.schema.count"
+        private const val AVAILIBLE_TABLESPACES_METRIC_NAME = "aurora.dbh.available.tablespaces"
     }
 }
 
@@ -137,7 +179,8 @@ private enum class MetricTag(val tagName: String) {
     AFFILIATION("affiliation"),
     ENVIRONMENT("environment"),
     APPLICATION("application"),
-    NAMESPACE("namespace")
+    NAMESPACE("namespace"),
+    INSTANCE_NAME("instanceName")
 }
 
 private val NAMESPACE_LABEL = ENVIRONMENT.tagName
@@ -162,6 +205,19 @@ private val DatabaseSchema.metricTags
             t(SCHEMA_TYPE, this.type.name)
         )
     }
+
+private val DatabaseInstance.metricTags
+    get(): List<Tag> {
+        val t = { tag: MetricTag, value: String? -> tagOfValueOrUnknown(tag.tagName, value) }
+        return listOf(
+            t(DATABASE_HOST, this.metaInfo.host),
+            t(INSTANCE_NAME, this.instanceName),
+            t(DATABASE_ENGINE, this.metaInfo.engine.name)
+        )
+    }
+
+private val CountGroup.metricTags
+    get(): List<Tag> = this.map { (k, v) -> tagOfValueOrUnknown(k, v) }
 
 data class GaugeValue(var id: String, var value: Double)
 

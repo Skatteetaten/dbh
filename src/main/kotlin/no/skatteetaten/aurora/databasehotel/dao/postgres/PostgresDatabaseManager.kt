@@ -60,6 +60,16 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
             arrayOf(schemaName.toSafe())
         )!!
 
+    override fun getMaxTablespaces(): Int? {
+        // Not implemented for postgres
+        return null
+    }
+
+    override fun getUsedTablespaces(): Int? {
+        // Not implemented for postgres
+        return null
+    }
+
     /**
      * Converts the name of a schema to a string that is safe to use as a database name for Postgres.
      */

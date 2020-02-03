@@ -87,6 +87,16 @@ class OracleDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSource
         // NOOP
     }
 
+    override fun getMaxTablespaces(): Int? {
+        val query = "SELECT VALUE FROM v\$parameter WHERE NAME='db_files'"
+        return jdbcTemplate.queryForObject(query, Int::class.java)
+    }
+
+    override fun getUsedTablespaces(): Int? {
+        val query = "SELECT count(*) FROM v\$tablespace"
+        return jdbcTemplate.queryForObject(query, Int::class.java)
+    }
+
     companion object {
 
         private fun convertToValid(schemaName: String): String {

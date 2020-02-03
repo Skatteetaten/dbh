@@ -19,6 +19,13 @@ data class DatabaseInstanceRequirements(
     val instanceFallback: Boolean = true
 )
 
+data class TablespaceInfo(
+    val max: Int,
+    val used: Int
+) {
+    val available get(): Int = max - used
+}
+
 @Service
 class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelAdminService) {
 
@@ -53,6 +60,20 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         val externalSchemas = databaseHotelAdminService.externalSchemaManager?.findAllSchemas() ?: emptySet()
         val matchingExternalSchemas = findAllMatchingSchemas(externalSchemas, labelsToMatch)
         return schemas + matchingExternalSchemas
+    }
+
+    fun getTablespaceInfo(): List<Pair<DatabaseInstance, TablespaceInfo>> {
+        val databaseInstances = databaseHotelAdminService.findAllDatabaseInstances()
+        return databaseInstances
+            .mapNotNull { instance ->
+                val maxTablespaces = instance.getMaxTablespaces()
+                val usedTablespaces = instance.getUsedTablespaces()
+
+                if (maxTablespaces == null || usedTablespaces == null) return@mapNotNull null
+
+                val tablespaceInfo = TablespaceInfo(maxTablespaces, usedTablespaces)
+                Pair(instance, tablespaceInfo)
+            }
     }
 
     fun findAllInactiveDatabaseSchemas(labelsToMatch: Map<String, String?> = emptyMap()): Set<DatabaseSchema> =
