@@ -89,12 +89,11 @@ class ResourceUseCollector(
                 metricData.value = schemas.size.toDouble()
             } else {
                 val data = GaugeValue(id, schemas.size.toDouble())
-                val tags = groupKeys.map { (k, v) -> tagOfValueOrUnknown(k, v) }
                 val gauge = registerGauge(
                     SCHEMA_COUNT_METRIC_NAME,
                     "count",
                     "the amount of schemas",
-                    tags,
+                    groupKeys.metricTags,
                     data
                 )
                 schemaCountGauges[id] = data to gauge
@@ -125,6 +124,7 @@ class ResourceUseCollector(
             }
             id
         }
+
         availibleTablespacesGauges.removeDeprecatedMetrics(currentMetricIds)
     }
 
@@ -215,6 +215,9 @@ private val DatabaseInstance.metricTags
             t(DATABASE_ENGINE, this.metaInfo.engine.name)
         )
     }
+
+private val CountGroup.metricTags
+    get(): List<Tag> = this.map { (k, v) -> tagOfValueOrUnknown(k, v) }
 
 data class GaugeValue(var id: String, var value: Double)
 
