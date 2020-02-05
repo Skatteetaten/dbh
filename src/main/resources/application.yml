@@ -9,6 +9,16 @@ database-config:
   schemaListingAllowed: false
   cooldownDaysAfterDelete: 30
 
+management:
+  metrics:
+    distribution:
+      maximum-expected-value:
+        http: 100ms
+      minimum-expected-value:
+        http: 100ms
+      sla:
+        http: 100ms,500ms,1s,2s,3s,5s,10s,15s,25s
+
 metrics:
   resourceUseCollectInterval: "300000"
 
