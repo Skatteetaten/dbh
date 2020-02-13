@@ -30,7 +30,7 @@ data class DatabaseSchemaTestBuilder(val type: DatabaseSchema.Type = DatabaseSch
     )
 }
 
-class DatabaseInstanceBuilder() {
+class DatabaseInstanceBuilder {
     fun build() = DatabaseInstance(
         DatabaseInstanceMetaInfo(
             DatabaseEngine.ORACLE,
@@ -38,7 +38,7 @@ class DatabaseInstanceBuilder() {
             "dbhost.example.com",
             1521,
             true,
-            emptyMap()
+            mapOf("affiliation" to "aurora")
         ),
         mockk(),
         mockk(),
