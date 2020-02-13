@@ -17,7 +17,7 @@ data class DatabaseInstanceResource(
     val createSchemaAllowed: Boolean,
     val instanceName: String,
     val port: Int,
-    val affiliation: String?
+    val labels: Map<String, String>
 )
 
 @RestController
@@ -50,5 +50,5 @@ fun DatabaseInstanceMetaInfo.toResource() =
         createSchemaAllowed,
         instanceName,
         port,
-        labels["affiliation"]
+        labels
     )

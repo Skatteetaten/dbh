@@ -26,7 +26,7 @@ class DatabaseInstanceControllerTest : AbstractControllerTest() {
             statusIsOk()
             responseJsonPath("$.status").equalsValue("OK")
             responseJsonPath("$.items[0].engine").equalsValue("ORACLE")
-            responseJsonPath("$.items[0].affiliation").equalsValue("aurora")
+            responseJsonPath("$.items[0].labels.affiliation").equalsValue("aurora")
         }
     }
 
