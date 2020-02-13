@@ -16,7 +16,8 @@ data class DatabaseInstanceResource(
     val host: String,
     val createSchemaAllowed: Boolean,
     val instanceName: String,
-    val port: Int
+    val port: Int,
+    val affiliation: String?
 )
 
 @RestController
@@ -43,4 +44,11 @@ class DatabaseInstanceController(private val databaseHotelAdminService: Database
 }
 
 fun DatabaseInstanceMetaInfo.toResource() =
-    DatabaseInstanceResource(engine, host, createSchemaAllowed, instanceName, port)
+    DatabaseInstanceResource(
+        engine,
+        host,
+        createSchemaAllowed,
+        instanceName,
+        port,
+        labels["affiliation"]
+    )
