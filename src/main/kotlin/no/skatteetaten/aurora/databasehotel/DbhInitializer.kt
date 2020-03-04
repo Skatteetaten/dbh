@@ -12,9 +12,7 @@ private val logger = KotlinLogging.logger {}
 @Component
 class DbhInitializer(
     private val databaseHotelAdminService: DatabaseHotelAdminService,
-    private val configuration: DbhConfiguration,
-    @Value("\${database-config.retryDelay}")
-    val retryDelay: Int
+    private val configuration: DbhConfiguration
 ) {
 
     @Async
@@ -35,15 +33,10 @@ class DbhInitializer(
                 } catch (e: Exception) {
                     val host = databaseConfig["host"]
                     logger.warn("Unable to connect to $host - will try again later (${e.message})")
-                    Thread.sleep(retryDelay.toLong())
+                    Thread.sleep(configuration.retryDelay.toLong())
                 }
             }
         }
-        val defaultDatabaseInstance = databaseHotelAdminService.findDefaultDatabaseInstance()
-        val databaseHotelDataDao = defaultDatabaseInstance.databaseHotelDataDao
-        val externalSchemaManager = ExternalSchemaManager(databaseHotelDataDao)
-        databaseHotelAdminService.externalSchemaManager = externalSchemaManager
-        logger.info("Registered ExternalSchemaManager")
     }
 
     private fun registerDatabase(databaseConfig: Map<String, Any>) {
@@ -56,7 +49,7 @@ class DbhInitializer(
         val instanceName: String = databaseConfig.typedGet("instanceName")
         val username: String = databaseConfig.typedGet("username")
         val password: String = databaseConfig.typedGet("password")
-        when (engine) {
+        val instance = when (engine) {
             "postgres" -> {
                 val port: Int = databaseConfig.typedGet("port")
                 databaseHotelAdminService.registerPostgresDatabaseInstance(
@@ -86,8 +79,16 @@ class DbhInitializer(
                     instanceLabels
                 )
             }
+            else -> throw IllegalArgumentException("Unknown engine $engine")
         }
         logger.info("Registered host [{}]", host)
+
+        if (instance.instanceName == configuration.defaultInstanceName) {
+            val databaseHotelDataDao = instance.databaseHotelDataDao
+            val externalSchemaManager = ExternalSchemaManager(databaseHotelDataDao)
+            databaseHotelAdminService.externalSchemaManager = externalSchemaManager
+            logger.info("Registered ExternalSchemaManager")
+        }
     }
 
     private inline fun <reified T> Map<String, *>.typedGet(key: String, default: T? = null): T {

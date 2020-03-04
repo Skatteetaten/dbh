@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.databasehotel
 
 import mu.KotlinLogging
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 
@@ -9,6 +10,11 @@ private val logger = KotlinLogging.logger {}
 @ConfigurationProperties(prefix = "database-config")
 @Component
 class DbhConfiguration {
+
+    var retryDelay: Int = 0
+
+    var defaultInstanceName: String = ""
+
     private lateinit var _databases: List<Map<String, Any>>
     var databases: List<Map<String, Any>>
         get() = _databases
