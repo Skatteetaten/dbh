@@ -23,7 +23,7 @@ class DatabaseHotelServiceTest @Autowired constructor(
     val instanceNames = listOf("dev1" to "aurora", "dev2" to "part", "dev3" to "memo")
 
     val databaseInstanceInitializer = DatabaseInstanceInitializer()
-    val adminService = DatabaseHotelAdminService(databaseInstanceInitializer, instanceNames.first().first)
+    val adminService = DatabaseHotelAdminService(databaseInstanceInitializer)
     val databaseHotelService = DatabaseHotelService(adminService)
     val databaseManager = PostgresDatabaseManager(dataSource)
 
