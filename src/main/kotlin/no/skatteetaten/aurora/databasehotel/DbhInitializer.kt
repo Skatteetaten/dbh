@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.databasehotel
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelAdminService
 import no.skatteetaten.aurora.databasehotel.service.ExternalSchemaManager
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 

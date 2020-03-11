@@ -4,7 +4,6 @@ import java.util.HashMap
 import java.util.Random
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
