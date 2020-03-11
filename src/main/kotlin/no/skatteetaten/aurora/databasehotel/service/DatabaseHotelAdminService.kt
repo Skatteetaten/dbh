@@ -4,14 +4,10 @@ import java.util.HashMap
 import java.util.Random
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class DatabaseHotelAdminService(
-    private val databaseInstanceInitializer: DatabaseInstanceInitializer,
-    @Value("\${database-config.defaultInstanceName:}") private val defaultInstanceName: String
-) {
+class DatabaseHotelAdminService(private val databaseInstanceInitializer: DatabaseInstanceInitializer) {
 
     var externalSchemaManager: ExternalSchemaManager? = null
     private val databaseInstances: MutableMap<String, DatabaseInstance> = HashMap()
@@ -114,22 +110,6 @@ class DatabaseHotelAdminService(
     }
 
     fun findDatabaseInstanceByHost(host: String): DatabaseInstance? = databaseInstances.values.find { it.metaInfo.host == host }
-
-    fun findDefaultDatabaseInstance(): DatabaseInstance {
-
-        if (databaseInstances.isEmpty()) {
-            throw DatabaseServiceException("No database instances registered")
-        }
-        // If there is only one database instance registered, we just return that one without further ado.
-        if (databaseInstances.size == 1) {
-            return databaseInstances.entries.stream().findFirst().get().value
-        }
-        if (defaultInstanceName.isEmpty()) {
-            throw DatabaseServiceException("More than one database instance registered but database-config.defaultInstanceName has not been specified.")
-        }
-        return findDatabaseInstanceByInstanceName(defaultInstanceName)
-            ?: throw DatabaseServiceException("Unable to find database instance $defaultInstanceName among registered instances ${databaseInstances.keys}")
-    }
 
     private fun getRandomInstanceName(instances: List<DatabaseInstance>): String? {
         if (instances.isEmpty()) return null

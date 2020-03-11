@@ -13,7 +13,7 @@ def overrides = [
     chatRoom: "#aos-notifications",
     mountCredentials: [[ credentialId : "dbh-application.properties", path: "~/.spring-boot-devtools.properties"]],
     versionStrategy: [
-        [ branch: 'master', versionHint: '3' ]
+        [ branch: 'master', versionHint: '4' ]
     ]
 ]
 
