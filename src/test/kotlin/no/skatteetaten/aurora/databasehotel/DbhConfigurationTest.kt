@@ -17,6 +17,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 @ContextConfiguration(classes = [DbhConfiguration::class])
 @TestPropertySource(
     properties = [
+        "database-config.defaultInstanceName=postgres",
         "database-config.databases[0].host=localhost",
         "database-config.databases[0].port=5432",
         "database-config.databases[0].engine=postgres",

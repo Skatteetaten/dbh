@@ -88,7 +88,6 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
                 return externalSchema.jdbcUrl ?: ""
             }
         }
-
         return DatabaseSchemaBuilder(
             metaInfo,
             jdbcUrlBuilder,
