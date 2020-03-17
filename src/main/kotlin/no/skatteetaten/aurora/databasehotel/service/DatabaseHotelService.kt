@@ -45,14 +45,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
             ?.let { candidates.add(it) }
 
         verifyOnlyOneCandidate(id, candidates)
-        var firstOrNull = candidates.firstOrNull()
-
-        if(firstOrNull?.first?.databaseInstanceMetaInfo?.engine?.equals(DatabaseEngine.POSTGRES)){
-            firstOrNull.first.createdDate = null
-            firstOrNull.first.lastUsedDate = null
-        }
-
-        return firstOrNull
+        return candidates.firstOrNull()
     }
 
     fun findAllDatabaseSchemas(
