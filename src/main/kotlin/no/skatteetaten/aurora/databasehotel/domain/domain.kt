@@ -29,7 +29,7 @@ data class DatabaseSchema @JvmOverloads constructor(
     val databaseInstanceMetaInfo: DatabaseInstanceMetaInfo,
     val jdbcUrl: String,
     val name: String,
-    val createdDate: Date,
+    val createdDate: Date?,
     val lastUsedDate: Date?,
     val setToCooldownAt: Date?,
     val deleteAfter: Date?,
@@ -39,7 +39,7 @@ data class DatabaseSchema @JvmOverloads constructor(
     private val _users = HashSet<User>()
     private val _labels = HashMap<String, String?>()
 
-    val lastUsedOrCreatedDate: Date get() = lastUsedDate ?: createdDate
+    val lastUsedOrCreatedDate: Date? get() = lastUsedDate ?: createdDate
 
     val isUnused: Boolean get() = lastUsedDate == null
 

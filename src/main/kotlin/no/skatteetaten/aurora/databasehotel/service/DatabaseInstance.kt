@@ -167,7 +167,8 @@ open class DatabaseInstance(
         fun DatabaseSchema.isCandidateForDeletion() = this.isUnused || this.isSystemTestSchema()
         return findAllSchemas()
             .filter(DatabaseSchema::isCandidateForDeletion)
-            .filter { s -> s.lastUsedOrCreatedDate.before(daysAgo) }
+            .filter { s -> s.lastUsedOrCreatedDate != null }
+            .filter { s -> s.lastUsedOrCreatedDate!!.before(daysAgo) }
             .toSet()
     }
 
