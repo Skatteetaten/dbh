@@ -22,4 +22,4 @@ private fun ResultSet.dateOrNull(columnName: String): Date? {
         Date(getTimestamp(columnName).time)
 }
 
-// både oracle og postgres bruker toSchema i jdbcutils.kt.
+// TODO både oracle og postgres bruker toSchema i jdbcutils.kt.

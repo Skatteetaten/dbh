@@ -30,7 +30,7 @@ class DatabaseSchemaBuilderTest {
 
         val schemas = builder(listOf(Schema("SCHEMA_NAME", Date(), Date())))
             .createMany(
-                listOf(SchemaData("A", name = "SCHEMA_NAME"))
+                listOf(SchemaData("A", name = "SCHEMA_NAME", createdDate = Date()))
             )
 
         assertThat(schemas).hasSize(1)
@@ -49,7 +49,7 @@ class DatabaseSchemaBuilderTest {
                 Schema("SCHEMA_NAME", Date(), Date()),
                 Schema("SCHEMA_NAME_WITH_NO_MATCH", Date(), Date())
             )
-        ).createMany(listOf(SchemaData("A", name = "SCHEMA_NAME")))
+        ).createMany(listOf(SchemaData("A", name = "SCHEMA_NAME", createdDate = Date())))
 
         assertThat(schemas).hasSize(1)
         with(schemas.first()) {

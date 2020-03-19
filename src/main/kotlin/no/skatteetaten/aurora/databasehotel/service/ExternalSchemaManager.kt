@@ -125,7 +125,7 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
     private fun getDatabaseSchemaFromExternalSchema(externalSchemaFull: ExternalSchemaFull): DatabaseSchema {
 
         val schemaData =
-            externalSchemaFull.run { SchemaData(id, active, name, schemaType, setToCooldownAt, deleteAfter) }
+            externalSchemaFull.run { SchemaData(id, active, name, schemaType, setToCooldownAt, deleteAfter, createdDate) }
         val externalSchema = externalSchemaFull.run { ExternalSchema(createdDate, jdbcUrl) }
         val users = listOf(externalSchemaFull.run { SchemaUser(userId, id, type, username, password) })
         val labels = externalSchemaFull.labels

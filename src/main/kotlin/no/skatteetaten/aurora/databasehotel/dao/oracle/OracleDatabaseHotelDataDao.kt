@@ -41,7 +41,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
 
         val id = generateId()
         jdbcTemplate.update(
-            "insert into SCHEMA_DATA (id, name, schema_type, active) values (?, ?, ?, ?)", id, name, schemaType, 1
+            "insert into SCHEMA_DATA (id, name, schema_type, active, created_date) values (?, ?, ?, ?, current_timestamp)", id, name, schemaType, 1
         )
         return findSchemaDataById(id) ?: throw DataAccessException("Unable to create schema data")
     }
