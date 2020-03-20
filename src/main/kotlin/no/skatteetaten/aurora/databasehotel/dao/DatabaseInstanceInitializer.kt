@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
 import com.zaxxer.hikari.HikariDataSource
-import java.math.BigDecimal
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
@@ -25,6 +24,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
+import java.math.BigDecimal
+import java.sql.ResultSet
+
+private val logger = KotlinLogging.logger {}
+
 
 @Component
 class DatabaseInstanceInitializer(
@@ -56,20 +60,32 @@ class DatabaseInstanceInitializer(
         )
 
         (fun() {
-            // Assert some old bad migrations are missing from the flyway table since they have been removed from
-            // the db/migration folder. Keeping them would prevent the application to properly migrate the schema
-            // forward.
+            // migrate createdDate from dba_users to $schemaName.SCHEMA_DATA needs system privileges
             val jdbcTemplate = JdbcTemplate(managementDataSource)
-            listOf("201703091203", "201703091537").forEach { flywayVersion ->
-                try {
-                    val updates =
-                        jdbcTemplate.update("delete from $schemaName.SCHEMA_VERSION where \"version\"=?", flywayVersion)
-                    if (updates > 0) {
-                        logger.info("Deleted migration {}", flywayVersion)
+
+            try {
+                val hasRecord =
+                    jdbcTemplate.query<Boolean>(
+                        "select \"version\" from $schemaName.SCHEMA_VERSION where \"version\" = '202019031345'"
+                    ) { rs: ResultSet ->
+                        if (rs.next()) {
+                            return@query true
+                        }
+                        false
                     }
-                } catch (e: Exception) {
-                    logger.warn("Unable to delete migration {}; {}", flywayVersion, e.message)
+                if (hasRecord == true) {
+                    try {
+                        val updates =
+                            jdbcTemplate.update("UPDATE $schemaName.SCHEMA_DATA SD SET CREATED_DATE = (SELECT CREATED FROM DBA_USERS U WHERE SD.NAME = U.USERNAME) WHERE SD.CREATED_DATE IS NULL")
+                        if (updates > 0) {
+                            logger.info("Updated $schemaName.SCHEMA_DATA.CREATED_DATE, {} rows affected", updates)
+                        }
+                    } catch (e: Exception) {
+                        logger.warn("Unable to update $schemaName.SCHEMA_DATA; {}", e.message)
+                    }
                 }
+            } catch (e: Exception) {
+                logger.warn("Unable to select version from $schemaName.SCHEMA_DATA; {}", e.message)
             }
         })()
 
