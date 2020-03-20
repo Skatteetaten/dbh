@@ -27,9 +27,6 @@ import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.sql.ResultSet
 
-private val logger = KotlinLogging.logger {}
-
-
 @Component
 class DatabaseInstanceInitializer(
     @Value("\${database-config.cooldownDaysAfterDelete:30}") private val cooldownDaysAfterDelete: Int = 30,
