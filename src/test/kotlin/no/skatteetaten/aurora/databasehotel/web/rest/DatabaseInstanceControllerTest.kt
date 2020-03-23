@@ -2,11 +2,9 @@ package no.skatteetaten.aurora.databasehotel.web.rest
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.mockk
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelAdminService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.get
-import no.skatteetaten.aurora.mockmvc.extensions.post
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
@@ -29,5 +27,4 @@ class DatabaseInstanceControllerTest : AbstractControllerTest() {
             responseJsonPath("$.items[0].labels.affiliation").equalsValue("aurora")
         }
     }
-
 }
