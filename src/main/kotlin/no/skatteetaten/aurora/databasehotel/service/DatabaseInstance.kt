@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.databasehotel.service
 
 import java.time.Duration
 import java.util.ArrayList
-import java.util.Calendar
 import java.util.Date
 import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseHotelDataDao
@@ -24,8 +23,7 @@ open class DatabaseInstance(
     val databaseHotelDataDao: DatabaseHotelDataDao,
     val jdbcUrlBuilder: JdbcUrlBuilder,
     val resourceUsageCollector: ResourceUsageCollector,
-    private val cooldownDaysAfterDelete: Int,
-    private val cooldownDaysForOldUnusedSchemas: Int
+    private val cooldownDaysAfterDelete: Int
 ) {
 
     private val integrations = ArrayList<Integration>()
@@ -136,40 +134,12 @@ open class DatabaseInstance(
     }
 
     @Transactional
-    open fun deactivateStaleSchemas() {
-
-        logger.info("Deactivating stale schemas for server {}", metaInfo.instanceName)
-
-        val schemas = findAllStaleSchemas()
-        logger.info("Found {} stale schemas", schemas.size)
-        schemas.parallelStream().forEach {
-            deactivateSchema(it.name, Duration.ofDays(cooldownDaysForOldUnusedSchemas.toLong()))
-        }
-    }
-
-    @Transactional
     open fun deleteSchemasWithExpiredCooldowns() {
 
         logger.info("Permanently deleting schemas with expired cooldowns for server {}", metaInfo.instanceName)
 
         val schemas = findAllSchemasWithExpiredCooldowns()
         schemas.map { it.name }.parallelStream().forEach(::permanentlyDeleteSchema)
-    }
-
-    fun findAllStaleSchemas(): Set<DatabaseSchema> {
-
-        val daysAgo = Calendar.getInstance().run {
-            add(Calendar.DAY_OF_MONTH, DAYS_BACK)
-            time
-        }
-
-        fun DatabaseSchema.isSystemTestSchema() = this.labels["userId"]?.endsWith(":jenkins-builder") ?: false
-        fun DatabaseSchema.isCandidateForDeletion() = this.isUnused || this.isSystemTestSchema()
-        return findAllSchemas()
-            .filter(DatabaseSchema::isCandidateForDeletion)
-            .filter { s -> s.lastUsedOrCreatedDate != null }
-            .filter { s -> s.lastUsedOrCreatedDate!!.before(daysAgo) }
-            .toSet()
     }
 
     fun findAllSchemasWithExpiredCooldowns(): Set<DatabaseSchema> {
