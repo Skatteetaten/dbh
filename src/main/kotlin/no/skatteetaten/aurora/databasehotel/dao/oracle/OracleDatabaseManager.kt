@@ -64,7 +64,7 @@ class OracleDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSource
     }
 
     override fun findSchemaByName(schemaName: String): Schema? {
-        val query = "SELECT username, created, last_login as lastLogin FROM dba_users u WHERE username=?"
+        val query = "SELECT username, last_login as lastLogin FROM dba_users u WHERE username=?"
         return try {
             jdbcTemplate.queryForObject(query, toSchema, schemaName)
         } catch (e: EmptyResultDataAccessException) {

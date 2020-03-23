@@ -9,5 +9,5 @@ data class SchemaData(
     var schemaType: String? = null,
     var setToCooldownAt: Date? = null,
     var deleteAfter: Date? = null,
-    var created: Date? = null
+    var createdDate: Date? = null
 )

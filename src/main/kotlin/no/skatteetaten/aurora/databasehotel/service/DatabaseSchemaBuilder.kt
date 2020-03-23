@@ -58,7 +58,7 @@ data class DatabaseSchemaBuilder(
             metaInfo,
             jdbcUrl,
             schema.username,
-            schema.created,
+            schemaData.createdDate,
             schema.lastLogin,
             schemaData.setToCooldownAt,
             schemaData.deleteAfter,
