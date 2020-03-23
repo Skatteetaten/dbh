@@ -30,14 +30,4 @@ class DatabaseInstanceControllerTest : AbstractControllerTest() {
         }
     }
 
-    @Test
-    fun `Delete unused`() {
-        every { databaseHotelAdminService.findDatabaseInstanceByHost(any()) } returns mockk(relaxed = true)
-
-        mockMvc.post(Path("/api/v1/admin/databaseInstance/{host}/deleteUnused", "test")) {
-            statusIsOk()
-            responseJsonPath("$.status").equalsValue("OK")
-            responseJsonPath("$.totalCount").equalsValue(0)
-        }
-    }
 }

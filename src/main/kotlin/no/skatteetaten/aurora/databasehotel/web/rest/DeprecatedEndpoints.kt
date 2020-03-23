@@ -20,11 +20,6 @@ class DeprecatedEndpoints(
     @Timed
     fun databaseInstanceControllerFindAll() = databaseInstanceController.findAll()
 
-    @PostMapping("/admin/databaseInstance/{host}/deleteUnused")
-    @Timed
-    fun databaseInstanceControllerDeleteUnused(@PathVariable host: String) =
-        databaseInstanceController.deleteUnused(host)
-
     @GetMapping("/schema/{id}")
     @Timed
     fun findById(@PathVariable id: String) = databaseSchemaController.findById(id)

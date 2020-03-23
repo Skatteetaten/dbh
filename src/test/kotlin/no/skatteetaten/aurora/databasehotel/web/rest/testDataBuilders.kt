@@ -44,6 +44,6 @@ class DatabaseInstanceBuilder {
         mockk(),
         mockk(),
         mockk(),
-        6, 1
+        6
     )
 }

@@ -30,7 +30,6 @@ import java.sql.ResultSet
 @Component
 class DatabaseInstanceInitializer(
     @Value("\${database-config.cooldownDaysAfterDelete:30}") private val cooldownDaysAfterDelete: Int = 30,
-    @Value("\${database-config.cooldownDaysForOldUnusedSchemas:1}") private val cooldownDaysForOldUnusedSchemas: Int = 1,
     @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long = 300000L
 ) {
 
@@ -103,7 +102,7 @@ class DatabaseInstanceInitializer(
         val databaseInstance = DatabaseInstance(
             databaseInstanceMetaInfo, databaseManager,
             databaseHotelDataDao, jdbcUrlBuilder, resourceUsageCollector,
-            cooldownDaysAfterDelete, cooldownDaysForOldUnusedSchemas
+            cooldownDaysAfterDelete
         )
         val residentsIntegration = ResidentsIntegration(managementDataSource)
         databaseInstance.registerIntegration(residentsIntegration)
@@ -149,7 +148,7 @@ class DatabaseInstanceInitializer(
         return DatabaseInstance(
             databaseInstanceMetaInfo, databaseManager,
             databaseHotelDataDao, urlBuilder, resourceUsageCollector,
-            cooldownDaysAfterDelete, cooldownDaysForOldUnusedSchemas
+            cooldownDaysAfterDelete
         )
     }
 

@@ -33,14 +33,6 @@ class DatabaseInstanceController(private val databaseHotelAdminService: Database
 
         return Responses.okResponse(resources)
     }
-
-    @PostMapping("/{host}/deleteUnused")
-    @Timed
-    fun deleteUnused(@PathVariable host: String): ResponseEntity<ApiResponse<*>> {
-
-        databaseHotelAdminService.findDatabaseInstanceByHost(host)?.deactivateStaleSchemas()
-        return Responses.okResponse()
-    }
 }
 
 fun DatabaseInstanceMetaInfo.toResource() =
