@@ -30,7 +30,7 @@ data class DatabaseSchemaResource(
     val type: String,
     val jdbcUrl: String,
     val name: String,
-    val createdDate: Date?,
+    val createdDate: Date,
     val lastUsedDate: Date?,
     val databaseInstance: DatabaseInstanceResource,
     val users: List<UserResource>,

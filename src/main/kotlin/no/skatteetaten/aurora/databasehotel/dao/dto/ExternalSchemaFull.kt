@@ -10,7 +10,7 @@ data class ExternalSchemaFull(
     var setToCooldownAt: Date? = null,
     var deleteAfter: Date? = null,
 
-    var createdDate: Date? = null,
+    var createdDate: Date = Date(),
     var jdbcUrl: String? = null,
 
     var userId: String? = null,

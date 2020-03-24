@@ -55,9 +55,20 @@ class DatabaseInstanceInitializer(
             managementJdbcUrl, username, password, oracleScriptRequired
         )
 
+        val databaseManager = OracleDatabaseManager(managementDataSource)
+
+        assertInitialized(databaseManager, password)
+
+        val databaseHotelDs = OracleDataSourceUtils.createDataSource(
+            managementJdbcUrl, schemaName, password, oracleScriptRequired
+        )
+        migrate(databaseHotelDs)
+
         (fun() {
             // migrate createdDate from dba_users to $schemaName.SCHEMA_DATA needs system privileges
             val jdbcTemplate = JdbcTemplate(managementDataSource)
+
+            logger.info("we here now")
 
             try {
                 val hasRecord =
@@ -71,28 +82,37 @@ class DatabaseInstanceInitializer(
                     }
                 if (hasRecord == true) {
                     try {
-                        val updates =
+                        logger.info("first batch")
+                        val firstUpdates =
                             jdbcTemplate.update("UPDATE $schemaName.SCHEMA_DATA SD SET CREATED_DATE = (SELECT CREATED FROM DBA_USERS U WHERE SD.NAME = U.USERNAME) WHERE SD.CREATED_DATE IS NULL")
-                        if (updates > 0) {
-                            logger.info("Updated $schemaName.SCHEMA_DATA.CREATED_DATE, {} rows affected", updates)
+                        if (firstUpdates > 0) {
+                            logger.info(
+                                "Updated $schemaName.SCHEMA_DATA.CREATED_DATE with data from DBA_USERS, {} rows affected",
+                                firstUpdates
+                            )
                         }
                     } catch (e: Exception) {
-                        logger.warn("Unable to update $schemaName.SCHEMA_DATA; {}", e.message)
+                        logger.warn("Unable to update $schemaName.SCHEMA_DATA in first batch; {}", e.message)
+                    }
+
+                    try {
+                        logger.info("second batch")
+                        val secondUpdates =
+                            jdbcTemplate.update("UPDATE $schemaName.SCHEMA_DATA SD SET CREATED_DATE = TO_TIMESTAMP('01-JAN-1990 12:00:00:00','DD-MON-YYYY HH24:MI:SS:FF') WHERE SD.CREATED_DATE IS NULL")
+                        if (secondUpdates > 0) {
+                            logger.info(
+                                "Updated $schemaName.SCHEMA_DATA.CREATED_DATE to fictional date where created_date = null, {} rows affected",
+                                secondUpdates
+                            )
+                        }
+                    } catch (e: Exception) {
+                        logger.warn("Unable to update $schemaName.SCHEMA_DATA in second batch; {}", e.message)
                     }
                 }
             } catch (e: Exception) {
                 logger.warn("Unable to select version from $schemaName.SCHEMA_DATA; {}", e.message)
             }
         })()
-
-        val databaseManager = OracleDatabaseManager(managementDataSource)
-
-        assertInitialized(databaseManager, password)
-
-        val databaseHotelDs = OracleDataSourceUtils.createDataSource(
-            managementJdbcUrl, schemaName, password, oracleScriptRequired
-        )
-        migrate(databaseHotelDs)
 
         val databaseHotelDataDao = OracleDatabaseHotelDataDao(databaseHotelDs)
 
