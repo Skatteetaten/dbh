@@ -82,10 +82,6 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
             .filter { !it.active }
             .toSet()
 
-    fun findAllStaleDatabaseSchemas(): Set<DatabaseSchema> =
-        databaseHotelAdminService.findAllDatabaseInstances()
-            .pFlatMap { it.findAllStaleSchemas() }
-
     fun createSchema(requirements: DatabaseInstanceRequirements = DatabaseInstanceRequirements()): DatabaseSchema =
         createSchema(requirements, emptyMap())
 

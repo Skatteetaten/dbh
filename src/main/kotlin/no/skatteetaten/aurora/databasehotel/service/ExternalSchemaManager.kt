@@ -80,7 +80,7 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
         labels: List<Label>
     ): DatabaseSchema {
 
-        val schema = Schema(schemaData.name, externalSchema.createdDate!!)
+        val schema = Schema(schemaData.name)
 
         val metaInfo = DatabaseInstanceMetaInfo(ORACLE, "external", "-", 0, false, HashMap())
         val jdbcUrlBuilder = object : JdbcUrlBuilder {
@@ -125,8 +125,18 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
     private fun getDatabaseSchemaFromExternalSchema(externalSchemaFull: ExternalSchemaFull): DatabaseSchema {
 
         val schemaData =
-            externalSchemaFull.run { SchemaData(id, active, name, schemaType, setToCooldownAt, deleteAfter) }
-        val externalSchema = externalSchemaFull.run { ExternalSchema(createdDate, jdbcUrl) }
+            externalSchemaFull.run {
+                SchemaData(
+                    id,
+                    active,
+                    name,
+                    schemaType,
+                    setToCooldownAt,
+                    deleteAfter,
+                    createdDate
+                )
+            }
+        val externalSchema = externalSchemaFull.run { ExternalSchema(jdbcUrl) }
         val users = listOf(externalSchemaFull.run { SchemaUser(userId, id, type, username, password) })
         val labels = externalSchemaFull.labels
 

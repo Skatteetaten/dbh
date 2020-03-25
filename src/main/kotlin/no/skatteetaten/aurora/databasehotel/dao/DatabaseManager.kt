@@ -4,7 +4,6 @@ import java.util.Date
 
 data class Schema @JvmOverloads constructor(
     val username: String,
-    val created: Date,
     val lastLogin: Date? = null
 )
 

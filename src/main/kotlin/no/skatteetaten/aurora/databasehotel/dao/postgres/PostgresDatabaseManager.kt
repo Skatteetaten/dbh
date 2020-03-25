@@ -34,13 +34,13 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
     }
 
     override fun findSchemaByName(schemaName: String): Schema? {
-        val query = "SELECT datname as username, now() as created, now() as lastLogin FROM pg_database WHERE datname=?"
+        val query = "SELECT datname as username, null as lastLogin FROM pg_database WHERE datname=?"
         return jdbcTemplate.queryForObject(query, toSchema, schemaName.toSafe())
     }
 
     override fun findAllNonSystemSchemas(): List<Schema> {
         val query =
-            "SELECT datname as username, now() as created, now() as lastLogin FROM pg_database WHERE datistemplate = false and datname not in ('postgres')"
+            "SELECT datname as username, null as lastLogin FROM pg_database WHERE datistemplate = false and datname not in ('postgres')"
         return jdbcTemplate.query(query, toSchema)
     }
 

@@ -41,8 +41,6 @@ data class DatabaseSchema @JvmOverloads constructor(
 
     val lastUsedOrCreatedDate: Date get() = lastUsedDate ?: createdDate
 
-    val isUnused: Boolean get() = lastUsedDate == null
-
     val sizeMb: Double get() = metadata?.sizeInMb ?: 0.0
 
     fun addUser(user: User) {

@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
 import com.zaxxer.hikari.HikariDataSource
-import java.math.BigDecimal
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
@@ -25,11 +24,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
+import java.math.BigDecimal
+import java.sql.ResultSet
 
 @Component
 class DatabaseInstanceInitializer(
     @Value("\${database-config.cooldownDaysAfterDelete:30}") private val cooldownDaysAfterDelete: Int = 30,
-    @Value("\${database-config.cooldownDaysForOldUnusedSchemas:1}") private val cooldownDaysForOldUnusedSchemas: Int = 1,
     @Value("\${metrics.resourceUseCollectInterval}") private val resourceUseCollectInterval: Long = 300000L
 ) {
 
@@ -55,24 +55,6 @@ class DatabaseInstanceInitializer(
             managementJdbcUrl, username, password, oracleScriptRequired
         )
 
-        (fun() {
-            // Assert some old bad migrations are missing from the flyway table since they have been removed from
-            // the db/migration folder. Keeping them would prevent the application to properly migrate the schema
-            // forward.
-            val jdbcTemplate = JdbcTemplate(managementDataSource)
-            listOf("201703091203", "201703091537").forEach { flywayVersion ->
-                try {
-                    val updates =
-                        jdbcTemplate.update("delete from $schemaName.SCHEMA_VERSION where \"version\"=?", flywayVersion)
-                    if (updates > 0) {
-                        logger.info("Deleted migration {}", flywayVersion)
-                    }
-                } catch (e: Exception) {
-                    logger.warn("Unable to delete migration {}; {}", flywayVersion, e.message)
-                }
-            }
-        })()
-
         val databaseManager = OracleDatabaseManager(managementDataSource)
 
         assertInitialized(databaseManager, password)
@@ -82,6 +64,53 @@ class DatabaseInstanceInitializer(
         )
         migrate(databaseHotelDs)
 
+        (fun() {
+            // migrate createdDate from dba_users to $schemaName.SCHEMA_DATA needs system privileges
+            val jdbcTemplate = JdbcTemplate(managementDataSource)
+            try {
+                val hasRecord =
+                    jdbcTemplate.query<Boolean>(
+                        "select \"version\" from $schemaName.SCHEMA_VERSION where \"version\" = '202019031345'"
+                    ) { rs: ResultSet ->
+                        if (rs.next()) {
+                            return@query true
+                        }
+                        false
+                    }
+                if (hasRecord == true) {
+                    try {
+                        logger.info("Running first batch")
+                        val firstUpdates =
+                            jdbcTemplate.update("UPDATE $schemaName.SCHEMA_DATA SD SET CREATED_DATE = (SELECT CREATED FROM DBA_USERS U WHERE SD.NAME = U.USERNAME) WHERE SD.CREATED_DATE IS NULL")
+                        if (firstUpdates > 0) {
+                            logger.info(
+                                "Updated $schemaName.SCHEMA_DATA.CREATED_DATE with data from DBA_USERS, {} rows affected",
+                                firstUpdates
+                            )
+                        }
+                    } catch (e: Exception) {
+                        logger.warn("Unable to update $schemaName.SCHEMA_DATA in first batch; {}", e.message)
+                    }
+
+                    try {
+                        logger.info("Running second batch")
+                        val secondUpdates =
+                            jdbcTemplate.update("UPDATE $schemaName.SCHEMA_DATA SD SET CREATED_DATE = TO_TIMESTAMP('01-JAN-1990 12:00:00:00','DD-MON-YYYY HH24:MI:SS:FF') WHERE SD.CREATED_DATE IS NULL")
+                        if (secondUpdates > 0) {
+                            logger.info(
+                                "Updated $schemaName.SCHEMA_DATA.CREATED_DATE to fictional date where created_date = null, {} rows affected",
+                                secondUpdates
+                            )
+                        }
+                    } catch (e: Exception) {
+                        logger.warn("Unable to update $schemaName.SCHEMA_DATA in second batch; {}", e.message)
+                    }
+                }
+            } catch (e: Exception) {
+                logger.warn("Unable to select version from $schemaName.SCHEMA_DATA; {}", e.message)
+            }
+        })()
+
         val databaseHotelDataDao = OracleDatabaseHotelDataDao(databaseHotelDs)
 
         val jdbcUrlBuilder = OracleJdbcUrlBuilder(clientService)
@@ -90,7 +119,7 @@ class DatabaseInstanceInitializer(
         val databaseInstance = DatabaseInstance(
             databaseInstanceMetaInfo, databaseManager,
             databaseHotelDataDao, jdbcUrlBuilder, resourceUsageCollector,
-            cooldownDaysAfterDelete, cooldownDaysForOldUnusedSchemas
+            cooldownDaysAfterDelete
         )
         val residentsIntegration = ResidentsIntegration(managementDataSource)
         databaseInstance.registerIntegration(residentsIntegration)
@@ -136,7 +165,7 @@ class DatabaseInstanceInitializer(
         return DatabaseInstance(
             databaseInstanceMetaInfo, databaseManager,
             databaseHotelDataDao, urlBuilder, resourceUsageCollector,
-            cooldownDaysAfterDelete, cooldownDaysForOldUnusedSchemas
+            cooldownDaysAfterDelete
         )
     }
 

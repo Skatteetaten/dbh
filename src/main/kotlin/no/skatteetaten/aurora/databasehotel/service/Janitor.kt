@@ -20,7 +20,6 @@ class Janitor(
 
         logger.info("Periodic run of janitor")
         databaseHotelAdminService.findAllDatabaseInstances().forEach {
-            it.deactivateStaleSchemas()
             it.deleteSchemasWithExpiredCooldowns()
         }
     }

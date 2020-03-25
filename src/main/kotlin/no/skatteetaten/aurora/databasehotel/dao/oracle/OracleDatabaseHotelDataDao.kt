@@ -41,7 +41,11 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
 
         val id = generateId()
         jdbcTemplate.update(
-            "insert into SCHEMA_DATA (id, name, schema_type, active) values (?, ?, ?, ?)", id, name, schemaType, 1
+            "insert into SCHEMA_DATA (id, name, schema_type, active, created_date) values (?, ?, ?, ?, current_timestamp)",
+            id,
+            name,
+            schemaType,
+            1
         )
         return findSchemaDataById(id) ?: throw DataAccessException("Unable to create schema data")
     }
@@ -88,7 +92,7 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         @Language("SQL") val dataQuery = """
         select 
             sd.id, sd.active, sd.name, sd.schema_type, sd.set_to_cooldown_at, sd.delete_after, 
-            es.created_date, es.jdbc_url,
+            sd.created_date, es.jdbc_url,
             u.id as user_id, u.type, u.username, u.password
         from SCHEMA_DATA sd
             LEFT JOIN EXTERNAL_SCHEMA es on sd.id=es.schema_id
@@ -208,14 +212,14 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
 
         jdbcTemplate
             .update(
-                "insert into EXTERNAL_SCHEMA (id, created_date, schema_id, jdbc_url) values (?, ?, ?, ?)",
-                generateId(), Date(), id, jdbcUrl
+                "insert into EXTERNAL_SCHEMA (id, schema_id, jdbc_url) values (?, ?, ?)",
+                generateId(), id, jdbcUrl
             )
-        return ExternalSchema(Date(), jdbcUrl)
+        return ExternalSchema(jdbcUrl)
     }
 
     override fun findExternalSchemaById(id: String): ExternalSchema? = queryForOne(
-        "select created_date, jdbc_url from EXTERNAL_SCHEMA where schema_id=?",
+        "select jdbc_url from EXTERNAL_SCHEMA where schema_id=?",
         ExternalSchema::class.java,
         id
     )
