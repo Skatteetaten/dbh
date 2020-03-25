@@ -67,9 +67,6 @@ class DatabaseInstanceInitializer(
         (fun() {
             // migrate createdDate from dba_users to $schemaName.SCHEMA_DATA needs system privileges
             val jdbcTemplate = JdbcTemplate(managementDataSource)
-
-            logger.info("we here now")
-
             try {
                 val hasRecord =
                     jdbcTemplate.query<Boolean>(
@@ -82,7 +79,7 @@ class DatabaseInstanceInitializer(
                     }
                 if (hasRecord == true) {
                     try {
-                        logger.info("first batch")
+                        logger.info("Running first batch")
                         val firstUpdates =
                             jdbcTemplate.update("UPDATE $schemaName.SCHEMA_DATA SD SET CREATED_DATE = (SELECT CREATED FROM DBA_USERS U WHERE SD.NAME = U.USERNAME) WHERE SD.CREATED_DATE IS NULL")
                         if (firstUpdates > 0) {
@@ -96,7 +93,7 @@ class DatabaseInstanceInitializer(
                     }
 
                     try {
-                        logger.info("second batch")
+                        logger.info("Running second batch")
                         val secondUpdates =
                             jdbcTemplate.update("UPDATE $schemaName.SCHEMA_DATA SD SET CREATED_DATE = TO_TIMESTAMP('01-JAN-1990 12:00:00:00','DD-MON-YYYY HH24:MI:SS:FF') WHERE SD.CREATED_DATE IS NULL")
                         if (secondUpdates > 0) {
