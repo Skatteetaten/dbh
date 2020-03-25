@@ -76,7 +76,7 @@ class OracleDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSource
 
         val currentUserName = jdbcTemplate.queryForObject("select user from dual", String::class.java)
         val query = (
-            """SELECT username, created, last_login as lastLogin FROM dba_users u WHERE 
+            """SELECT username, last_login as lastLogin FROM dba_users u WHERE 
             default_tablespace not in ('SYSTEM', 'SYSAUX', 'USERS', 'MAPTEST', 'AOS_API_USER', 'RESIDENTS') 
             and default_tablespace=username and username!=?""".trimIndent())
         return jdbcTemplate.query(query, toSchema, currentUserName)
