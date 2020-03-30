@@ -180,6 +180,22 @@ class DatabaseSchemaController(
         val success = connectionVerificationRequest.id?.let {
             databaseHotelService.validateConnection(it)
         } ?: connectionVerificationRequest.jdbcUser?.let {
+            databaseHotelService.validateConnection(it.jdbcUrl, it.username, it.password).success
+        } ?: throw IllegalArgumentException("id or jdbcUser is required")
+        return Responses.okResponse(success)
+    }
+}
+
+@RestController
+@RequestMapping("/api/v2/schema")
+class DatabaseSchemaControllerV2(
+        private val databaseHotelService: DatabaseHotelService
+) {
+    @PutMapping("/validate")
+    fun validate(@RequestBody connectionVerificationRequest: ConnectionVerificationRequest): ResponseEntity<ApiResponse<*>> {
+        val success = connectionVerificationRequest.id?.let {
+            databaseHotelService.validateConnection(it)
+        } ?: connectionVerificationRequest.jdbcUser?.let {
             databaseHotelService.validateConnection(it.jdbcUrl, it.username, it.password)
         } ?: throw IllegalArgumentException("id or jdbcUser is required")
         return Responses.okResponse(success)

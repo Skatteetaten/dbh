@@ -8,7 +8,6 @@ import mu.KotlinLogging
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.internal.SchemaLabelMatcher.findAllMatchingSchemas
-import no.skatteetaten.aurora.databasehotel.web.rest.ConnectionVerificationResponse
 import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
@@ -110,6 +109,11 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         }
     }
 
+    data class ConnectionVerification(
+            val success: Boolean? = null,
+            val message: String? = ""
+    )
+
     fun validateConnection(id: String) =
         findSchemaById(id)?.let { (schema, _) ->
             val user = schema.users.first()
@@ -119,12 +123,11 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
     fun validateConnection(jdbcUrl: String, username: String, password: String) =
             try {
                 DriverManager.getConnection(jdbcUrl, username, password).use {
-                    ConnectionVerificationResponse(true, "success")
+                    ConnectionVerification(true, "success")
                 }
 
             } catch (ex: SQLException) {
-                logger.info { ex.message }
-                ConnectionVerificationResponse(false, ex.message)
+                ConnectionVerification(false, ex.message)
             }
 
     @JvmOverloads
