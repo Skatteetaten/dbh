@@ -26,6 +26,11 @@ data class TablespaceInfo(
     val available get(): Int = max - used
 }
 
+data class ConnectionVerification(
+        val isSuccessful: Boolean? = null,
+        val message: String? = ""
+)
+
 @Service
 class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelAdminService) {
 
@@ -108,11 +113,6 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
             }
         }
     }
-
-    data class ConnectionVerification(
-            val isSuccessful: Boolean? = null,
-            val message: String? = ""
-    )
 
     fun validateConnection(id: String) =
         findSchemaById(id)?.let { (schema, _) ->
