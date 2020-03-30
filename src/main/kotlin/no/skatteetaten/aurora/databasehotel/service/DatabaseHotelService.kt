@@ -119,6 +119,8 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         try {
             DriverManager.getConnection(jdbcUrl, username, password).use { true }
         } catch (ex: SQLException) {
+            logger.info { ex.message }
+            logger.info { ex.cause?.message }
             false
         }
 
