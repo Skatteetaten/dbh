@@ -180,7 +180,7 @@ class DatabaseSchemaController(
         val success = connectionVerificationRequest.id?.let {
             databaseHotelService.validateConnection(it)
         } ?: connectionVerificationRequest.jdbcUser?.let {
-            databaseHotelService.validateConnection(it.jdbcUrl, it.username, it.password).success
+            databaseHotelService.validateConnection(it.jdbcUrl, it.username, it.password).isSuccessful
         } ?: throw IllegalArgumentException("id or jdbcUser is required")
         return Responses.okResponse(success)
     }

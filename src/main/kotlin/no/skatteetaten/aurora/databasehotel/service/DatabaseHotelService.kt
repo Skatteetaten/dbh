@@ -110,7 +110,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
     }
 
     data class ConnectionVerification(
-            val success: Boolean? = null,
+            val isSuccessful: Boolean? = null,
             val message: String? = ""
     )
 
@@ -123,7 +123,7 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
     fun validateConnection(jdbcUrl: String, username: String, password: String) =
             try {
                 DriverManager.getConnection(jdbcUrl, username, password).use {
-                    ConnectionVerification(true, "success")
+                    ConnectionVerification(true, "successful")
                 }
 
             } catch (ex: SQLException) {
