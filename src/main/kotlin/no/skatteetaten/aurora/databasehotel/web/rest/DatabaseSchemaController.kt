@@ -65,11 +65,6 @@ data class Schema(val username: String, val password: String, val jdbcUrl: Strin
     val isValid = username.isNotEmpty() && password.isNotEmpty() && jdbcUrl.isNotEmpty()
 }
 
-data class ConnectionVerificationResponse(
-        val success: Boolean? = null,
-        val message: String? = ""
-)
-
 @RestController
 @RequestMapping("/api/v1/schema")
 class DatabaseSchemaController(
