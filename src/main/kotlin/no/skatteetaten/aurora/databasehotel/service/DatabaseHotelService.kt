@@ -27,8 +27,8 @@ data class TablespaceInfo(
 }
 
 data class ConnectionVerification(
-        val isSuccessful: Boolean? = null,
-        val message: String? = ""
+    val isSuccessful: Boolean? = null,
+    val message: String? = ""
 )
 
 @Service
@@ -125,7 +125,6 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
                 DriverManager.getConnection(jdbcUrl, username, password).use {
                     ConnectionVerification(true, "successful")
                 }
-
             } catch (ex: SQLException) {
                 ConnectionVerification(false, ex.message)
             }
