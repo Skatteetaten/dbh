@@ -27,8 +27,8 @@ data class TablespaceInfo(
 }
 
 data class ConnectionVerification(
-    val isSuccessful: Boolean? = null,
-    val message: String? = ""
+        val hasSucceeded: Boolean? = null,
+        val message: String? = ""
 )
 
 @Service

@@ -65,8 +65,8 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
     @ParameterizedTest
     @ArgumentsSource(JdbcParams::class)
     fun validateConnection(request: ConnectionVerificationRequest) {
-        every { databaseHotelService.validateConnection(any()) } returns ConnectionVerification(isSuccessful = true)
-        every { databaseHotelService.validateConnection(any(), any(), any()) } returns ConnectionVerification(isSuccessful = true)
+        every { databaseHotelService.validateConnection(any()) } returns ConnectionVerification(hasSucceeded = true)
+        every { databaseHotelService.validateConnection(any(), any(), any()) } returns ConnectionVerification(hasSucceeded = true)
 
         mockMvc.put(
             path = Path("/api/v1/schema/validate"),
