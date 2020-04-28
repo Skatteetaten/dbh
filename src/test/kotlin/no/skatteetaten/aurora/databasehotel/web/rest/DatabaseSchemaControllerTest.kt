@@ -76,7 +76,7 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
             statusIsOk()
             responseJsonPath("$.status").equalsValue("OK")
             responseJsonPath("$.totalCount").equalsValue(1)
-            responseJsonPath("$.items[0]").isTrue()
+            responseJsonPath("$.items[0].hasSucceeded").isTrue()
         }
     }
 
