@@ -26,6 +26,11 @@ data class TablespaceInfo(
     val available get(): Int = max - used
 }
 
+data class ConnectionVerification(
+    val hasSucceeded: Boolean? = null,
+    val message: String? = ""
+)
+
 @Service
 class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelAdminService) {
 
@@ -116,11 +121,13 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         } ?: throw IllegalArgumentException("no database schema found for id: $id")
 
     fun validateConnection(jdbcUrl: String, username: String, password: String) =
-        try {
-            DriverManager.getConnection(jdbcUrl, username, password).use { true }
-        } catch (ex: SQLException) {
-            false
-        }
+            try {
+                DriverManager.getConnection(jdbcUrl, username, password).use {
+                    ConnectionVerification(true, "successful")
+                }
+            } catch (ex: SQLException) {
+                ConnectionVerification(false, ex.message)
+            }
 
     @JvmOverloads
     fun updateSchema(

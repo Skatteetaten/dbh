@@ -8,6 +8,7 @@ import java.net.URLEncoder.encode
 import java.util.stream.Stream
 import no.skatteetaten.aurora.databasehotel.dao.DataAccessException
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
+import no.skatteetaten.aurora.databasehotel.service.ConnectionVerification
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
@@ -64,8 +65,8 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
     @ParameterizedTest
     @ArgumentsSource(JdbcParams::class)
     fun validateConnection(request: ConnectionVerificationRequest) {
-        every { databaseHotelService.validateConnection(any()) } returns true
-        every { databaseHotelService.validateConnection(any(), any(), any()) } returns true
+        every { databaseHotelService.validateConnection(any()) } returns ConnectionVerification(hasSucceeded = true)
+        every { databaseHotelService.validateConnection(any(), any(), any()) } returns ConnectionVerification(hasSucceeded = true)
 
         mockMvc.put(
             path = Path("/api/v1/schema/validate"),
@@ -75,7 +76,7 @@ class DatabaseSchemaControllerTest : AbstractControllerTest() {
             statusIsOk()
             responseJsonPath("$.status").equalsValue("OK")
             responseJsonPath("$.totalCount").equalsValue(1)
-            responseJsonPath("$.items[0]").isTrue()
+            responseJsonPath("$.items[0].hasSucceeded").isTrue()
         }
     }
 

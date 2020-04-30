@@ -7,6 +7,7 @@ import java.time.Duration
 import java.util.Date
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
+import no.skatteetaten.aurora.databasehotel.service.ConnectionVerification
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstanceRequirements
 import no.skatteetaten.aurora.databasehotel.toDatabaseEngine
@@ -64,6 +65,11 @@ data class ConnectionVerificationRequest(
 data class Schema(val username: String, val password: String, val jdbcUrl: String) {
     val isValid = username.isNotEmpty() && password.isNotEmpty() && jdbcUrl.isNotEmpty()
 }
+
+data class ConnectionVerificationResponse(
+    val hasSucceeded: Boolean? = null,
+    val message: String? = ""
+)
 
 @RestController
 @RequestMapping("/api/v1/schema")
@@ -172,14 +178,19 @@ class DatabaseSchemaController(
 
     @PutMapping("/validate")
     fun validate(@RequestBody connectionVerificationRequest: ConnectionVerificationRequest): ResponseEntity<ApiResponse<*>> {
-        val success = connectionVerificationRequest.id?.let {
+        val connectionVerification = connectionVerificationRequest.id?.let {
             databaseHotelService.validateConnection(it)
         } ?: connectionVerificationRequest.jdbcUser?.let {
             databaseHotelService.validateConnection(it.jdbcUrl, it.username, it.password)
         } ?: throw IllegalArgumentException("id or jdbcUser is required")
-        return Responses.okResponse(success)
+        return Responses.okResponse(connectionVerification.toResource())
     }
 }
+
+fun ConnectionVerification.toResource() = ConnectionVerificationResponse(
+        hasSucceeded = hasSucceeded,
+        message = message
+)
 
 fun DatabaseSchema.toResource() = DatabaseSchemaResource(
     id = id,
