@@ -12,6 +12,7 @@ def overrides = [
     jiraFiksetIKomponentversjon: true,
     chatRoom: "#aos-notifications",
     mountCredentials: [[ credentialId : "dbh-application.properties", path: "~/.spring-boot-devtools.properties"]],
+    compilePropertiesIq:  '-x test',
     versionStrategy: [
         [ branch: 'master', versionHint: '5' ]
     ]
