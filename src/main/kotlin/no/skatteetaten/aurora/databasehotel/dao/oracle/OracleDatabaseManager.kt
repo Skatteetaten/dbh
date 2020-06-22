@@ -16,7 +16,7 @@ class OracleDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSource
         get() {
 
             val dataFolderQuery =
-                "SELECT SUBSTR(FILE_NAME, 1, INSTR(FILE_NAME, '/', -1) -1) as DATA_FOLDER FROM DBA_DATA_FILES where " + "TABLESPACE_NAME='SYSTEM'"
+                "SELECT SUBSTR(FILE_NAME, 1, INSTR(FILE_NAME, '/', -1) -1) as DATA_FOLDER FROM DBA_DATA_FILES where " + "TABLESPACE_NAME='SYSTEM' " + "and rownum=1"
             return jdbcTemplate.queryForObject(dataFolderQuery, String::class.java)
         }
 
