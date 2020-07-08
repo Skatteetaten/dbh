@@ -39,14 +39,15 @@ class RestorableDatabaseSchemaController(val databaseHotelService: DatabaseHotel
     }
 
     @PatchMapping("/{id}")
-    fun update(@PathVariable id: String, @RequestBody payload: RestoreDatabaseSchemaPayload) {
+    fun update(@PathVariable id: String, @RequestBody payload: RestoreDatabaseSchemaPayload): ResponseEntity<ApiResponse<*>> {
 
-        if (payload.active != true) return
+        if (payload.active != true) throw IllegalArgumentException("Active must be true in payload")
 
         val (schema, databaseInstance) = databaseHotelService.findSchemaById(id, false)
             ?: throw IllegalArgumentException("No such schema id=$id")
         databaseInstance ?: throw java.lang.IllegalArgumentException("Schema id=$id is not a managed schema")
         databaseInstance.reactivateSchema(schema)
+        return Responses.okResponse(schema)
     }
 }
 
