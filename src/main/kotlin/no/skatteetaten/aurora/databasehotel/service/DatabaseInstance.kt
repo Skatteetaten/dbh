@@ -160,6 +160,8 @@ open class DatabaseInstance(
     open fun reactivateSchema(schema: DatabaseSchema) {
 
         databaseHotelDataDao.reactivateSchemaData(schema.id)
+        val user = schema.users.first()
+        databaseManager.updatePassword(user.name, user.password)
         integrations.forEach { it.onSchemaReactivated(schema) }
     }
 
