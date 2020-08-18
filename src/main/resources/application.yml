@@ -37,9 +37,10 @@ logging:
         catalina: WARN
 
 aurora:
-  authenticationEnabled: true
+  authentication:
+      enabled: true
   token:
-    headerValuePrefix: aurora-token
+    header-value-prefix: aurora-token | bearer
 
 ---
 spring:
@@ -74,7 +75,8 @@ metrics:
     resourceUseCollectInterval: "10000"
 
 aurora:
-  authenticationEnabled: false
+  authentication:
+      enabled: false
   token:
     location: ./src/test/resources/aurora-token
 

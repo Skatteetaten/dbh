@@ -31,9 +31,10 @@ database-config:
     dropAllowed: true
 
 aurora:
-    authenticationEnabled: false
+    authentication:
+        enabled: false
     token:
-        headerValuePrefix: abc
+        header-value-prefix: abc
 
 
 test:
@@ -62,6 +63,10 @@ logging:
     # Setting  error level on some flyway logging to avoid warnings during test
     org.flywaydb.core.internal.command.DbMigrate: ERROR
     org.flywaydb.core.internal.database.base.Database: ERROR
+
+management:
+    server:
+        port: 8081
 
 ---
 
