@@ -1,19 +1,19 @@
 import com.adarshr.gradle.testlogger.theme.ThemeType
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.3.50"
-    id("org.jetbrains.kotlin.plugin.spring") version "1.3.50"
-    id("org.jlleitschuh.gradle.ktlint") version "8.2.0"
-    id("org.sonarqube") version "2.7.1"
+    id("org.jetbrains.kotlin.jvm") version "1.3.72"
+    id("org.jetbrains.kotlin.plugin.spring") version "1.3.72"
+    id("org.jlleitschuh.gradle.ktlint") version "9.3.0"
+    id("org.sonarqube") version "3.0"
 
-    id("org.springframework.boot") version "2.1.8.RELEASE"
+    id("org.springframework.boot") version "2.3.3.RELEASE"
 
-    id("com.gorylenko.gradle-git-properties") version "2.0.0"
-    id("com.github.ben-manes.versions") version "0.22.0"
-    id("se.patrikerdes.use-latest-versions") version "0.2.12"
-    id("com.adarshr.test-logger") version "1.7.0"
+    id("com.gorylenko.gradle-git-properties") version "2.2.3"
+    id("com.github.ben-manes.versions") version "0.29.0"
+    id("se.patrikerdes.use-latest-versions") version "0.2.14"
+    id("com.adarshr.test-logger") version "2.1.0"
 
-    id("no.skatteetaten.gradle.aurora") version "3.1.0"
+    id("no.skatteetaten.gradle.aurora") version "3.6.6"
 }
 
 repositories {
@@ -29,9 +29,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.apache.commons:commons-lang3")
-    implementation("com.google.guava:guava:28.1-jre")
+    implementation("com.google.guava:guava:29.0-jre")
     implementation("com.github.ben-manes.caffeine:caffeine")
-    implementation("com.oracle:ojdbc8:12.2.0.1")
+    implementation("com.oracle:ojdbc8:18.3")
     implementation("org.postgresql:postgresql")
     implementation("org.flywaydb:flyway-core")
 
@@ -39,10 +39,10 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
-    testImplementation("io.mockk:mockk:1.9.3")
-    testImplementation("com.ninja-squad:springmockk:1.1.3")
-    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.19")
-    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.0.2")
+    testImplementation("io.mockk:mockk:1.10.0")
+    testImplementation("com.ninja-squad:springmockk:2.0.3")
+    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.22")
+    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:bugfix_AOS_4800-SNAPSHOT")
 
     val devtools = "org.springframework.boot:spring-boot-devtools"
     if (project.hasProperty("springBootDevtools")) {
@@ -54,6 +54,7 @@ dependencies {
 }
 
 configurations.forEach {
+    it.exclude("org.junit.vintage", "junit-vintage-engine")
     it.exclude("org.springframework.cloud", "spring-cloud-contract-verifier")
     it.exclude("junit", "junit")
 }

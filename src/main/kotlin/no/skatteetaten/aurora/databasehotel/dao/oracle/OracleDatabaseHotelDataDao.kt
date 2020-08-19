@@ -89,7 +89,8 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         selectManySchemaData(SCHEMA_TYPE to schemaType, ACTIVE to 1)
 
     override fun findAllExternalSchemaData(): List<ExternalSchemaFull> {
-        @Language("SQL") val dataQuery = """
+        @Language("SQL") val dataQuery =
+            """
         select 
             sd.id, sd.active, sd.name, sd.schema_type, sd.set_to_cooldown_at, sd.delete_after, 
             sd.created_date, es.jdbc_url,
@@ -101,7 +102,8 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
         """
         val schemaData = queryForMany(dataQuery, ExternalSchemaFull::class.java)
 
-        @Language("SQL") val labelQuery = """
+        @Language("SQL") val labelQuery =
+            """
         select l.id, l.SCHEMA_ID, l.NAME, l.VALUE
             from SCHEMA_DATA sd LEFT JOIN LABELS l on sd.id=l.SCHEMA_ID
             where schema_type='EXTERNAL'
@@ -143,7 +145,8 @@ open class OracleDatabaseHotelDataDao(dataSource: DataSource) : DatabaseSupport(
                 from LABELS where name in (:names)
                 group by schema_id
                 HAVING listagg(value, ',') WITHIN GROUP (ORDER BY name) like (:values)
-                ) and (active=1 or active=(:active)) and schema_type=(:type)""".trimIndent(),
+                ) and (active=1 or active=(:active)) and schema_type=(:type)
+            """.trimIndent(),
             parameters,
             BeanPropertyRowMapper(SchemaData::class.java)
         )

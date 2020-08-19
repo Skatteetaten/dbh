@@ -64,52 +64,54 @@ class DatabaseInstanceInitializer(
         )
         migrate(databaseHotelDs)
 
-        (fun() {
-            // migrate createdDate from dba_users to $schemaName.SCHEMA_DATA needs system privileges
-            val jdbcTemplate = JdbcTemplate(managementDataSource)
-            try {
-                val hasRecord =
-                    jdbcTemplate.query<Boolean>(
-                        "select \"version\" from $schemaName.SCHEMA_VERSION where \"version\" = '202019031345'"
-                    ) { rs: ResultSet ->
-                        if (rs.next()) {
-                            return@query true
+        (
+            fun() {
+                // migrate createdDate from dba_users to $schemaName.SCHEMA_DATA needs system privileges
+                val jdbcTemplate = JdbcTemplate(managementDataSource)
+                try {
+                    val hasRecord =
+                        jdbcTemplate.query<Boolean>(
+                            "select \"version\" from $schemaName.SCHEMA_VERSION where \"version\" = '202019031345'"
+                        ) { rs: ResultSet ->
+                            if (rs.next()) {
+                                return@query true
+                            }
+                            false
                         }
-                        false
-                    }
-                if (hasRecord == true) {
-                    try {
-                        logger.info("Running first batch")
-                        val firstUpdates =
-                            jdbcTemplate.update("UPDATE $schemaName.SCHEMA_DATA SD SET CREATED_DATE = (SELECT CREATED FROM DBA_USERS U WHERE SD.NAME = U.USERNAME) WHERE SD.CREATED_DATE IS NULL")
-                        if (firstUpdates > 0) {
-                            logger.info(
-                                "Updated $schemaName.SCHEMA_DATA.CREATED_DATE with data from DBA_USERS, {} rows affected",
-                                firstUpdates
-                            )
+                    if (hasRecord == true) {
+                        try {
+                            logger.info("Running first batch")
+                            val firstUpdates =
+                                jdbcTemplate.update("UPDATE $schemaName.SCHEMA_DATA SD SET CREATED_DATE = (SELECT CREATED FROM DBA_USERS U WHERE SD.NAME = U.USERNAME) WHERE SD.CREATED_DATE IS NULL")
+                            if (firstUpdates > 0) {
+                                logger.info(
+                                    "Updated $schemaName.SCHEMA_DATA.CREATED_DATE with data from DBA_USERS, {} rows affected",
+                                    firstUpdates
+                                )
+                            }
+                        } catch (e: Exception) {
+                            logger.warn("Unable to update $schemaName.SCHEMA_DATA in first batch; {}", e.message)
                         }
-                    } catch (e: Exception) {
-                        logger.warn("Unable to update $schemaName.SCHEMA_DATA in first batch; {}", e.message)
-                    }
 
-                    try {
-                        logger.info("Running second batch")
-                        val secondUpdates =
-                            jdbcTemplate.update("UPDATE $schemaName.SCHEMA_DATA SD SET CREATED_DATE = TO_TIMESTAMP('01-JAN-1990 12:00:00:00','DD-MON-YYYY HH24:MI:SS:FF') WHERE SD.CREATED_DATE IS NULL")
-                        if (secondUpdates > 0) {
-                            logger.info(
-                                "Updated $schemaName.SCHEMA_DATA.CREATED_DATE to fictional date where created_date = null, {} rows affected",
-                                secondUpdates
-                            )
+                        try {
+                            logger.info("Running second batch")
+                            val secondUpdates =
+                                jdbcTemplate.update("UPDATE $schemaName.SCHEMA_DATA SD SET CREATED_DATE = TO_TIMESTAMP('01-JAN-1990 12:00:00:00','DD-MON-YYYY HH24:MI:SS:FF') WHERE SD.CREATED_DATE IS NULL")
+                            if (secondUpdates > 0) {
+                                logger.info(
+                                    "Updated $schemaName.SCHEMA_DATA.CREATED_DATE to fictional date where created_date = null, {} rows affected",
+                                    secondUpdates
+                                )
+                            }
+                        } catch (e: Exception) {
+                            logger.warn("Unable to update $schemaName.SCHEMA_DATA in second batch; {}", e.message)
                         }
-                    } catch (e: Exception) {
-                        logger.warn("Unable to update $schemaName.SCHEMA_DATA in second batch; {}", e.message)
                     }
+                } catch (e: Exception) {
+                    logger.warn("Unable to select version from $schemaName.SCHEMA_DATA; {}", e.message)
                 }
-            } catch (e: Exception) {
-                logger.warn("Unable to select version from $schemaName.SCHEMA_DATA; {}", e.message)
             }
-        })()
+            )()
 
         val databaseHotelDataDao = OracleDatabaseHotelDataDao(databaseHotelDs)
 

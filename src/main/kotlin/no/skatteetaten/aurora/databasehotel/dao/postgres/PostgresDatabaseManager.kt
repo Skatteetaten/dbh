@@ -19,7 +19,8 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
                   EXCEPTION WHEN OTHERS THEN
                   RAISE NOTICE 'not creating role app_user -- it already exists';
                 END
-                ${'$'}${'$'};""".trimIndent(),
+                ${'$'}${'$'};
+            """.trimIndent(),
             "create user $safeName with password '$password'",
             "create database $safeName",
             "GRANT CREATE ON DATABASE $safeName TO $safeName",

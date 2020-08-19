@@ -19,9 +19,10 @@ class SharedSecretAuthenticationManager(
             if (!headerFormatRegex.matches(authenticationHeaderValue))
                 throw BadCredentialsException("Unexpected Authorization header format")
 
-            val tokenFromRequest =
-                authenticationHeaderValue.replace(Regex(headerValuePrefixesRegexFormat, RegexOption.IGNORE_CASE), "")
-                    .trim()
+            val tokenFromRequest = authenticationHeaderValue
+                .replace(Regex(headerValuePrefixesRegexFormat, RegexOption.IGNORE_CASE), "")
+                .trim()
+
             if (tokenFromRequest != prenegotiatedSecret) throw BadCredentialsException("Invalid bearer token")
         }
 

@@ -52,7 +52,7 @@ class WebSecurityConfig(
             setExceptionIfHeaderMissing(false)
             setAuthenticationManager(
                 SharedSecretAuthenticationManager(
-                    prenegotiatedSecret = if(authenticationEnabled) sharedSecretReader.secret else "-",
+                    prenegotiatedSecret = if (authenticationEnabled) sharedSecretReader.secret else "-",
                     headerValuePrefixesRegexFormat = headerValuePrefixesRegexFormat,
                     authIsEnabled = authenticationEnabled
                 )

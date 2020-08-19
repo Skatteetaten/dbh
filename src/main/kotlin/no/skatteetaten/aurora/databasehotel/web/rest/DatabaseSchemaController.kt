@@ -188,8 +188,8 @@ class DatabaseSchemaController(
 }
 
 fun ConnectionVerification.toResource() = ConnectionVerificationResponse(
-        hasSucceeded = hasSucceeded,
-        message = message
+    hasSucceeded = hasSucceeded,
+    message = message
 )
 
 fun DatabaseSchema.toResource() = DatabaseSchemaResource(

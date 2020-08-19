@@ -24,7 +24,8 @@ class TestController {
                 "principal" to it.principal,
                 "authorities" to it.authorities.map { it.authority }
             )
-        } ?: emptyMap<String, Any>())
+        } ?: emptyMap<String, Any>()
+    )
 }
 
 enum class AuthState { AUTH_ENABLED, AUTH_DISABLED }

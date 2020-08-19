@@ -121,13 +121,13 @@ class DatabaseHotelService(private val databaseHotelAdminService: DatabaseHotelA
         } ?: throw IllegalArgumentException("no database schema found for id: $id")
 
     fun validateConnection(jdbcUrl: String, username: String, password: String) =
-            try {
-                DriverManager.getConnection(jdbcUrl, username, password).use {
-                    ConnectionVerification(true, "successful")
-                }
-            } catch (ex: SQLException) {
-                ConnectionVerification(false, ex.message)
+        try {
+            DriverManager.getConnection(jdbcUrl, username, password).use {
+                ConnectionVerification(true, "successful")
             }
+        } catch (ex: SQLException) {
+            ConnectionVerification(false, ex.message)
+        }
 
     @JvmOverloads
     fun updateSchema(
