@@ -27,7 +27,7 @@ object DataSourceUtils {
 
         val maskedPassword = createPasswordHint(config.password)
         logger
-            .debug(
+            .info(
                 "Creating datasource using jdbcUrl: \"{}\", username: \"{}\", password: \"{}\"", config.jdbcUrl,
                 config.username, maskedPassword
             )
@@ -42,6 +42,7 @@ object DataSourceUtils {
         config.username = username
         config.password = password
         config.maximumPoolSize = maximumPoolSize
+        logger.info("{}", config)
 
         // Just some defaults. Has not been properly evaluated.
         config.addDataSourceProperty("cachePrepStmts", "true")
