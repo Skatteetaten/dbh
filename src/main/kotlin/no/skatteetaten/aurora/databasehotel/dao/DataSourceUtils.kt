@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.dao
 
-import com.google.common.base.Strings.nullToEmpty
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import mu.KotlinLogging
@@ -52,7 +51,7 @@ object DataSourceUtils {
 
     fun createPasswordHint(password: String?): String {
         return if (password == null || password.length < 8) {
-            StringUtils.repeat("*", nullToEmpty(password).length)
+            StringUtils.repeat("*", password?.length ?: 0)
         } else {
             password.substring(0, 2) + StringUtils.repeat(
                 "*",

@@ -29,7 +29,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.apache.commons:commons-lang3")
-    implementation("com.google.guava:guava:29.0-jre")
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("com.oracle:ojdbc8:18.3")
     implementation("org.postgresql:postgresql")
@@ -42,7 +41,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.10.0")
     testImplementation("com.ninja-squad:springmockk:2.0.3")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.22")
-    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:bugfix_AOS_4800-SNAPSHOT")
+    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.1.2")
 
     val devtools = "org.springframework.boot:spring-boot-devtools"
     if (project.hasProperty("springBootDevtools")) {

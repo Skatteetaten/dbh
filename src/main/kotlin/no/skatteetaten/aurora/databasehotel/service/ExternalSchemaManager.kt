@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.service
 
-import com.google.common.collect.Lists
 import java.math.BigDecimal
 import java.util.HashMap
 import mu.KotlinLogging
@@ -48,10 +47,9 @@ class ExternalSchemaManager(private val databaseHotelDataDao: DatabaseHotelDataD
         val externalSchema = databaseHotelDataDao.registerExternalSchema(schemaData.id, jdbcUrl)
         databaseHotelDataDao.replaceLabels(schemaData.id, labelMap)
         val user = databaseHotelDataDao.createUser(schemaData.id, SCHEMA.toString(), username, password)
-        val users = Lists.newArrayList(user)
         val labels = databaseHotelDataDao.findAllLabelsForSchema(schemaData.id)
 
-        return createDatabaseSchema(schemaData, externalSchema, users, labels)
+        return createDatabaseSchema(schemaData, externalSchema, listOf(user), labels)
     }
 
     fun deleteSchema(schemaId: String) {
