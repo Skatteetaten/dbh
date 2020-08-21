@@ -52,6 +52,14 @@ abstract class WebSecurityConfigTest(val mvc: MockMvc, val authEnabled: AuthStat
             .andExpect(jsonPath("$.principal").value("aurora"))
             .andExpect(jsonPath("$.authorities").value("admin"))
     }
+
+    @Test
+    fun `access granted when old header-prefix and token provided`() {
+        mvc.perform(get("/").header("Authorization", "bearer aurora-token shared-secret"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.principal").value("aurora"))
+            .andExpect(jsonPath("$.authorities").value("admin"))
+    }
 }
 
 @WebMvcTest(TestController::class, properties = ["aurora.authentication.token.value=shared-secret", "aurora.authentication.enabled=true"])
