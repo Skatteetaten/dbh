@@ -147,9 +147,15 @@ class DatabaseInstanceInitializer(
         assertInitialized(databaseManager, password)
 
         val database = schemaName.toLowerCase()
+        // need to add @
         val jdbcUrl = urlBuilder.create(dbHost, port, database)
-        val databaseHotelDs = DataSourceUtils.createDataSource(jdbcUrl, database, password)
 
+        val managementUsername = if (dbHost.contains("azure")) {
+            val host = dbHost.replace(".postgres.database.azure.com", "")
+            "$database@$host"
+        } else database
+
+        val databaseHotelDs = DataSourceUtils.createDataSource(jdbcUrl, managementUsername, password)
         migrate(databaseHotelDs)
 
         val databaseHotelDataDao = PostgresDatabaseHotelDataDao(databaseHotelDs)
