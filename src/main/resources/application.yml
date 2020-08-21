@@ -6,7 +6,7 @@ database-config:
   databases: []
   retryDelay: 60000
   dropAllowed: false
-  schemaListingAllowed: false
+  schemaListingAllowed: true
   cooldownDaysAfterDelete: 30
 
 management:

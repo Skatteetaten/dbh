@@ -11,6 +11,8 @@ import no.skatteetaten.aurora.databasehotel.service.ConnectionVerification
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import no.skatteetaten.aurora.databasehotel.service.DatabaseInstanceRequirements
 import no.skatteetaten.aurora.databasehotel.toDatabaseEngine
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -71,6 +73,8 @@ data class ConnectionVerificationResponse(
     val message: String? = ""
 )
 
+val logger: Logger = LoggerFactory.getLogger(DatabaseSchemaController::class.java)
+
 @RestController
 @RequestMapping("/api/v1/schema")
 class DatabaseSchemaController(
@@ -110,6 +114,8 @@ class DatabaseSchemaController(
         @RequestParam(name = "engine", required = false) engineName: String?,
         @RequestParam(required = false) labels: String?
     ): ResponseEntity<ApiResponse<*>> {
+
+        logger.debug("Find all with q={} engine={} labels={}", q, engineName, labels)
 
         if (!schemaListingAllowed) throw OperationDisabledException("Schema listing has been disabled for this instance")
 
@@ -152,6 +158,8 @@ class DatabaseSchemaController(
     @PostMapping("/")
     @Timed
     fun create(@RequestBody schemaCreationRequest: SchemaCreationRequest): ResponseEntity<ApiResponse<*>> {
+
+        logger.debug("Create database with request={}", schemaCreationRequest)
 
         val labels = schemaCreationRequest.labels ?: emptyMap()
         val schema = schemaCreationRequest.schema

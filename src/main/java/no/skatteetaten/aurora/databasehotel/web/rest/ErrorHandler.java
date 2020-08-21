@@ -58,6 +58,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         if (e.getCause() != null) {
             errorMessageList.add("cause: " + e.getCause().getMessage());
         }
+       LOGGER.debug("Handle exception status={} exception={}", httpStatus.value(), e);
 
         return handleExceptionInternal(e, new ApiResponse<>(errorMessageList, "Failed"), headers, httpStatus,
             request);
