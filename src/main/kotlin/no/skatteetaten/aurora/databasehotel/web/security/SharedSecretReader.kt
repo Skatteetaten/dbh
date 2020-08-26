@@ -14,8 +14,8 @@ private val logger = KotlinLogging.logger {}
  */
 @Component
 class SharedSecretReader(
-    @Value("\${aurora.authentication.token.location:}") private val secretLocation: String?,
-    @Value("\${aurora.authentication.token.value:}") private val secretValue: String?
+    @Value("\${aurora.token.location:}") private val secretLocation: String?,
+    @Value("\${aurora.token.value:}") private val secretValue: String?
 ) {
 
     val secret: String by lazy {

@@ -62,17 +62,17 @@ abstract class WebSecurityConfigTest(val mvc: MockMvc, val authEnabled: AuthStat
     }
 }
 
-@WebMvcTest(TestController::class, properties = ["aurora.authentication.token.value=shared-secret", "aurora.authentication.enabled=true"])
+@WebMvcTest(TestController::class, properties = ["aurora.token.value=shared-secret", "aurora.authentication.enabled=true"])
 class WebSecurityAuroraTokenValueTest @Autowired constructor(mvc: MockMvc) : WebSecurityConfigTest(mvc)
 
 @WebMvcTest(
     TestController::class,
-    properties = ["aurora.authentication.token.location=./src/test/resources/aurora-token", "aurora.authentication.enabled=true"]
+    properties = ["aurora.token.location=./src/test/resources/aurora-token", "aurora.authentication.enabled=true"]
 )
 class WebSecurityAuroraTokenLocationTest @Autowired constructor(mvc: MockMvc) : WebSecurityConfigTest(mvc)
 
 @WebMvcTest(
     TestController::class,
-    properties = ["aurora.authentication.token.value=shared-secret", "aurora.authentication.enabled=false"]
+    properties = ["aurora.token.value=shared-secret", "aurora.authentication.enabled=false"]
 )
 class WebSecuritySecurityDisabledTest @Autowired constructor(mvc: MockMvc) : WebSecurityConfigTest(mvc, AUTH_DISABLED)
