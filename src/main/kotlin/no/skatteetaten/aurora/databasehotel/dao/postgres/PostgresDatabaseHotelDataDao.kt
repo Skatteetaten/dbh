@@ -31,7 +31,7 @@ class PostgresDatabaseHotelDataDao(dataSource: DataSource) : OracleDatabaseHotel
                             group by schema_id
                             having string_agg(value, ',' order by name) like (:values)
                         ) and (active=1 or active=(:active)) and schema_type=(:type)
-                        """.trimIndent(),
+            """.trimIndent(),
             parameters,
             BeanPropertyRowMapper(SchemaData::class.java)
         )

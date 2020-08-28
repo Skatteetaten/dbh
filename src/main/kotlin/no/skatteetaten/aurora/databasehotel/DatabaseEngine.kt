@@ -12,8 +12,10 @@ enum class DatabaseEngine {
  */
 fun String.toDatabaseEngineFromJdbcUrl(): DatabaseEngine {
 
-    val engineName = ("jdbc:(.*?):.*".toRegex().find(this)?.groupValues?.get(1)
-        ?: throw IllegalArgumentException("$this does not appear to be a valid jdbc string"))
+    val engineName = (
+        "jdbc:(.*?):.*".toRegex().find(this)?.groupValues?.get(1)
+            ?: throw IllegalArgumentException("$this does not appear to be a valid jdbc string")
+        )
 
     return when (engineName) {
         "postgresql" -> DatabaseEngine.POSTGRES

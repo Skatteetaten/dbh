@@ -52,7 +52,8 @@ open class DatabaseInstance(
             databaseHotelDataDao.findAllManagedSchemaDataByLabels(
                 labelsToMatch,
                 ignoreActiveFilter
-            ), LookupDataFetchStrategy.FOR_EACH
+            ),
+            LookupDataFetchStrategy.FOR_EACH
         )
     }
 
