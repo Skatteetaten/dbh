@@ -21,13 +21,25 @@ class RestorableDatabaseSchemaControllerTest : AbstractControllerTest() {
     private lateinit var databaseHotelService: DatabaseHotelService
 
     @Test
+    fun `Find restorable schema by id`() {
+        every { databaseHotelService.findSchemaById(any(), active = false) } returns Pair(DatabaseSchemaTestBuilder().build(), DatabaseInstanceBuilder().build())
+
+        val id = "123"
+        mockMvc.get(Path("/api/v1/restorableSchema/{id}", id)) {
+            statusIsOk()
+            responseJsonPath("$.status").equalsValue("OK")
+            responseJsonPath("$.items[0].id").equalsValue(id)
+        }
+    }
+
+    @Test
     fun `Find all restorable schemas`() {
         every { databaseHotelService.findAllInactiveDatabaseSchemas(any()) } returns setOf(DatabaseSchemaTestBuilder().build())
 
         mockMvc.get(Path("/api/v1/restorableSchema/?labels=aurora")) {
             statusIsOk()
             responseJsonPath("$.status").equalsValue("OK")
-            responseJsonPath("$.items[0].databaseSchema.id").equalsValue("123")
+            responseJsonPath("$.items[0]databaseSchema.id").equalsValue("123")
         }
     }
 
