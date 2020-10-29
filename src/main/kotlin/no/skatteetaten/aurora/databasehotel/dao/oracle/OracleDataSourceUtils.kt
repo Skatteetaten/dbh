@@ -22,9 +22,6 @@ object OracleDataSourceUtils {
     ): HikariDataSource {
 
         val hikariConfig = DataSourceUtils.createConfig(jdbcUrl, username, password, 2)
-        if (oracleScriptRequired) {
-            hikariConfig.connectionInitSql = "alter session set \"_ORACLE_SCRIPT\"=true"
-        }
 
         return DataSourceUtils.createDataSource(hikariConfig)
     }
