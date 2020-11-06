@@ -33,7 +33,7 @@ class RestorableDatabaseSchemaController(val databaseHotelService: DatabaseHotel
         val schemas = databaseHotelService.findAllInactiveDatabaseSchemas(parseLabelsParam(labels))
 
         val resources = schemas
-            .sortedBy { it.lastUsedOrCreatedDate }
+            .sortedByDescending { it.lastUsedOrCreatedDate }
             .map(DatabaseSchema::toRestorableDatabaseSchemaResource)
         return Responses.okResponse(resources)
     }
