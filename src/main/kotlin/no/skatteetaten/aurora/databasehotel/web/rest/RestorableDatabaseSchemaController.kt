@@ -57,7 +57,8 @@ class RestorableDatabaseSchemaController(val databaseHotelService: DatabaseHotel
             ?: throw IllegalArgumentException("No such schema id=$id")
         databaseInstance ?: throw java.lang.IllegalArgumentException("Schema id=$id is not a managed schema")
         databaseInstance.reactivateSchema(schema)
-        return Responses.okResponse(schema.copy(active = true).toResource())
+        val activatedSchema = databaseHotelService.findSchemaById(id)?.first ?: throw IllegalArgumentException("No such activated schema with id=$id")
+        return Responses.okResponse(activatedSchema.toResource())
     }
 }
 
