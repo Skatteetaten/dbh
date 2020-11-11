@@ -28,7 +28,7 @@ class RestorableDatabaseSchemaControllerTest : AbstractControllerTest() {
         mockMvc.get(Path("/api/v1/restorableSchema/{id}", id)) {
             statusIsOk()
             responseJsonPath("$.status").equalsValue("OK")
-            responseJsonPath("$.items[0].id").equalsValue(id)
+            responseJsonPath("$.items[0].databaseSchema.id").equalsValue(id)
         }
     }
 

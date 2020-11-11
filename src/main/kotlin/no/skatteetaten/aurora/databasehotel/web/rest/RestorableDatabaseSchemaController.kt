@@ -41,7 +41,7 @@ class RestorableDatabaseSchemaController(val databaseHotelService: DatabaseHotel
     @GetMapping("/{id}")
     fun findById(@PathVariable id: String): ResponseEntity<ApiResponse<*>> {
         val schema = databaseHotelService.findSchemaById(id, active = false)?.first
-        val schemaResource = schema?.let { listOf(it.toResource()) }
+        val schemaResource = schema?.let { listOf(it.toRestorableDatabaseSchemaResource()) }
         return Responses.okResponse(schemaResource.orEmpty())
     }
 
