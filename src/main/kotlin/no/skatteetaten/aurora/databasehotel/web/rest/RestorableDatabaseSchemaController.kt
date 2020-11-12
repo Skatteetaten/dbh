@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.databasehotel.web.rest
 
-import java.util.Date
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import no.skatteetaten.aurora.databasehotel.service.DatabaseHotelService
 import org.springframework.http.ResponseEntity
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.util.Date
 
 data class RestorableDatabaseSchemaResource(
     val setToCooldownAt: Date,
@@ -33,13 +33,23 @@ class RestorableDatabaseSchemaController(val databaseHotelService: DatabaseHotel
         val schemas = databaseHotelService.findAllInactiveDatabaseSchemas(parseLabelsParam(labels))
 
         val resources = schemas
-            .sortedBy { it.lastUsedOrCreatedDate }
+            .sortedByDescending { it.setToCooldownAt }
             .map(DatabaseSchema::toRestorableDatabaseSchemaResource)
         return Responses.okResponse(resources)
     }
 
+    @GetMapping("/{id}")
+    fun findById(@PathVariable id: String): ResponseEntity<ApiResponse<*>> {
+        val schema = databaseHotelService.findSchemaById(id, active = false)?.first
+        val schemaResource = schema?.let { listOf(it.toRestorableDatabaseSchemaResource()) }
+        return Responses.okResponse(schemaResource.orEmpty())
+    }
+
     @PatchMapping("/{id}")
-    fun update(@PathVariable id: String, @RequestBody payload: RestoreDatabaseSchemaPayload): ResponseEntity<ApiResponse<*>> {
+    fun update(
+        @PathVariable id: String,
+        @RequestBody payload: RestoreDatabaseSchemaPayload
+    ): ResponseEntity<ApiResponse<*>> {
 
         require(payload.active) { "Property active in RestoreDatabaseSchemaPayload has to be true, schema id=$id" }
 
@@ -47,7 +57,8 @@ class RestorableDatabaseSchemaController(val databaseHotelService: DatabaseHotel
             ?: throw IllegalArgumentException("No such schema id=$id")
         databaseInstance ?: throw java.lang.IllegalArgumentException("Schema id=$id is not a managed schema")
         databaseInstance.reactivateSchema(schema)
-        return Responses.okResponse(schema)
+        val activatedSchema = databaseHotelService.findSchemaById(id)?.first ?: throw IllegalArgumentException("No such activated schema with id=$id")
+        return Responses.okResponse(activatedSchema.toResource())
     }
 }
 
