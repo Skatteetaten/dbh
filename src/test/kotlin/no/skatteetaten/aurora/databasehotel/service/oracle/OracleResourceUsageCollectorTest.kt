@@ -3,19 +3,24 @@ package no.skatteetaten.aurora.databasehotel.service.oracle
 import assertk.assertThat
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isNotNull
-import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
+import no.skatteetaten.aurora.databasehotel.OracleConfig
 import no.skatteetaten.aurora.databasehotel.OracleTest
 import no.skatteetaten.aurora.databasehotel.TargetEngine
+import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
 import no.skatteetaten.aurora.databasehotel.deleteNonSystemSchemas
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.jdbc.core.JdbcTemplate
+import javax.sql.DataSource
 
 @DatabaseTest
 @OracleTest
-class OracleResourceUsageCollectorTest(
+class OracleResourceUsageCollectorTest @Autowired constructor(
+    val oracleConfig: OracleConfig,
     @TargetEngine(DatabaseEngine.ORACLE) val dataSource: DataSource
 ) {
     private val testSchemas = listOf("TEST1", "TEST2")
@@ -28,8 +33,9 @@ class OracleResourceUsageCollectorTest(
             deleteNonSystemSchemas()
             testSchemas.forEach { schemaName ->
                 createSchema(schemaName, "-")
-                executeStatements("create table $schemaName.DUMMY (id integer)")
-                (1..10).forEach { executeStatements("insert into $schemaName.DUMMY values ($it)") }
+                val template = createUserJdbcTemplate(schemaName, "-")
+                template.execute("create table $schemaName.DUMMY (id integer)")
+                (1..10).forEach { template.execute("insert into $schemaName.DUMMY values ($it)") }
             }
         }
         resourceUsageCollector.invalidateCache()
@@ -54,5 +60,14 @@ class OracleResourceUsageCollectorTest(
             assertThat(schemaSize).isNotNull()
             assertThat(schemaSize!!.schemaSizeMb.toDouble()).isGreaterThan(0.0)
         }
+    }
+
+    private fun createUserJdbcTemplate(username: String, password: String): JdbcTemplate {
+        val uds = DataSourceUtils.createDataSource(
+            OracleJdbcUrlBuilder(oracleConfig.service).create(oracleConfig.host, oracleConfig.port.toInt(), null),
+            username,
+            password
+        )
+        return JdbcTemplate(uds)
     }
 }

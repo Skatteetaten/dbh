@@ -52,16 +52,15 @@ class OracleSchemaDeleter(dataSource: DataSource) : DatabaseSupport(dataSource) 
             val sid = session["sid"]
             val serial = session["serial#"]
             val statements = arrayOf(
-                "ALTER SYSTEM KILL SESSION '$sid, $serial' IMMEDIATE",
-                // KILL SESSION by it self does not always do the trick...
-                "ALTER SYSTEM DISCONNECT SESSION '$sid, $serial' IMMEDIATE"
+                // See test/resources/kill_dev_session.sql
+                "BEGIN sys.kill_dev_session($sid, $serial); END;"
             )
             executeStatementsOnlyLogErrors(*statements)
         }
     }
 
     private fun getActiveSessions(schemaName: String) =
-        jdbcTemplate.queryForList("SELECT s.sid, s.serial# FROM v\$session s where username=?", schemaName)
+        jdbcTemplate.queryForList("SELECT s.sid, s.serial# FROM v\$session s where username=? and not status='KILLED'", schemaName)
 
     private fun executeStatementsOnlyLogErrors(vararg statements: String) {
 
