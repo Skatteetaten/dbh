@@ -7,6 +7,8 @@ import org.apache.commons.lang3.StringUtils
 
 private val logger = KotlinLogging.logger {}
 
+private val LOGIN_TIMEOUT = 10
+
 object DataSourceUtils {
 
     @JvmOverloads
@@ -14,15 +16,16 @@ object DataSourceUtils {
         jdbcUrl: String,
         username: String,
         password: String,
-        maximumPoolSize: Int = 2
+        maximumPoolSize: Int = 2,
+        loginTimeout: Int = LOGIN_TIMEOUT
     ): HikariDataSource {
 
         val config = createConfig(jdbcUrl, username, password, maximumPoolSize)
 
-        return createDataSource(config)
+        return createDataSource(config, loginTimeout)
     }
 
-    fun createDataSource(config: HikariConfig): HikariDataSource {
+    fun createDataSource(config: HikariConfig, loginTimeout: Int = LOGIN_TIMEOUT): HikariDataSource {
 
         val maskedPassword = createPasswordHint(config.password)
         logger
@@ -31,7 +34,11 @@ object DataSourceUtils {
                 config.username, maskedPassword
             )
 
-        return HikariDataSource(config)
+        val hikariDataSource = HikariDataSource(config)
+        // Setting this will prevent establishing connections from hanging forever in cases where the server is unable
+        // to report back a connection error (for instance when under heavy load).
+        hikariDataSource.loginTimeout = loginTimeout
+        return hikariDataSource
     }
 
     fun createConfig(jdbcUrl: String, username: String, password: String, maximumPoolSize: Int): HikariConfig {
