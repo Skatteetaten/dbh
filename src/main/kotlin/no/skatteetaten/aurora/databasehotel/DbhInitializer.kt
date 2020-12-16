@@ -48,6 +48,9 @@ class DbhInitializer(
         val instanceName: String = databaseConfig.typedGet("instanceName")
         val username: String = databaseConfig.typedGet("username")
         val password: String = databaseConfig.typedGet("password")
+
+        logger.info("Registering host [{}]", host)
+
         val instance = when (engine) {
             "postgres" -> {
                 val port: Int = databaseConfig.typedGet("port")
@@ -86,7 +89,7 @@ class DbhInitializer(
             val databaseHotelDataDao = instance.databaseHotelDataDao
             val externalSchemaManager = ExternalSchemaManager(databaseHotelDataDao)
             databaseHotelAdminService.externalSchemaManager = externalSchemaManager
-            logger.info("Registered ExternalSchemaManager")
+            logger.info("Registered host [{}] as ExternalSchemaManager", host)
         }
     }
 
