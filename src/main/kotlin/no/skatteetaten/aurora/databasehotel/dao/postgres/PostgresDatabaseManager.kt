@@ -36,7 +36,7 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
 
     override fun findSchemaByName(schemaName: String): Schema? {
         val query = "SELECT datname as username, null as lastLogin FROM pg_database WHERE datname=?"
-        return jdbcTemplate.queryForObject(query, toSchema, schemaName.toSafe())
+        return jdbcTemplate.query(query, toSchema, schemaName.toSafe()).firstOrNull()
     }
 
     override fun findAllNonSystemSchemas(): List<Schema> {
