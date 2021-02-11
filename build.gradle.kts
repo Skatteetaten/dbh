@@ -22,6 +22,11 @@ repositories {
     }
 }
 
+val mockkVersion = "1.10.0"
+val springMockkVersion = "2.0.3"
+val assertkJvmVersion = "0.22"
+val mockmvcExtensionsKotlinVersion = "1.1.2"
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -38,10 +43,10 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
-    testImplementation("io.mockk:mockk:1.10.0")
-    testImplementation("com.ninja-squad:springmockk:2.0.3")
-    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.22")
-    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.1.2")
+    testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("com.ninja-squad:springmockk:$springMockkVersion")
+    testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertkJvmVersion")
+    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:$mockmvcExtensionsKotlinVersion")
 
     val devtools = "org.springframework.boot:spring-boot-devtools"
     if (project.hasProperty("springBootDevtools")) {
