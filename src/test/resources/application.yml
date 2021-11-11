@@ -76,6 +76,7 @@ spring:
 test:
   datasource:
     postgres:
-      host: postgresql
-      port: 5432
-      password: postgres
+      host: "${dbh.postgres.host:postgresql}"
+      port: ${dbh.postgres.port:5432}
+      username: "${dbh.postgres.username:postgres}"
+      password: "${dbh.postgres.password:postgres}"
