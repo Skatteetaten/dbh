@@ -50,7 +50,7 @@ class DatabaseHotelServiceTest @Autowired constructor(
                 instanceName = instanceName,
                 instanceLabels = mapOf("affiliation" to affiliation)
             )
-            JdbcTemplate(dataSource).update("alter user $schemaName with superuser")
+            JdbcTemplate(dataSource).update("alter user $schemaName with createrole createdb")
             adminService.registerDatabaseInstance(instance)
         }
     }
