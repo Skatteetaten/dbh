@@ -8,8 +8,10 @@ import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.PostgresConfig
 import no.skatteetaten.aurora.databasehotel.TargetEngine
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
+import no.skatteetaten.aurora.databasehotel.dao.Schema
 import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
-import no.skatteetaten.aurora.databasehotel.deleteNonSystemSchemas
+import no.skatteetaten.aurora.databasehotel.permanentlyDeleteSchema
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,11 +29,13 @@ class DatabaseHotelServiceTest @Autowired constructor(
     val databaseHotelService = DatabaseHotelService(adminService)
     val databaseManager = PostgresDatabaseManager(dataSource)
 
+    val createdSchemas = arrayListOf<Schema>()
+
     @BeforeEach
     fun setup() {
 
         adminService.removeAllInstances()
-        databaseManager.deleteNonSystemSchemas()
+//        databaseManager.deleteNonSystemSchemas()
 
         // Simulate a few DatabaseInstances by creating databases on the test server, initializing the management
         // schemas in these databases and giving the roles superuser privileges.
@@ -39,6 +43,7 @@ class DatabaseHotelServiceTest @Autowired constructor(
             val (username, password) = createSchemaNameAndPassword()
             val schemaName = databaseManager.createSchema(username, password)
             databaseInstanceInitializer.schemaName = schemaName
+            createdSchemas.add(Schema(schemaName))
             val conf = config.copy(username = schemaName, password = password)
             val instance = databaseInstanceInitializer.createInitializedPostgresInstance(
                 conf,
@@ -47,6 +52,15 @@ class DatabaseHotelServiceTest @Autowired constructor(
             )
             JdbcTemplate(dataSource).update("alter user $schemaName with superuser")
             adminService.registerDatabaseInstance(instance)
+        }
+    }
+
+    @AfterEach
+    fun cleanup() {
+        createdSchemas.forEach {
+            try {
+                databaseManager.permanentlyDeleteSchema(it)
+            } catch (e: Exception) { }
         }
     }
 
@@ -59,6 +73,7 @@ class DatabaseHotelServiceTest @Autowired constructor(
                 instanceLabels = mapOf("affiliation" to "aurora")
             )
         )
+        createdSchemas.add(Schema(schema1.name))
         assertThat(schema1.databaseInstanceMetaInfo.instanceName).isEqualTo("dev1")
 
         val schema2 = databaseHotelService.createSchema(
@@ -67,6 +82,7 @@ class DatabaseHotelServiceTest @Autowired constructor(
                 instanceLabels = mapOf("affiliation" to "memo")
             )
         )
+        createdSchemas.add(Schema(schema2.name))
         assertThat(schema2.databaseInstanceMetaInfo.instanceName).isEqualTo("dev3")
     }
 
@@ -83,6 +99,8 @@ class DatabaseHotelServiceTest @Autowired constructor(
                 )
             }
         }
+        createdSchemas.addAll(schemas.map { Schema(it.name) })
+
         val expected = listOf(0, 3)
             .map { schemas[it].id.also { databaseHotelService.deactivateSchema(it, null) } }.toSet()
 

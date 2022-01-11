@@ -12,7 +12,6 @@ import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import com.zaxxer.hikari.pool.HikariPool
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
-import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleConfig
 import no.skatteetaten.aurora.databasehotel.OracleTest
@@ -21,12 +20,12 @@ import no.skatteetaten.aurora.databasehotel.TargetEngine
 import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
-import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import no.skatteetaten.aurora.databasehotel.deleteNonSystemSchemas
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
 import java.time.Duration
 import javax.sql.DataSource
@@ -140,43 +139,43 @@ abstract class AbstractDatabaseInstanceTest {
     }
 }
 
-@DatabaseTest
-class PostgresDatabaseInstanceTest @Autowired constructor(
-    val config: PostgresConfig,
-    @TargetEngine(POSTGRES) val dataSource: DataSource,
-    val databaseInstanceInitializer: DatabaseInstanceInitializer
-) : AbstractDatabaseInstanceTest() {
-
-    @BeforeEach
-    fun setup() {
-        PostgresDatabaseManager(dataSource).deleteNonSystemSchemas()
-        instance = databaseInstanceInitializer.createInitializedPostgresInstance(config, instanceLabels = mapOf())
-    }
-
-    @Test
-    fun `create schema when deletion is disabled fails`() {
-
-        val instance = databaseInstanceInitializer.createInitializedPostgresInstance(
-            config,
-            createSchemaAllowed = false,
-            instanceLabels = mapOf()
-        )
-        assertThat { instance.createSchema(emptyMap()) }
-            .isFailure().hasClass(DatabaseServiceException::class)
-    }
-
-    @Test
-    fun `permanently delete schemas with expired cooldowns`() {
-
-        val (_, _, s3) = createSchemasWhereSomeHaveExpiredCooldowns()
-
-        instance.deleteSchemasWithExpiredCooldowns()
-
-        val schemasAfterDeletion = instance.findAllSchemas(true)
-        assertThat(schemasAfterDeletion).hasSize(1)
-        assertThat(schemasAfterDeletion.map { it.id }).containsAll(s3.id)
-    }
-}
+// @DatabaseTest
+// class PostgresDatabaseInstanceTest @Autowired constructor(
+//    val config: PostgresConfig,
+//    @TargetEngine(POSTGRES) val dataSource: DataSource,
+//    val databaseInstanceInitializer: DatabaseInstanceInitializer
+// ) : AbstractDatabaseInstanceTest() {
+//
+//    @BeforeEach
+//    fun setup() {
+//        PostgresDatabaseManager(dataSource).deleteNonSystemSchemas()
+//        instance = databaseInstanceInitializer.createInitializedPostgresInstance(config, instanceLabels = mapOf())
+//    }
+//
+//    @Test
+//    fun `create schema when deletion is disabled fails`() {
+//
+//        val instance = databaseInstanceInitializer.createInitializedPostgresInstance(
+//            config,
+//            createSchemaAllowed = false,
+//            instanceLabels = mapOf()
+//        )
+//        assertThat { instance.createSchema(emptyMap()) }
+//            .isFailure().hasClass(DatabaseServiceException::class)
+//    }
+//
+//    @Test
+//    fun `permanently delete schemas with expired cooldowns`() {
+//
+//        val (_, _, s3) = createSchemasWhereSomeHaveExpiredCooldowns()
+//
+//        instance.deleteSchemasWithExpiredCooldowns()
+//
+//        val schemasAfterDeletion = instance.findAllSchemas(true)
+//        assertThat(schemasAfterDeletion).hasSize(1)
+//        assertThat(schemasAfterDeletion.map { it.id }).containsAll(s3.id)
+//    }
+// }
 
 @OracleTest
 @DatabaseTest
