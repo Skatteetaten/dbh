@@ -12,16 +12,21 @@ import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import com.zaxxer.hikari.pool.HikariPool
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
+import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleConfig
 import no.skatteetaten.aurora.databasehotel.OracleTest
 import no.skatteetaten.aurora.databasehotel.PostgresConfig
 import no.skatteetaten.aurora.databasehotel.TargetEngine
+import no.skatteetaten.aurora.databasehotel.cleanPostgresTestSchemas
 import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
+import no.skatteetaten.aurora.databasehotel.dao.Schema
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
+import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import no.skatteetaten.aurora.databasehotel.deleteNonSystemSchemas
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,11 +48,22 @@ private fun DatabaseInstance.createDefaultSchema() = this.createSchema(defaultLa
 abstract class AbstractDatabaseInstanceTest {
 
     lateinit var instance: DatabaseInstance
+    var createdSchemas = arrayListOf<Schema>()
+
+    protected fun addSchema(s: DatabaseSchema): DatabaseSchema {
+        createdSchemas.add(Schema(s.name))
+        return s
+    }
+
+    protected fun addSchemas(s: List<DatabaseSchema>): List<DatabaseSchema> {
+        s.forEach { addSchema(it) }
+        return s
+    }
 
     @Test
     fun `create schema and connect to it`() {
 
-        val schema = instance.createDefaultSchema()
+        val schema = addSchema(instance.createDefaultSchema())
         val user = schema.users.firstOrNull() ?: throw AssertionError("Should be able to find a user")
 
         JdbcTemplate(DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1))
@@ -56,7 +72,7 @@ abstract class AbstractDatabaseInstanceTest {
     @Test
     fun `verify schema privileges`() {
 
-        val schema = instance.createDefaultSchema()
+        val schema = addSchema(instance.createDefaultSchema())
         val user = schema.users.firstOrNull() ?: throw AssertionError("Should be able to find a user")
 
         val jdbcTemplate = JdbcTemplate(DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1))
@@ -71,7 +87,7 @@ abstract class AbstractDatabaseInstanceTest {
     @Test
     fun `delete schema`() {
 
-        val schema = instance.createDefaultSchema()
+        val schema = addSchema(instance.createDefaultSchema())
         assertThat(instance.findSchemaById(schema.id)).isNotNull()
 
         instance.deactivateSchema(schema.name, Duration.ofSeconds(1))
@@ -91,8 +107,8 @@ abstract class AbstractDatabaseInstanceTest {
             mapOf("environment" to "test"),
             mapOf("environment" to "test", "application" to "ref2"),
             mapOf("affiliation" to "paas", "environment" to "test")
-        ).forEach { instance.createSchema(defaultLabels + it) }
-        repeat(3) { instance.createSchema(defaultLabels) }
+        ).forEach { addSchema(instance.createSchema(defaultLabels + it)) }
+        repeat(3) { addSchema(instance.createSchema(defaultLabels)) }
 
         assertThat(instance.findAllSchemas(emptyMap())).hasSize(8)
 
@@ -108,7 +124,7 @@ abstract class AbstractDatabaseInstanceTest {
     @Test
     fun `find all schemas with expired cooldowns`() {
 
-        val (s1, s2, s3) = createSchemasWhereSomeHaveExpiredCooldowns()
+        val (s1, s2, s3) = addSchemas(createSchemasWhereSomeHaveExpiredCooldowns())
 
         val schemasAfterExpiry = instance.findAllSchemasWithExpiredCooldowns()
 
@@ -138,43 +154,49 @@ abstract class AbstractDatabaseInstanceTest {
     }
 }
 
-// @DatabaseTest
-// class PostgresDatabaseInstanceTest @Autowired constructor(
-//    val config: PostgresConfig,
-//    @TargetEngine(POSTGRES) val dataSource: DataSource,
-//    val databaseInstanceInitializer: DatabaseInstanceInitializer
-// ) : AbstractDatabaseInstanceTest() {
-//
-//    @BeforeEach
-//    fun setup() {
-//        PostgresDatabaseManager(dataSource).deleteNonSystemSchemas()
-//        instance = databaseInstanceInitializer.createInitializedPostgresInstance(config, instanceLabels = mapOf())
-//    }
-//
-//    @Test
-//    fun `create schema when deletion is disabled fails`() {
-//
-//        val instance = databaseInstanceInitializer.createInitializedPostgresInstance(
-//            config,
-//            createSchemaAllowed = false,
-//            instanceLabels = mapOf()
-//        )
-//        assertThat { instance.createSchema(emptyMap()) }
-//            .isFailure().hasClass(DatabaseServiceException::class)
-//    }
-//
-//    @Test
-//    fun `permanently delete schemas with expired cooldowns`() {
-//
-//        val (_, _, s3) = createSchemasWhereSomeHaveExpiredCooldowns()
-//
-//        instance.deleteSchemasWithExpiredCooldowns()
-//
-//        val schemasAfterDeletion = instance.findAllSchemas(true)
-//        assertThat(schemasAfterDeletion).hasSize(1)
-//        assertThat(schemasAfterDeletion.map { it.id }).containsAll(s3.id)
-//    }
-// }
+@DatabaseTest
+class PostgresDatabaseInstanceTest @Autowired constructor(
+    val config: PostgresConfig,
+    @TargetEngine(POSTGRES) val dataSource: DataSource,
+    val databaseInstanceInitializer: DatabaseInstanceInitializer
+) : AbstractDatabaseInstanceTest() {
+    val databaseManager = PostgresDatabaseManager(dataSource)
+
+    @BeforeEach
+    fun setup() {
+        instance = databaseInstanceInitializer.createInitializedPostgresInstance(config, instanceLabels = mapOf())
+    }
+
+    @AfterEach
+    fun cleanup() {
+        databaseManager.cleanPostgresTestSchemas(createdSchemas)
+        createdSchemas = arrayListOf()
+    }
+    @Test
+    fun `create schema when deletion is disabled fails`() {
+
+        val instance = databaseInstanceInitializer.createInitializedPostgresInstance(
+            config,
+            createSchemaAllowed = false,
+            instanceLabels = mapOf()
+        )
+        assertThat { instance.createSchema(emptyMap()) }
+            .isFailure().hasClass(DatabaseServiceException::class)
+    }
+
+    @Test
+    fun `permanently delete schemas with expired cooldowns`() {
+
+        val (_, _, s3) = createSchemasWhereSomeHaveExpiredCooldowns()
+        addSchema(s3)
+
+        instance.deleteSchemasWithExpiredCooldowns()
+
+        val schemasAfterDeletion = instance.findAllSchemas(true)
+        assertThat(schemasAfterDeletion).hasSize(1)
+        assertThat(schemasAfterDeletion.map { it.id }).containsAll(s3.id)
+    }
+}
 
 @OracleTest
 @DatabaseTest

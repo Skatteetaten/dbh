@@ -9,7 +9,9 @@ import com.zaxxer.hikari.HikariDataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.TargetEngine
+import no.skatteetaten.aurora.databasehotel.cleanPostgresTestSchema
 import no.skatteetaten.aurora.databasehotel.createPostgresSchema
+import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.BadSqlGrammarException
@@ -37,5 +39,7 @@ class DatabaseInstanceInitializerPostgresTest @Autowired constructor(
         migrations.forEach {
             assertThat(it["success"]).isEqualTo(true)
         }
+
+        PostgresDatabaseManager(this.dataSource).cleanPostgresTestSchema(dataSource.username)
     }
 }

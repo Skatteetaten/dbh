@@ -7,10 +7,10 @@ import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.PostgresConfig
 import no.skatteetaten.aurora.databasehotel.TargetEngine
+import no.skatteetaten.aurora.databasehotel.cleanPostgresTestSchemas
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.Schema
 import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
-import no.skatteetaten.aurora.databasehotel.permanentlyDeleteSchema
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,13 +29,12 @@ class DatabaseHotelServiceTest @Autowired constructor(
     val databaseHotelService = DatabaseHotelService(adminService)
     val databaseManager = PostgresDatabaseManager(dataSource)
 
-    val createdSchemas = arrayListOf<Schema>()
+    var createdSchemas = arrayListOf<Schema>()
 
     @BeforeEach
     fun setup() {
 
         adminService.removeAllInstances()
-//        databaseManager.deleteNonSystemSchemas()
 
         // Simulate a few DatabaseInstances by creating databases on the test server, initializing the management
         // schemas in these databases and giving the roles superuser privileges.
@@ -57,11 +56,8 @@ class DatabaseHotelServiceTest @Autowired constructor(
 
     @AfterEach
     fun cleanup() {
-        createdSchemas.forEach {
-            try {
-                databaseManager.permanentlyDeleteSchema(it)
-            } catch (e: Exception) { }
-        }
+        databaseManager.cleanPostgresTestSchemas(createdSchemas)
+        createdSchemas = arrayListOf()
     }
 
     @Test

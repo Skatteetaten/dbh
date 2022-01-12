@@ -102,7 +102,7 @@ class OracleDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSource
     companion object {
 
         private fun convertToValid(schemaName: String): String {
-            return schemaName.toUpperCase()
+            return schemaName.uppercase()
         }
     }
 }

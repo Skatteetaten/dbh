@@ -46,3 +46,31 @@ fun createOracleSchema(mangerDataSource: HikariDataSource): HikariDataSource {
     val schemaName = manager.createSchema(username, password)
     return DataSourceUtils.createDataSource(mangerDataSource.jdbcUrl, schemaName, password)
 }
+
+fun DatabaseManager.cleanPostgresTestSchemas(schemas: List<Schema>) {
+    if (this is PostgresDatabaseManager) {
+        val roleRemoveFailed = arrayListOf<Schema>()
+
+        schemas.forEach {
+            try {
+                permanentlyDeleteSchema(it)
+            } catch (e: Exception) {
+                if (e.message!!.contains("cannot be dropped because some objects depend on it")) {
+                    roleRemoveFailed.add(it)
+                }
+            }
+        }
+
+        roleRemoveFailed.forEach {
+            try {
+                executeStatements("drop role ${it.username}")
+            } catch (e: Exception) { }
+        }
+    }
+}
+
+fun DatabaseManager.cleanPostgresTestSchema(schemaName: String) {
+    if (schemaName.isNotBlank()) {
+        cleanPostgresTestSchemas(arrayListOf(Schema(schemaName)))
+    }
+}

@@ -74,5 +74,5 @@ class PostgresDatabaseManager(dataSource: DataSource) : DatabaseSupport(dataSour
     /**
      * Converts the name of a schema to a string that is safe to use as a database name for Postgres.
      */
-    private fun String.toSafe() = this.toLowerCase()
+    private fun String.toSafe() = this.lowercase()
 }
