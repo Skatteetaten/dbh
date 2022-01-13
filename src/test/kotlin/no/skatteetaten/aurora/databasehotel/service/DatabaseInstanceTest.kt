@@ -110,10 +110,13 @@ abstract class AbstractDatabaseInstanceTest {
         ).forEach { addSchema(instance.createSchema(defaultLabels + it)) }
         repeat(3) { addSchema(instance.createSchema(defaultLabels)) }
 
-        val schemas = instance.findAllSchemas(emptyMap()).map { it.name }
-        val createdSchemaNames = createdSchemas.map { it.username }
-        assertThat(schemas.containsAll(createdSchemaNames)).isTrue()
-//        assertThat(instance.findAllSchemas(emptyMap())).hasSize(8)
+        if (this is OracleDatabaseInstanceTest) {
+            assertThat(instance.findAllSchemas(emptyMap())).hasSize(8)
+        } else {
+            val schemas = instance.findAllSchemas(emptyMap()).map { it.name }
+            val createdSchemaNames = createdSchemas.map { it.username }
+            assertThat(schemas.containsAll(createdSchemaNames)).isTrue()
+        }
 
         jassertThat(instance.findAllSchemas(mapOf("environment" to "test")))
             .allMatch { it.labels["environment"] == "test" }
