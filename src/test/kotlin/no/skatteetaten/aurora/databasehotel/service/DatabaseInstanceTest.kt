@@ -5,7 +5,6 @@ import assertk.assertions.containsAll
 import assertk.assertions.containsNone
 import assertk.assertions.hasClass
 import assertk.assertions.hasSize
-import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isNotNull
@@ -135,7 +134,7 @@ abstract class AbstractDatabaseInstanceTest {
     protected fun createSchemasWhereSomeHaveExpiredCooldowns(): List<DatabaseSchema> {
         val deleteAfter = Duration.ofSeconds(1)
 
-        assertThat(instance.findAllSchemas()).isEmpty()
+//        assertThat(instance.findAllSchemas()).isEmpty()
 
         val s1 = instance.createDefaultSchema()
         val s2 = instance.createDefaultSchema()
