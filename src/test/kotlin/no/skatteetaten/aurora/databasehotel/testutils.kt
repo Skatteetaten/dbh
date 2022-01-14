@@ -58,8 +58,6 @@ fun DatabaseManager.cleanPostgresTestSchemas(schemas: List<Schema>): List<Except
             } catch (e: Exception) {
                 if (e.message!!.contains("cannot be dropped because some objects depend on it")) {
                     roleRemoveFailed.add(it)
-                } else {
-                    suppressedExceptions.add(e)
                 }
             }
         }
@@ -77,7 +75,10 @@ fun DatabaseManager.cleanPostgresTestSchemas(schemas: List<Schema>): List<Except
 
 fun DatabaseManager.cleanPostgresTestSchema(schemaName: String) {
     if (schemaName.isNotBlank()) {
-        cleanPostgresTestSchemas(arrayListOf(Schema(schemaName)))
+        val suppressed = cleanPostgresTestSchemas(arrayListOf(Schema(schemaName)))
+        if (suppressed.isNotEmpty()) {
+            throw CleanPostgresTestSchemasException(suppressed)
+        }
     }
 }
 
