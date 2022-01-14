@@ -11,6 +11,7 @@ import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import com.zaxxer.hikari.pool.HikariPool
+import no.skatteetaten.aurora.databasehotel.CleanPostgresTestSchemasException
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
@@ -175,8 +176,11 @@ class PostgresDatabaseInstanceTest @Autowired constructor(
 
     @AfterEach
     fun cleanup() {
-        databaseManager.cleanPostgresTestSchemas(createdSchemas)
+        val suppressedExceptions = databaseManager.cleanPostgresTestSchemas(createdSchemas)
         createdSchemas = arrayListOf()
+        if (suppressedExceptions.isNotEmpty()) {
+            throw CleanPostgresTestSchemasException(suppressedExceptions)
+        }
     }
     @Test
     fun `create schema when deletion is disabled fails`() {

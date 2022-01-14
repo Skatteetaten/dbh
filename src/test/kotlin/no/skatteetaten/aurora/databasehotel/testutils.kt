@@ -47,7 +47,8 @@ fun createOracleSchema(mangerDataSource: HikariDataSource): HikariDataSource {
     return DataSourceUtils.createDataSource(mangerDataSource.jdbcUrl, schemaName, password)
 }
 
-fun DatabaseManager.cleanPostgresTestSchemas(schemas: List<Schema>) {
+fun DatabaseManager.cleanPostgresTestSchemas(schemas: List<Schema>): List<Exception> {
+    val suppressedExceptions = arrayListOf<Exception>()
     if (this is PostgresDatabaseManager) {
         val roleRemoveFailed = arrayListOf<Schema>()
 
@@ -57,6 +58,8 @@ fun DatabaseManager.cleanPostgresTestSchemas(schemas: List<Schema>) {
             } catch (e: Exception) {
                 if (e.message!!.contains("cannot be dropped because some objects depend on it")) {
                     roleRemoveFailed.add(it)
+                } else {
+                    suppressedExceptions.add(e)
                 }
             }
         }
@@ -64,13 +67,26 @@ fun DatabaseManager.cleanPostgresTestSchemas(schemas: List<Schema>) {
         roleRemoveFailed.forEach {
             try {
                 executeStatements("drop role ${it.username}")
-            } catch (e: Exception) { }
+            } catch (e: Exception) {
+                suppressedExceptions.add(e)
+            }
         }
     }
+    return suppressedExceptions
 }
 
 fun DatabaseManager.cleanPostgresTestSchema(schemaName: String) {
     if (schemaName.isNotBlank()) {
-        cleanPostgresTestSchemas(arrayListOf(Schema(schemaName)))
+        val suppressed = cleanPostgresTestSchemas(arrayListOf(Schema(schemaName)))
+        if (suppressed.isNotEmpty()) {
+            throw CleanPostgresTestSchemasException(suppressed)
+        }
+    }
+}
+
+class CleanPostgresTestSchemasException(suppressed: List<Exception>) :
+    RuntimeException("Errors occurred during clean up") {
+    init {
+        suppressed.forEach { this.addSuppressed(it) }
     }
 }

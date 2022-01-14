@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.databasehotel.service
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import no.skatteetaten.aurora.databasehotel.CleanPostgresTestSchemasException
 import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
@@ -56,8 +57,11 @@ class DatabaseHotelServiceTest @Autowired constructor(
 
     @AfterEach
     fun cleanup() {
-        databaseManager.cleanPostgresTestSchemas(createdSchemas)
+        val suppressedExceptions = databaseManager.cleanPostgresTestSchemas(createdSchemas)
         createdSchemas = arrayListOf()
+        if (suppressedExceptions.isNotEmpty()) {
+            throw CleanPostgresTestSchemasException(suppressedExceptions)
+        }
     }
 
     @Test
