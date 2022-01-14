@@ -77,10 +77,7 @@ fun DatabaseManager.cleanPostgresTestSchemas(schemas: List<Schema>): List<Except
 
 fun DatabaseManager.cleanPostgresTestSchema(schemaName: String) {
     if (schemaName.isNotBlank()) {
-        val suppressed = cleanPostgresTestSchemas(arrayListOf(Schema(schemaName)))
-        if (suppressed.isNotEmpty()) {
-            throw CleanPostgresTestSchemasException(suppressed)
-        }
+        cleanPostgresTestSchemas(arrayListOf(Schema(schemaName)))
     }
 }
 
