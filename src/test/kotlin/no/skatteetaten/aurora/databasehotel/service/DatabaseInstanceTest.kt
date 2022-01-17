@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleConfig
 import no.skatteetaten.aurora.databasehotel.OracleTest
 import no.skatteetaten.aurora.databasehotel.PostgresConfig
+import no.skatteetaten.aurora.databasehotel.PostgresConnectionsExtension
 import no.skatteetaten.aurora.databasehotel.TargetEngine
 import no.skatteetaten.aurora.databasehotel.cleanPostgresTestSchemas
 import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
@@ -30,6 +31,7 @@ import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import java.time.Duration
@@ -162,6 +164,7 @@ abstract class AbstractDatabaseInstanceTest {
 }
 
 @DatabaseTest
+@ExtendWith(PostgresConnectionsExtension::class)
 class PostgresDatabaseInstanceTest @Autowired constructor(
     val config: PostgresConfig,
     @TargetEngine(POSTGRES) val dataSource: DataSource,

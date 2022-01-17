@@ -7,6 +7,7 @@ import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.PostgresConfig
+import no.skatteetaten.aurora.databasehotel.PostgresConnectionsExtension
 import no.skatteetaten.aurora.databasehotel.TargetEngine
 import no.skatteetaten.aurora.databasehotel.cleanPostgresTestSchemas
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
@@ -15,10 +16,12 @@ import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 
 @DatabaseTest
+@ExtendWith(PostgresConnectionsExtension::class)
 class DatabaseHotelServiceTest @Autowired constructor(
     val config: PostgresConfig,
     @TargetEngine(POSTGRES) val dataSource: DataSource

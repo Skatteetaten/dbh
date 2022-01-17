@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleTest
+import no.skatteetaten.aurora.databasehotel.PostgresConnectionsExtension
 import no.skatteetaten.aurora.databasehotel.TargetEngine
 import no.skatteetaten.aurora.databasehotel.cleanPostgresTestSchema
 import no.skatteetaten.aurora.databasehotel.createOracleSchema
@@ -28,6 +29,7 @@ import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 
 abstract class DatabaseHotelDataDaoTest {
@@ -112,6 +114,7 @@ abstract class DatabaseHotelDataDaoTest {
 }
 
 @DatabaseTest
+@ExtendWith(PostgresConnectionsExtension::class)
 class PostgresDatabaseHotelDataDaoTest @Autowired constructor(
     @TargetEngine(POSTGRES) val dataSource: HikariDataSource,
     val initializer: DatabaseInstanceInitializer
