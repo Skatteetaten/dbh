@@ -37,8 +37,8 @@ class PostgresConnectionsExtension : BeforeAllCallback, AfterAllCallback {
     }
 
     private fun databaseManager(context: ExtensionContext): PostgresDatabaseManager {
-        val dataSource = SpringExtension.getApplicationContext(context)
-            .getBean(DataSource::class.java)
+        val dataSource: DataSource = SpringExtension.getApplicationContext(context)
+            .getBean("postgresDatasource") as DataSource
         return PostgresDatabaseManager(dataSource)
     }
 }
