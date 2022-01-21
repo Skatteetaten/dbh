@@ -53,7 +53,6 @@ abstract class AbstractDatabaseInstanceTest {
     fun `create schema and connect to it`() {
 
         val schema = instance.createDefaultSchema()
-
         val user = schema.users.firstOrNull() ?: throw AssertionError("Should be able to find a user")
 
         JdbcTemplate(DataSourceUtils.createDataSource(schema.jdbcUrl, user.name, user.password, 1))

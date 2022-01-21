@@ -10,13 +10,13 @@ import javax.sql.DataSource
 class PostgresConnectionsExtension : BeforeAllCallback, AfterAllCallback {
     lateinit var databaseManager: PostgresDatabaseManager
 
-    override fun beforeAll(context: ExtensionContext?) {
-        databaseManager = context?.let { databaseManager(it) }!!
+    override fun beforeAll(context: ExtensionContext) {
+        databaseManager = databaseManager(context)
         setConnectionLimit(20)
     }
 
-    override fun afterAll(context: ExtensionContext?) {
-        databaseManager = context?.let { databaseManager(it) }!!
+    override fun afterAll(context: ExtensionContext) {
+        databaseManager = databaseManager(context)
         setConnectionLimit(6)
     }
 
