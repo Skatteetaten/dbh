@@ -18,18 +18,15 @@ import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleTest
-import no.skatteetaten.aurora.databasehotel.PostgresConnectionsExtension
+import no.skatteetaten.aurora.databasehotel.PostgresCleaner
 import no.skatteetaten.aurora.databasehotel.TargetEngine
-import no.skatteetaten.aurora.databasehotel.cleanPostgresTestSchema
 import no.skatteetaten.aurora.databasehotel.createOracleSchema
 import no.skatteetaten.aurora.databasehotel.createPostgresSchema
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseHotelDataDao
-import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 
 abstract class DatabaseHotelDataDaoTest {
@@ -114,25 +111,24 @@ abstract class DatabaseHotelDataDaoTest {
 }
 
 @DatabaseTest
-@ExtendWith(PostgresConnectionsExtension::class)
 class PostgresDatabaseHotelDataDaoTest @Autowired constructor(
     @TargetEngine(POSTGRES) val dataSource: HikariDataSource,
     val initializer: DatabaseInstanceInitializer
 ) : DatabaseHotelDataDaoTest() {
 
-    lateinit var createdSchemaName: String
+    val postgresCleaner = PostgresCleaner(dataSource)
+    lateinit var schemaDataSource: HikariDataSource
 
     @BeforeAll
     fun setup() {
-        val dataSource = createPostgresSchema(dataSource)
-        createdSchemaName = dataSource.username
-        initializer.migrate(dataSource)
-        hotelDataDao = PostgresDatabaseHotelDataDao(dataSource)
+        schemaDataSource = createPostgresSchema(dataSource)
+        initializer.migrate(schemaDataSource)
+        hotelDataDao = PostgresDatabaseHotelDataDao(schemaDataSource)
     }
 
     @AfterAll
     fun cleanup() {
-        PostgresDatabaseManager(dataSource).cleanPostgresTestSchema(createdSchemaName)
+        postgresCleaner.cleanDataSourceSchema(schemaDataSource)
     }
 }
 

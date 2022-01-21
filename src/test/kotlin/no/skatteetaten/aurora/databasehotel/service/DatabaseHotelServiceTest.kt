@@ -2,26 +2,21 @@ package no.skatteetaten.aurora.databasehotel.service
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import no.skatteetaten.aurora.databasehotel.CleanPostgresTestSchemasException
 import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
+import no.skatteetaten.aurora.databasehotel.PostgresCleaner
 import no.skatteetaten.aurora.databasehotel.PostgresConfig
-import no.skatteetaten.aurora.databasehotel.PostgresConnectionsExtension
 import no.skatteetaten.aurora.databasehotel.TargetEngine
-import no.skatteetaten.aurora.databasehotel.cleanPostgresTestSchemas
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
-import no.skatteetaten.aurora.databasehotel.dao.Schema
 import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 
 @DatabaseTest
-@ExtendWith(PostgresConnectionsExtension::class)
 class DatabaseHotelServiceTest @Autowired constructor(
     val config: PostgresConfig,
     @TargetEngine(POSTGRES) val dataSource: DataSource
@@ -33,20 +28,16 @@ class DatabaseHotelServiceTest @Autowired constructor(
     val databaseHotelService = DatabaseHotelService(adminService)
     val databaseManager = PostgresDatabaseManager(dataSource)
 
-    var createdSchemas = arrayListOf<Schema>()
+    val postgresCleaner = PostgresCleaner(dataSource)
 
     @BeforeEach
     fun setup() {
-
-        adminService.removeAllInstances()
-
         // Simulate a few DatabaseInstances by creating databases on the test server, initializing the management
         // schemas in these databases and giving the roles superuser privileges.
         instanceNames.map { (instanceName, affiliation) ->
             val (username, password) = createSchemaNameAndPassword()
             val schemaName = databaseManager.createSchema(username, password)
             databaseInstanceInitializer.schemaName = schemaName
-            createdSchemas.add(Schema(schemaName))
             val conf = config.copy(username = schemaName, password = password)
             val instance = databaseInstanceInitializer.createInitializedPostgresInstance(
                 conf,
@@ -60,11 +51,8 @@ class DatabaseHotelServiceTest @Autowired constructor(
 
     @AfterEach
     fun cleanup() {
-        val suppressedExceptions = databaseManager.cleanPostgresTestSchemas(createdSchemas)
-        createdSchemas = arrayListOf()
-        if (suppressedExceptions.isNotEmpty()) {
-            throw CleanPostgresTestSchemasException(suppressedExceptions)
-        }
+        postgresCleaner.cleanInstanceSchemas(adminService.findAllDatabaseInstances(POSTGRES))
+        adminService.removeAllInstances()
     }
 
     @Test
@@ -76,7 +64,6 @@ class DatabaseHotelServiceTest @Autowired constructor(
                 instanceLabels = mapOf("affiliation" to "aurora")
             )
         )
-        createdSchemas.add(Schema(schema1.name))
         assertThat(schema1.databaseInstanceMetaInfo.instanceName).isEqualTo("dev1")
 
         val schema2 = databaseHotelService.createSchema(
@@ -85,7 +72,6 @@ class DatabaseHotelServiceTest @Autowired constructor(
                 instanceLabels = mapOf("affiliation" to "memo")
             )
         )
-        createdSchemas.add(Schema(schema2.name))
         assertThat(schema2.databaseInstanceMetaInfo.instanceName).isEqualTo("dev3")
     }
 
@@ -102,7 +88,6 @@ class DatabaseHotelServiceTest @Autowired constructor(
                 )
             }
         }
-        createdSchemas.addAll(schemas.map { Schema(it.name) })
 
         val expected = listOf(0, 3)
             .map { schemas[it].id.also { databaseHotelService.deactivateSchema(it, null) } }.toSet()
