@@ -16,16 +16,19 @@ import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleConfig
 import no.skatteetaten.aurora.databasehotel.OracleTest
+import no.skatteetaten.aurora.databasehotel.PostgresCleaner
 import no.skatteetaten.aurora.databasehotel.PostgresConfig
+import no.skatteetaten.aurora.databasehotel.PostgresConnectionsExtension
 import no.skatteetaten.aurora.databasehotel.TargetEngine
 import no.skatteetaten.aurora.databasehotel.dao.DataSourceUtils
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseManager
-import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
 import no.skatteetaten.aurora.databasehotel.deleteNonSystemSchemas
 import no.skatteetaten.aurora.databasehotel.domain.DatabaseSchema
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import java.time.Duration
@@ -141,16 +144,22 @@ abstract class AbstractDatabaseInstanceTest {
 }
 
 @DatabaseTest
+@ExtendWith(PostgresConnectionsExtension::class)
 class PostgresDatabaseInstanceTest @Autowired constructor(
     val config: PostgresConfig,
     @TargetEngine(POSTGRES) val dataSource: DataSource,
     val databaseInstanceInitializer: DatabaseInstanceInitializer
 ) : AbstractDatabaseInstanceTest() {
+    val postgresCleaner = PostgresCleaner(dataSource)
 
     @BeforeEach
     fun setup() {
-        PostgresDatabaseManager(dataSource).deleteNonSystemSchemas()
         instance = databaseInstanceInitializer.createInitializedPostgresInstance(config, instanceLabels = mapOf())
+    }
+
+    @AfterEach
+    fun cleanup() {
+        postgresCleaner.cleanInstanceSchema(instance, config)
     }
 
     @Test

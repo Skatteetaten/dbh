@@ -5,11 +5,12 @@ import assertk.assertions.isEqualTo
 import javax.sql.DataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
+import no.skatteetaten.aurora.databasehotel.PostgresCleaner
 import no.skatteetaten.aurora.databasehotel.PostgresConfig
 import no.skatteetaten.aurora.databasehotel.TargetEngine
 import no.skatteetaten.aurora.databasehotel.dao.DatabaseInstanceInitializer
 import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseManager
-import no.skatteetaten.aurora.databasehotel.deleteNonSystemSchemas
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,12 +28,10 @@ class DatabaseHotelServiceTest @Autowired constructor(
     val databaseHotelService = DatabaseHotelService(adminService)
     val databaseManager = PostgresDatabaseManager(dataSource)
 
+    val postgresCleaner = PostgresCleaner(dataSource)
+
     @BeforeEach
     fun setup() {
-
-        adminService.removeAllInstances()
-        databaseManager.deleteNonSystemSchemas()
-
         // Simulate a few DatabaseInstances by creating databases on the test server, initializing the management
         // schemas in these databases and giving the roles superuser privileges.
         instanceNames.map { (instanceName, affiliation) ->
@@ -45,9 +44,15 @@ class DatabaseHotelServiceTest @Autowired constructor(
                 instanceName = instanceName,
                 instanceLabels = mapOf("affiliation" to affiliation)
             )
-            JdbcTemplate(dataSource).update("alter user $schemaName with superuser")
+            JdbcTemplate(dataSource).update("alter user $schemaName with createrole createdb")
             adminService.registerDatabaseInstance(instance)
         }
+    }
+
+    @AfterEach
+    fun cleanup() {
+        postgresCleaner.cleanInstanceSchemas(adminService.findAllDatabaseInstances(POSTGRES))
+        adminService.removeAllInstances()
     }
 
     @Test
@@ -83,6 +88,7 @@ class DatabaseHotelServiceTest @Autowired constructor(
                 )
             }
         }
+
         val expected = listOf(0, 3)
             .map { schemas[it].id.also { databaseHotelService.deactivateSchema(it, null) } }.toSet()
 

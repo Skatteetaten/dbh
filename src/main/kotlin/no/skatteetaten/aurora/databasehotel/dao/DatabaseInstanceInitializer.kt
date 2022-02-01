@@ -97,7 +97,7 @@ class DatabaseInstanceInitializer(
 
         assertInitialized(databaseManager, password)
 
-        val database = schemaName.toLowerCase()
+        val database = schemaName.lowercase()
         val jdbcUrl = urlBuilder.create(dbHost, port, database)
         val databaseHotelDs = DataSourceUtils.createDataSource(jdbcUrl, database, password)
 

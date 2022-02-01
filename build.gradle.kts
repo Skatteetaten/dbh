@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("no.skatteetaten.gradle.aurora") version "4.3.22"
+    id("no.skatteetaten.gradle.aurora") version "4.4.9"
 }
 
 aurora {
@@ -16,17 +16,17 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.apache.commons:commons-lang3")
-    implementation("com.github.ben-manes.caffeine:caffeine:3.0.4")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.0.5")
     implementation("com.oracle:ojdbc8:18.3")
     implementation("org.postgresql:postgresql:42.3.1")
-    implementation("org.flywaydb:flyway-core:8.0.2")
+    implementation("org.flywaydb:flyway-core:8.4.1")
 
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
-    testImplementation("io.mockk:mockk:1.12.0")
-    testImplementation("com.ninja-squad:springmockk:3.0.1")
+    testImplementation("io.mockk:mockk:1.12.2")
+    testImplementation("com.ninja-squad:springmockk:3.1.0")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
     testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.1.7")
     testImplementation("no.skatteetaten.aurora:mockwebserver-extensions-kotlin:1.2.0")
