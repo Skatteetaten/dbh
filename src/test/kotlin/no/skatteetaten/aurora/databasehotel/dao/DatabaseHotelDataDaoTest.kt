@@ -18,11 +18,13 @@ import no.skatteetaten.aurora.databasehotel.DatabaseEngine.ORACLE
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
 import no.skatteetaten.aurora.databasehotel.OracleTest
+import no.skatteetaten.aurora.databasehotel.PostgresCleaner
 import no.skatteetaten.aurora.databasehotel.TargetEngine
 import no.skatteetaten.aurora.databasehotel.createOracleSchema
 import no.skatteetaten.aurora.databasehotel.createPostgresSchema
 import no.skatteetaten.aurora.databasehotel.dao.oracle.OracleDatabaseHotelDataDao
 import no.skatteetaten.aurora.databasehotel.dao.postgres.PostgresDatabaseHotelDataDao
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -114,11 +116,19 @@ class PostgresDatabaseHotelDataDaoTest @Autowired constructor(
     val initializer: DatabaseInstanceInitializer
 ) : DatabaseHotelDataDaoTest() {
 
+    val postgresCleaner = PostgresCleaner(dataSource)
+    lateinit var schemaDataSource: HikariDataSource
+
     @BeforeAll
     fun setup() {
-        val dataSource = createPostgresSchema(dataSource)
-        initializer.migrate(dataSource)
-        hotelDataDao = PostgresDatabaseHotelDataDao(dataSource)
+        schemaDataSource = createPostgresSchema(dataSource)
+        initializer.migrate(schemaDataSource)
+        hotelDataDao = PostgresDatabaseHotelDataDao(schemaDataSource)
+    }
+
+    @AfterAll
+    fun cleanup() {
+        postgresCleaner.cleanDataSourceSchema(schemaDataSource)
     }
 }
 

@@ -8,6 +8,7 @@ import assertk.assertions.isGreaterThan
 import com.zaxxer.hikari.HikariDataSource
 import no.skatteetaten.aurora.databasehotel.DatabaseEngine.POSTGRES
 import no.skatteetaten.aurora.databasehotel.DatabaseTest
+import no.skatteetaten.aurora.databasehotel.PostgresCleaner
 import no.skatteetaten.aurora.databasehotel.TargetEngine
 import no.skatteetaten.aurora.databasehotel.createPostgresSchema
 import org.junit.jupiter.api.Test
@@ -24,18 +25,20 @@ class DatabaseInstanceInitializerPostgresTest @Autowired constructor(
     @Test
     fun `migrate postgres database`() {
 
-        val dataSource = createPostgresSchema(dataSource)
-        val jdbcTemplate = JdbcTemplate(dataSource)
+        val schemaDataSource = createPostgresSchema(dataSource)
+        val jdbcTemplate = JdbcTemplate(schemaDataSource)
 
         assertThat { jdbcTemplate.queryForList("select * from FLYWAY_SCHEMA_HISTORY") }
             .isFailure().hasClass(BadSqlGrammarException::class)
 
-        initializer.migrate(dataSource)
+        initializer.migrate(schemaDataSource)
 
         val migrations = jdbcTemplate.queryForList("select * from FLYWAY_SCHEMA_HISTORY")
         assertThat(migrations.size).isGreaterThan(0)
         migrations.forEach {
             assertThat(it["success"]).isEqualTo(true)
         }
+
+        PostgresCleaner(dataSource).cleanDataSourceSchema(schemaDataSource)
     }
 }

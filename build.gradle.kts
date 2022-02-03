@@ -1,25 +1,12 @@
-import com.adarshr.gradle.testlogger.theme.ThemeType
-
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.3.72"
-    id("org.jetbrains.kotlin.plugin.spring") version "1.3.72"
-    id("org.jlleitschuh.gradle.ktlint") version "9.3.0"
-    id("org.sonarqube") version "3.0"
-
-    id("org.springframework.boot") version "2.3.3.RELEASE"
-
-    id("com.gorylenko.gradle-git-properties") version "2.2.3"
-    id("com.github.ben-manes.versions") version "0.29.0"
-    id("se.patrikerdes.use-latest-versions") version "0.2.14"
-    id("com.adarshr.test-logger") version "2.1.0"
-
-    id("no.skatteetaten.gradle.aurora") version "3.6.6"
+    id("java")
+    id("no.skatteetaten.gradle.aurora") version "4.4.9"
 }
 
-repositories {
-    flatDir {
-        dirs("libs")
-    }
+aurora {
+    useKotlinDefaults
+    useSpringBootDefaults
+    useAsciiDoctor
 }
 
 dependencies {
@@ -29,19 +16,20 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.apache.commons:commons-lang3")
-    implementation("com.github.ben-manes.caffeine:caffeine")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.0.5")
     implementation("com.oracle:ojdbc8:18.3")
-    implementation("org.postgresql:postgresql")
-    implementation("org.flywaydb:flyway-core")
+    implementation("org.postgresql:postgresql:42.3.1")
+    implementation("org.flywaydb:flyway-core:8.4.1")
 
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
-    testImplementation("io.mockk:mockk:1.10.0")
-    testImplementation("com.ninja-squad:springmockk:2.0.3")
-    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.22")
-    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.1.2")
+    testImplementation("io.mockk:mockk:1.12.2")
+    testImplementation("com.ninja-squad:springmockk:3.1.0")
+    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
+    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.1.7")
+    testImplementation("no.skatteetaten.aurora:mockwebserver-extensions-kotlin:1.2.0")
 
     val devtools = "org.springframework.boot:spring-boot-devtools"
     if (project.hasProperty("springBootDevtools")) {
@@ -51,15 +39,14 @@ dependencies {
         testImplementation(devtools)
     }
 }
+repositories {
+    mavenCentral()
+}
 
 configurations.forEach {
     it.exclude("org.junit.vintage", "junit-vintage-engine")
     it.exclude("org.springframework.cloud", "spring-cloud-contract-verifier")
     it.exclude("junit", "junit")
-}
-
-testlogger {
-    theme = ThemeType.PLAIN
 }
 
 tasks {
