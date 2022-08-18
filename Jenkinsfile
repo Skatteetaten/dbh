@@ -10,7 +10,7 @@ def overrides = [
     pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
     credentialsId: "github",
     checkstyle : false,
-    javaVersion: "11",
+    javaVersion: "17",
     jiraFiksetIKomponentversjon: true,
     chatRoom: "#aos-notifications",
     mountCredentials: [[ credentialId : "dbh-config", path: "~/.spring-boot-devtools.properties"]],
