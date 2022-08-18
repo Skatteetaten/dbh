@@ -7,6 +7,10 @@ aurora {
     useKotlinDefaults
     useSpringBootDefaults
     useAsciiDoctor
+
+    versions {
+        javaSourceCompatibility = "17"
+    }
 }
 
 dependencies {
