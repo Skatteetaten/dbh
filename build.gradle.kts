@@ -18,7 +18,7 @@ dependencies {
     implementation("org.apache.commons:commons-lang3")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.1")
     implementation("com.oracle:ojdbc8:18.3")
-    implementation("org.postgresql:postgresql:42.3.6")
+    implementation("org.postgresql:postgresql:42.4.1")
     implementation("org.flywaydb:flyway-core:9.0.4")
 
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
