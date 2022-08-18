@@ -32,8 +32,8 @@ dependencies {
     testImplementation("io.mockk:mockk:1.12.5")
     testImplementation("com.ninja-squad:springmockk:3.1.1")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
-    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.1.7")
-    testImplementation("no.skatteetaten.aurora:mockwebserver-extensions-kotlin:1.2.0")
+    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.1.8")
+    testImplementation("no.skatteetaten.aurora:mockwebserver-extensions-kotlin:1.3.1")
 
     val devtools = "org.springframework.boot:spring-boot-devtools"
     if (project.hasProperty("springBootDevtools")) {
